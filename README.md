@@ -28,14 +28,30 @@ All markup should be set using {{mustache}} so that defaults can be overwritten 
 All effects should be triggered by divs and anchors with specific classnames. By default we should look for 
 '.soundandvision' but that should be overridable. What should happen:
 
- - A .soundandvision &lt;div&gt; containing anchors linking directly to images: add images to an image lightbox. If the div 
-   has a unique ID, the image lightbox should be restricted to images from that id, otherwise add them to a global 
-   lightbox. Image title should be pulled from the "title" paramater of the anchor, and caption should be pulled 
-   from the image "alt" parameter. 
- - A .soundandvision &lt;div&gt; containing links to YouTube or Vimeo should parse the URLs and display the video in an 
-   embedded overlay.
+ - A .soundandvision &lt;div&gt; containing anchors linking directly to images: add images to an image lightbox. If 
+   the div has a unique ID, the image lightbox should be restricted to images from that id, otherwise add them to a 
+   global lightbox. Image title should be pulled from the "title" paramater of the anchor, and caption should be 
+   pulled from the image "alt" parameter. Launch overlay on image click.
+ - Individual &lt;img&gt; tags with the .soundandvision class should be added to the global image lightbox unless 
+   they are contained by a .soundandvision &lt;div&gt;.
  - A .soundandvision.soundplayer &lt;div&gt; should look for links to audio, turn them into a playlist, and replace 
    itself with an audio player. Options could be stored using the html5 data parameters, including boolean to 
    show/hide playlist, link to a custom markup template, etc. 
+ - All links to YouTube or Vimeo should parse the URLs and display the video in an embedded overlay.
  - On mobile sound players should perform normally, image galleries need mobile styling, and video should just link 
    through to the original location without embed.
+ - Events:<br />
+   In addition to the click events mentioned above, the library needs to fire or respond to the following events:  
+    - Lightbox overlays should be dismissed by clicking the background or with the ESC key
+    - Image lightboxes need to display next/previous links as well as respond to LEFT ARROW/RIGHT ARROW keys
+    - Playing videos should pause with the SPACE key (where possible)
+    - Overlays should fire an event on open with a string declaring it to be photo or video
+    - Video overlays should pause any playing sound player when opened, resume when closed
+    - Sound players should pause any playing sound players on play, no resume on pause
+    - Sound players need to fire events for play, pause, next, previous, beforeplay, 
+      progress (with percentage and current time), loading (with percentage), and loaded
+    - Sound player play event should be dependent on beforeplay, allowing changes to the tracklist before play
+      begins (swapping out details/source in the case of a secure player)
+ - CSS:<br />
+   All elements created should have css classes associated, allowing for CSS alterations to default layouts in 
+   addition to the more advanced mustache re-templating.
