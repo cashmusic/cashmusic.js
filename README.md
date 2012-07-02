@@ -25,7 +25,7 @@ All markup should be set using {{mustache}} so that defaults can be overwritten 
 ##Libraries to include  
 [hogan.js](http://twitter.github.com/hogan.js/)  
 [SoundManager 2](http://www.schillmania.com/projects/soundmanager2/)  
-[jQuery](http://jquery.com/)<sup><small>* would be lovely to do framework-agnostic, but if that's too much, jQuery's rad.</small></sup>  
+[jQuery](http://jquery.com/) <small>(would be lovely to do framework-agnostic, but if that's too much, jQuery's rad.)</small>  
   
 ##Specific behaviors
 All effects should be triggered by divs and anchors with specific classnames. By default we should look for 
