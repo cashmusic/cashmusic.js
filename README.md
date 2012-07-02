@@ -13,6 +13,9 @@ our new (lack of) naming conventions, so instead we just named this after what i
 ##The short version  
 soundandvision.js needs a standard overlay/lightbox object that can be reused for an image gallery or for turning 
 links to YouTube and Vimdeo into overlay embeds. 
+
+It also needs an audio wrapper with Flash fallback to provide an interface (and programatic wrapper) for playing 
+audio, including MP3s and mobile, with playlist support. 
   
 There needs to be a centralized object so video players can talk to audio players, pause them, etc. That central 
 object also needs to exist globally so we can reinitialize after an AJAX page load. 
