@@ -1,10 +1,10 @@
 /**
- * The core soundandvision.js file
+ * The core cashmusic.js file
  *
  * COMPRESSION SETTINGS
  * YUI compressor with "preserve unnecessary semi-colons" then append a semi-colon to the front to be careful
  *
- * @package soundandvision.org.cashmusic
+ * @package cashmusic.org.cashmusic
  * @author CASH Music
  * @link http://cashmusic.org/
  *
@@ -35,13 +35,13 @@
 
 ;(function() {
 	'use strict';
-	var soundandvision;
-	if (window.soundandvision != null) {
-		// if window.soundandvision exists, we just return the current instance
-		soundandvision = window.soundandvision;
+	var cashmusic;
+	if (window.cashmusic != null) {
+		// if window.cashmusic exists, we just return the current instance
+		cashmusic = window.cashmusic;
 	} else {
-		// no window.soundandvision, so we build and return an object
-		soundandvision = {
+		// no window.cashmusic, so we build and return an object
+		cashmusic = {
 
 			_init: function() {
 				// load status
@@ -53,9 +53,9 @@
 				this.storage = {};
 
 				// determine file location and path
-				this.scriptElement = document.querySelector('script[src=$soundandvision.js');
+				this.scriptElement = document.querySelector('script[src=$cashmusic.js');
 				if (this.scriptElement) {
-					this.path = this.scriptElement.src.replace('soundandvision.js','');
+					this.path = this.scriptElement.src.replace('cashmusic.js','');
 				}
 
 				// look for links to video sites
@@ -68,7 +68,7 @@
 					}
 				}
 
-				// look for .soundandvision.soundplayer divs
+				// look for .cashmusic.soundplayer divs
 			},
 
 			/*
@@ -206,7 +206,7 @@
 			}
 
 			/*
-			 * window.soundandvision.getXHR()
+			 * window.cashmusic.getXHR()
 			 * Tests for the proper XHR object type and returns the appropriate
 			 * object type for the current browser using a try/catch block. If 
 			 * no viable objects are found it returns false. But we should make
@@ -229,11 +229,11 @@
 			},
 
 			/*
-			 * window.soundandvision.fadeEffect (object)
+			 * window.cashmusic.fadeEffect (object)
 			 * Object to provide tweened fades for DOM elements.
 			 *
-			 * window.soundandvision.fadeEffect.init(id, flag, target)
-			 * window.soundandvision.fadeEffect.tween()
+			 * window.cashmusic.fadeEffect.init(id, flag, target)
+			 * window.cashmusic.fadeEffect.tween()
 			 */
 			fadeEffect: {
 				init: function(id,flag,target) {
@@ -245,7 +245,7 @@
 					if (this.alpha == 0 && target > 0) {
 						this.elem.style.display = 'block';
 					}
-					this.si = setInterval(function(){window.soundandvision.fadeEffect.tween();}, 20);
+					this.si = setInterval(function(){window.cashmusic.fadeEffect.tween();}, 20);
 				},
 				tween: function() {
 					if(this.alpha == this.target) {
@@ -297,7 +297,7 @@
 			}
 
 			/*
-			 * window.soundandvision.sendXHR(string url, string postString, function successCallback)
+			 * window.cashmusic.sendXHR(string url, string postString, function successCallback)
 			 * Do a POST or GET request via XHR/AJAX. Passing a postString will 
 			 * force a POST request, whereas passing false will send a GET.
 			 */
@@ -326,8 +326,8 @@
 			}
 		};
 	}
-	soundandvision._init();
-	return soundandvision;
+	cashmusic._init();
+	return cashmusic;
 
 	/*
 	document.getElementById('cashmusicshowvoterreg').addEventListener('click', function(e) {
