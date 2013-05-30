@@ -1,5 +1,5 @@
-#soundandvision.js
-soundandvision.js is a small JavaScript library that doesn't exist yet. A few years ago we wrote a library called 
+#cashmusic.js
+cashmusic.js is a small JavaScript library that doesn't exist yet. A few years ago we wrote a library called 
 [Flower](http://cashmusic.org/tools/flower/), which was primarily used as a way of presenting consistent lightboxes 
 and overlays, rendering custom audio players, and embedding video and image galleries. 
   
@@ -11,7 +11,7 @@ Now it's time to start work on a streamlined and improved version of that same i
 our new (lack of) naming conventions, so instead we just named this after what it is...and after a David Bowie song. 
   
 ##The short version  
-soundandvision.js needs a standard overlay/lightbox object that can be reused for an image gallery or for turning 
+cashmusic.js needs a standard overlay/lightbox object that can be reused for an image gallery or for turning 
 links to YouTube and Vimdeo into overlay embeds. 
 
 It also needs an audio wrapper with Flash fallback to provide an interface (and programatic wrapper) for playing 
