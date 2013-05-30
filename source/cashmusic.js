@@ -58,7 +58,7 @@
 					this.path = this.scriptElement.src.replace('soundandvision.js','');
 				}
 
-				// links to video sites
+				// look for links to video sites
 				this.storage.embeddableLinks = document.querySelectorAll('a[href*=youtube.com],a[href*=vimeo.com]');
 				if (this.storage.embeddableLinks.length > 0) {
 					if (!this.hogan) {
@@ -67,6 +67,111 @@
 						});
 					}
 				}
+
+				// look for .soundandvision.soundplayer divs
+			},
+
+			/*
+			 * window.cashmusic.embed(string publicURL, string elementId, bool lightboxed, bool lightboxTxt)
+			 * Generates the embed iFrame code for embedding a given element.
+			 * Optional third and fourth parameters allow the element to be 
+			 * embedded with a lightbox and to customize the text of lightbox
+			 * opener link. (default: 'open element')
+			 *
+			 * The iFrame is embedded at 1px high and sends a postMessage back 
+			 * to this parent window with its proper height. 
+			 */
+			embed: function(publicURL, elementId, targetNode, lightboxed, lightboxTxt) {
+				var randomId = 'cashmusic_embed' + Math.floor((Math.random()*1000000)+1);
+				var embedURL = publicURL + '/request/embed/' + elementId + '/location/' + encodeURIComponent(window.location.href.replace(/\//g,'!slash!'));
+				if (targetNode) {
+					// for AJAX, specify target node: '#id', '#id .class', etc. NEEDS to be specific
+					var currentNode = document.querySelector(targetNode);
+				} else {
+					// if used non-AJAX we just grab the current place in the doc
+					var allScripts = document.querySelectorAll('script[src="' + publicURL + 'cashmusic.js' + '"]');
+					var currentNode = allScripts[allScripts.length - 1];
+				}
+				// be nice neighbors. if we can't find currentNode, don't do the rest or pitch errors. silently fail.
+				if (currentNode) {
+					// create a div to contain the link/iframe
+					var embedNode = document.createElement('div');
+					embedNode.className = 'cashmusic_embed';
+					if (lightboxed) {
+						// open in a lightbox with a link in the target div
+						if (!lightboxTxt) {lightboxTxt = 'open element';}
+						var overlayId = 'cashmusic_embed' + Math.floor((Math.random()*1000000)+1);
+						embedNode.innerHTML = '<a id="' + randomId + '" href="' + embedURL + '" target="_blank">' + lightboxTxt + '</a><div id="' + overlayId + '" class="cashmusic_embed_overlay" style="position:fixed;overflow:auto;top:0;left:0;width:100%;height:100%;background-color:rgba(80,80,80,0.85);opacity:0;display:none;z-index:654321;"><div style="position:absolute;top:80px;left:50%;margin-left:-260px;z-index:10;background-color:#fff;padding:10px;"><iframe src="' + embedURL + '" scrolling="auto" width="500" height="400" frameborder="0"></iframe></div></div>';
+						currentNode.parentNode.insertBefore(embedNode,currentNode);
+						document.getElementById(randomId).addEventListener('click', function(e) {
+							window.cashmusic.fadeEffect.init(overlayId, 1, 100);
+							e.preventDefault();
+						}, false);
+
+						window.addEventListener("keyup", function(e) { 
+							if (e.keyCode == 27) {
+								// get all overlay divs and hide them
+								var matches = document.querySelectorAll('div.cashmusic_embed_overlay');
+								for (var i = 0; i < matches.length; ++i) {
+									// have to use for not foreach (matches is a nodeList not an array)
+									var d = matches[i];
+									d.style.opacity = 0;
+									d.style.filter = 'alpha(opacity=0)';
+									d.style.display = 'none';
+								}
+							} 
+						}, false);
+					} else {
+						var embedMarkup = '<iframe id="' + randomId + '" src="' + embedURL + '" scrolling="auto" width="100%" height="1" frameborder="0"></iframe>' +
+										  '<!--[if lte IE 7]><script type="text/javascript">var iframeEmbed=document.getElementById("' + randomId + '");iframeEmbed.height = "400px";</script><![endif]-->';
+						embedNode.innerHTML = embedMarkup;
+						currentNode.parentNode.insertBefore(embedNode,currentNode);
+						var iframeEmbed = document.getElementById(randomId);
+						
+						// using messages passed between the request and this script to resize the iframe
+						var onmessage = function(e) {
+							// look for cashmusic_embed...if not then we don't care
+							if (e.data.substring(0,15) == 'cashmusic_embed') {
+								var a = e.data.split('_');
+								// double-check that we're going with the correct element embed a[2] is the id
+								if (a[2] == elementId) {
+									if (embedURL.indexOf(e.origin) !== -1) {
+										// a[3] is the height
+										iframeEmbed.height = a[3] + 'px';
+									}
+								}
+							}
+						};
+						if (window.addEventListener) {
+							window.addEventListener('message', onmessage, false);
+						} else if (window.attachEvent) {
+							window.attachEvent('onmessage', onmessage);
+						}
+					}
+				}
+			},
+
+			/*
+			 * window.cashmusic.encodeForm(object form)
+			 * Takes a form object returned by a document.getElementBy... call
+			 * and turns it into a querystring to be used with a GET or POST call.
+			 */
+			encodeForm: function(form) {
+				if (typeof form !== 'object') {
+					return false;
+				}
+				var querystring = '';
+				form = form.elements || form; //double check for elements node-list
+				for (var i=0;i<form.length;i++) {
+					if (form[i].type === 'checkbox' || form[i].type === 'radio') {
+						if (form[i].checked) {
+							querystring += (querystring.length ? '&' : '') + form[i].name + '=' + form[i].value;
+						}
+						continue;
+					}
+					querystring += (querystring.length ? '&' : '') + form[i].name +'='+ form[i].value; 
+				}
+				return encodeURI(querystring);
 			},
 
 			getPath: function() {
