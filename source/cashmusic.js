@@ -33,7 +33,7 @@
  *
  **/
 
-;(function() {
+;window.cashmusic = (function() {
 	'use strict';
 	var cashmusic;
 	if (window.cashmusic != null) {
@@ -42,6 +42,7 @@
 	} else {
 		// no window.cashmusic, so we build and return an object
 		cashmusic = {
+			loaded: false,
 
 			_init: function() {
 				// load status
@@ -53,22 +54,37 @@
 				this.storage = {};
 
 				// determine file location and path
-				this.scriptElement = document.querySelector('script[src=$cashmusic.js');
+				this.scriptElement = document.querySelector('script[src$="cashmusic.js"]');
 				if (this.scriptElement) {
 					this.path = this.scriptElement.src.replace('cashmusic.js','');
 				}
 
 				// look for links to video sites
-				this.storage.embeddableLinks = document.querySelectorAll('a[href*=youtube.com],a[href*=vimeo.com]');
+				this.storage.embeddableLinks = document.querySelectorAll('a[href*="youtube.com"],a[href*="vimeo.com"]');
 				if (this.storage.embeddableLinks.length > 0) {
+					alert(this.storage.embeddableLinks.length);
+					/*
 					if (!this.hogan) {
 						this.getScript(this.path+'/lib/hogan/hogan-2.0.0.min.js',function() {
 							// make our nice overlays
 						});
 					}
+					*/
 				}
+				//*/
 
 				// look for .cashmusic.soundplayer divs
+
+				// we're loaded
+				this.loaded = true;
+			},
+
+			getPath: function() {
+				return this.path;
+			},
+
+			getScriptElement: function() {
+				return this.scriptElement;
 			},
 
 			/*
@@ -80,16 +96,22 @@
 			 *
 			 * The iFrame is embedded at 1px high and sends a postMessage back 
 			 * to this parent window with its proper height. 
+			 *
+			 * This is called in a script inline as a piece of blocking script — calling it before
+			 * contentLoaded because the partial load tells us where to embed each chunk — we find the
+			 * last script node and inject the content by it. For dynamic calls you need to specify 
+			 * a targetNode to serve as the anchor — with the embed chucked immediately after that 
+			 * element in the DOM.
 			 */
-			embed: function(publicURL, elementId, targetNode, lightboxed, lightboxTxt) {
+			embed: function(publicURL, elementId, lightboxed, lightboxTxt, targetNode) {
 				var randomId = 'cashmusic_embed' + Math.floor((Math.random()*1000000)+1);
-				var embedURL = publicURL + '/request/embed/' + elementId + '/location/' + encodeURIComponent(window.location.href.replace(/\//g,'!slash!'));
+				var embedURL = publicURL.replace(/\/$/, '') + '/request/embed/' + elementId + '/location/' + encodeURIComponent(window.location.href.replace(/\//g,'!slash!'));
 				if (targetNode) {
 					// for AJAX, specify target node: '#id', '#id .class', etc. NEEDS to be specific
 					var currentNode = document.querySelector(targetNode);
 				} else {
 					// if used non-AJAX we just grab the current place in the doc
-					var allScripts = document.querySelectorAll('script[src="' + publicURL + 'cashmusic.js' + '"]');
+					var allScripts = document.querySelectorAll('script[src$="cashmusic.js"]');
 					var currentNode = allScripts[allScripts.length - 1];
 				}
 				// be nice neighbors. if we can't find currentNode, don't do the rest or pitch errors. silently fail.
@@ -104,11 +126,11 @@
 						embedNode.innerHTML = '<a id="' + randomId + '" href="' + embedURL + '" target="_blank">' + lightboxTxt + '</a><div id="' + overlayId + '" class="cashmusic_embed_overlay" style="position:fixed;overflow:auto;top:0;left:0;width:100%;height:100%;background-color:rgba(80,80,80,0.85);opacity:0;display:none;z-index:654321;"><div style="position:absolute;top:80px;left:50%;margin-left:-260px;z-index:10;background-color:#fff;padding:10px;"><iframe src="' + embedURL + '" scrolling="auto" width="500" height="400" frameborder="0"></iframe></div></div>';
 						currentNode.parentNode.insertBefore(embedNode,currentNode);
 						document.getElementById(randomId).addEventListener('click', function(e) {
-							window.cashmusic.fadeEffect.init(overlayId, 1, 100);
+							window.cashmusic.fader.init(overlayId, 1, 100);
 							e.preventDefault();
 						}, false);
 
-						window.addEventListener("keyup", function(e) { 
+						this.addEvent(window,'keyup', function(e) { 
 							if (e.keyCode == 27) {
 								// get all overlay divs and hide them
 								var matches = document.querySelectorAll('div.cashmusic_embed_overlay');
@@ -120,16 +142,16 @@
 									d.style.display = 'none';
 								}
 							} 
-						}, false);
+						});
 					} else {
 						var embedMarkup = '<iframe id="' + randomId + '" src="' + embedURL + '" scrolling="auto" width="100%" height="1" frameborder="0"></iframe>' +
 										  '<!--[if lte IE 7]><script type="text/javascript">var iframeEmbed=document.getElementById("' + randomId + '");iframeEmbed.height = "400px";</script><![endif]-->';
 						embedNode.innerHTML = embedMarkup;
 						currentNode.parentNode.insertBefore(embedNode,currentNode);
 						var iframeEmbed = document.getElementById(randomId);
-						
+
 						// using messages passed between the request and this script to resize the iframe
-						var onmessage = function(e) {
+						this.addEvent(window,'message',function(e) {
 							// look for cashmusic_embed...if not then we don't care
 							if (e.data.substring(0,15) == 'cashmusic_embed') {
 								var a = e.data.split('_');
@@ -141,12 +163,7 @@
 									}
 								}
 							}
-						};
-						if (window.addEventListener) {
-							window.addEventListener('message', onmessage, false);
-						} else if (window.attachEvent) {
-							window.attachEvent('onmessage', onmessage);
-						}
+						});
 					}
 				}
 			},
@@ -174,14 +191,6 @@
 				return encodeURI(querystring);
 			},
 
-			getPath: function() {
-				return this.path;
-			},
-
-			getScriptElement: function() {
-				return this.scriptElement;
-			},
-
 			// stolen from jQuery
 			getScript: function(url,success) {
 				var head = document.getElementsByTagName("head")[0] || document.documentElement;
@@ -203,7 +212,7 @@
 					}
 				};
 				head.insertBefore( script, head.firstChild );
-			}
+			},
 
 			/*
 			 * window.cashmusic.getXHR()
@@ -228,40 +237,6 @@
 				}
 			},
 
-			/*
-			 * window.cashmusic.fadeEffect (object)
-			 * Object to provide tweened fades for DOM elements.
-			 *
-			 * window.cashmusic.fadeEffect.init(id, flag, target)
-			 * window.cashmusic.fadeEffect.tween()
-			 */
-			fadeEffect: {
-				init: function(id,flag,target) {
-					this.elem = document.getElementById(id);
-					clearInterval(this.elem.si);
-					this.target = target ? target : flag ? 100 : 0;
-					this.flag = flag || -1;
-					this.alpha = this.elem.style.opacity ? parseFloat(this.elem.style.opacity) * 100 : 0;
-					if (this.alpha == 0 && target > 0) {
-						this.elem.style.display = 'block';
-					}
-					this.si = setInterval(function(){window.cashmusic.fadeEffect.tween();}, 20);
-				},
-				tween: function() {
-					if(this.alpha == this.target) {
-						clearInterval(this.elem.si);
-					}else{
-						var value = Math.round(this.alpha + ((this.target - this.alpha) * 0.05)) + (this.flag);
-						this.elem.style.opacity = value / 100;
-						this.elem.style.filter = 'alpha(opacity=' + value + ')';
-						if (value == 0) {
-							this.elem.style.display = 'none';
-						}
-						this.alpha = value;
-					}
-				}
-			},
-
 			// http://ejohn.org/blog/flexible-javascript-events/
 			addEvent: function(obj,type,fn) {
 				if (obj.attachEvent) {
@@ -271,7 +246,7 @@
 				} else {
 					obj.addEventListener( type, fn, false );
 				}
-			}
+			},
 
 			// http://ejohn.org/blog/flexible-javascript-events/
 			removeEvent: function(obj,type,fn) {
@@ -281,7 +256,7 @@
 				} else {
 					obj.removeEventListener( type, fn, false );
 				}
-			}
+			},
 
 			fireEvent: function (obj,type,data){
 				if (document.dispatchEvent){
@@ -294,7 +269,43 @@
 					e.detail = data;
 					obj.fireEvent('on'+type,e);
 				}
-			}
+			},
+
+			/*
+			 * contentloaded.js by Diego Perini (diego.perini at gmail.com)
+			 * http://javascript.nwbox.com/ContentLoaded/
+			 * http://javascript.nwbox.com/ContentLoaded/MIT-LICENSE
+			 */
+			contentLoaded: function(fn) {
+				var done = false, top = true,
+				doc = window.document, root = doc.documentElement,
+
+				add = doc.addEventListener ? 'addEventListener' : 'attachEvent',
+				rem = doc.addEventListener ? 'removeEventListener' : 'detachEvent',
+				pre = doc.addEventListener ? '' : 'on',
+
+				init = function(e) {
+					if (e.type == 'readystatechange' && doc.readyState != 'complete') return;
+					(e.type == 'load' ? window : doc)[rem](pre + e.type, init, false);
+					if (!done && (done = true)) fn.call(window, e.type || e);
+				},
+
+				poll = function() {
+					try { root.doScroll('left'); } catch(e) { setTimeout(poll, 50); return; }
+					init('poll');
+				};
+
+				if (doc.readyState == 'complete') fn.call(window, 'lazy');
+				else {
+					if (doc.createEventObject && root.doScroll) {
+						try { top = !window.frameElement; } catch(e) { }
+						if (top) poll();
+					}
+					doc[add](pre + 'DOMContentLoaded', init, false);
+					doc[add](pre + 'readystatechange', init, false);
+					window[add](pre + 'load', init, false);
+				}
+			},
 
 			/*
 			 * window.cashmusic.sendXHR(string url, string postString, function successCallback)
@@ -323,26 +334,60 @@
 					}
 					ajax.send(postString);
 				}
+			},
+
+			/*
+			 * window.cashmusic.fader (object)
+			 * Object to provide tweened fades for DOM elements.
+			 *
+			 * window.cashmusic.fader.init(id, flag, target)
+			 * window.cashmusic.fader.tween()
+			 */
+			fader: {
+				init: function(id,flag,target) {
+					this.elem = document.getElementById(id);
+					clearInterval(this.elem.si);
+					this.target = target ? target : flag ? 100 : 0;
+					this.flag = flag || -1;
+					this.alpha = this.elem.style.opacity ? parseFloat(this.elem.style.opacity) * 100 : 0;
+					if (this.alpha == 0 && target > 0) {
+						this.elem.style.display = 'block';
+					}
+					this.si = setInterval(function(){window.cashmusic.fader.tween();}, 20);
+				},
+				tween: function() {
+					if(this.alpha == this.target) {
+						clearInterval(this.elem.si);
+					}else{
+						var value = Math.round(this.alpha + ((this.target - this.alpha) * 0.05)) + (this.flag);
+						this.elem.style.opacity = value / 100;
+						this.elem.style.filter = 'alpha(opacity=' + value + ')';
+						if (value == 0) {
+							this.elem.style.display = 'none';
+						}
+						this.alpha = value;
+					}
+				}
 			}
 		};
+		cashmusic.contentLoaded(cashmusic._init);
+		return cashmusic;
 	}
-	cashmusic._init();
-	return cashmusic;
 
 	/*
 	document.getElementById('cashmusicshowvoterreg').addEventListener('click', function(e) {
-		fadeEffect.init('cashmusicvoterregoverlay', 1, 100);
+		fader.init('cashmusicvoterregoverlay', 1, 100);
 		e.preventDefault();
 	}, false);
 
 	document.getElementById('cashmusichidevoterreg').addEventListener('click', function(e) {
-		fadeEffect.init('cashmusicvoterregoverlay', 0);
+		fader.init('cashmusicvoterregoverlay', 0);
 		e.preventDefault();
 	}, false);
 
 	window.addEventListener("keyup", function(e) { 
 		if (e.keyCode == 27) {
-			fadeEffect.init('cashmusicvoterregoverlay', 0);
+			fader.init('cashmusicvoterregoverlay', 0);
 		} 
 	}, false);
 	*/
