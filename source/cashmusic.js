@@ -43,10 +43,10 @@
 		// no window.cashmusic, so we build and return an object
 		cashmusic = {
 			loaded: false,
-			hogan: false,
 			soundmanager: false,
 			soundplayer: false,
-			overlay: false,
+			options:'',
+			path:'',
 			templates: {},
 			storage: {}, // basically just a namespace to use as a clipboard between scripts
 
@@ -58,57 +58,26 @@
 				if (this.scriptElement) {
 					this.path = this.scriptElement.src.replace('cashmusic.js','');
 				}
+				this.options = String(this.scriptElement.getAttribute('data-options'));
 
-				// look for links to video sites
-				this.storage.embeddableLinks = document.querySelectorAll('a[href*="youtube.com"],a[href*="vimeo.com"]');
-				if (this.storage.embeddableLinks.length > 0) {
-					//alert(this.storage.embeddableLinks.length);
-					if (!this.hogan) {
-						if (window.Hogan != null) {
-							this.hogan = window.Hogan;
-							// run search through links
-						} else {
-
-							this.loadScript(this.path+'/lib/hogan/hogan-2.0.0.min.js',function() {
-								self.hogan = window.Hogan; // Hogan in the global scope
-								self.getTemplate('overlay',function(t) {
-									var tmpDiv = document.createElement('div');
-									tmpDiv.innerHTML = t;
-									self.overlay = tmpDiv.firstChild;
-									self.overlay.style.display = 'none';
-									document.body.appendChild(window.cashmusic.overlay);
-									tmpDiv = null;
-									self.events.add(window,'keyup', function(e) { 
-										if (e.keyCode == 27) {
-											if (self.overlay.style.display = 'block') {
-												// hide all the overlays if they're visible
-												self.fader.hide(self.overlay);
-												var divs = self.overlay.getElementsByTagName('div');
-												divs[0].innerHTML = '';
-											}
-										} 
-									});
-									self.events.add(self.overlay,'click', function(e) { 
-										if(e.target === this) {
-											self.fader.hide(self.overlay);
-											var divs = self.overlay.getElementsByTagName('div');
-											divs[0].innerHTML = '';
-										}
-									});
-								});
-
-								for (var i = 0; i < self.storage.embeddableLinks.length; ++i) {
-									self.events.add(self.storage.embeddableLinks[i],'click', function(e) { 
+				if (this.options.indexOf('lightboxvideo') !== -1) {
+					// look for links to video sites
+					this.storage.embeddableLinks = document.querySelectorAll('a[href*="youtube.com"],a[href*="vimeo.com"]');
+					if (this.storage.embeddableLinks.length > 0) {
+						self.overlay.create(function() {
+							for (var i = 0; i < self.storage.embeddableLinks.length; ++i) {
+								self.events.add(self.storage.embeddableLinks[i],'click', function(e) {
+									if (self.measure.viewport().x > 400 && !e.metaKey) {
 										// do the overlay thing
 										var url = e.currentTarget.href;
-										self.fader.init(self.overlay, 100, function() {self.embeds.injectIframe(url)});
+										self.fader.init(self.overlay.bg, 100, function() {self.embeds.injectIframe(url)});
 
 										e.preventDefault();
 										return false;
-									});
-								}
-							});
-						}
+									}
+								});
+							}
+						});
 					}
 				}
 				//*/
@@ -170,8 +139,13 @@
 			 * element in the DOM.
 			 */
 			embed: function(publicURL, elementId, lightboxed, lightboxTxt, targetNode) {
-				var randomId = 'cashmusic_embed' + Math.floor((Math.random()*1000000)+1);
+				var cm = window.cashmusic;
 				var embedURL = publicURL.replace(/\/$/, '') + '/request/embed/' + elementId + '/location/' + encodeURIComponent(window.location.href.replace(/\//g,'!slash!'));
+				var iframe = document.createElement('iframe');
+					iframe.src = embedURL;
+					iframe.style.width = '100%';
+					iframe.style.height = '1px';
+					iframe.style.border = '0';
 				if (targetNode) {
 					// for AJAX, specify target node: '#id', '#id .class', etc. NEEDS to be specific
 					var currentNode = document.querySelector(targetNode);
@@ -186,38 +160,33 @@
 					var embedNode = document.createElement('div');
 					embedNode.className = 'cashmusic_embed';
 					if (lightboxed) {
-						// open in a lightbox with a link in the target div
-						if (!lightboxTxt) {lightboxTxt = 'open element';}
-						var overlayId = 'cashmusic_embed' + Math.floor((Math.random()*1000000)+1);
-						embedNode.innerHTML = '<a id="' + randomId + '" href="' + embedURL + '" target="_blank">' + lightboxTxt + '</a><div id="' + overlayId + '" class="cashmusic_embed_overlay" style="position:fixed;overflow:auto;top:0;left:0;width:100%;height:100%;background-color:rgba(80,80,80,0.85);opacity:0;display:none;z-index:654321;"><div style="position:absolute;top:80px;left:50%;margin-left:-260px;z-index:10;background-color:#fff;padding:10px;"><iframe src="' + embedURL + '" scrolling="auto" width="500" height="400" frameborder="0"></iframe></div></div>';
-						currentNode.parentNode.insertBefore(embedNode,currentNode);
-						this.events.add(embedNode,'click',function(e) {
-							window.cashmusic.fader.init(overlayId, 1, 100);
-							e.preventDefault();
-						}, false);
-
-						this.events.add(window,'keyup', function(e) { 
-							if (e.keyCode == 27) {
-								// get all overlay divs and hide them
-								var matches = document.querySelectorAll('div.cashmusic_embed_overlay');
-								for (var i = 0; i < matches.length; ++i) {
-									// have to use for not foreach (matches is a nodeList not an array)
-									var d = matches[i];
-									d.style.opacity = 0;
-									d.style.filter = 'alpha(opacity=0)';
-									d.style.display = 'none';
-								}
-							} 
+						cm.contentLoaded(function() {
+							// open in a lightbox with a link in the target div
+							if (!lightboxTxt) {lightboxTxt = 'open element';}
+							cm.overlay.create(function() {
+								var a = document.createElement('a');
+									a.href = embedURL;
+									a.target = '_blank';
+									a.innerHTML = lightboxTxt;
+								embedNode.appendChild(a);
+								currentNode.parentNode.insertBefore(embedNode,currentNode);
+								cm.events.add(a,'click',function(e) {
+									cm.overlay.resize('80px','30%','40%','0');
+									cm.overlay.content.appendChild(iframe);
+									window.cashmusic.fader.init(cm.overlay.bg, 100);
+									e.preventDefault();
+									return false;
+								});
+							});
 						});
 					} else {
-						var embedMarkup = '<iframe id="' + randomId + '" src="' + embedURL + '" scrolling="auto" width="100%" height="1" frameborder="0"></iframe>' +
-										  '<!--[if lte IE 7]><script type="text/javascript">var iframeEmbed=document.getElementById("' + randomId + '");iframeEmbed.height = "400px";</script><![endif]-->';
-						embedNode.innerHTML = embedMarkup;
+						embedNode.appendChild(iframe);
 						currentNode.parentNode.insertBefore(embedNode,currentNode);
-						var iframeEmbed = document.getElementById(randomId);
+					}
 
+					cm.contentLoaded(function() {
 						// using messages passed between the request and this script to resize the iframe
-						this.events.add(window,'message',function(e) {
+						cm.events.add(window,'message',function(e) {
 							// look for cashmusic_embed...if not then we don't care
 							if (e.data.substring(0,15) == 'cashmusic_embed') {
 								var a = e.data.split('_');
@@ -225,21 +194,13 @@
 								if (a[2] == elementId) {
 									if (embedURL.indexOf(e.origin) !== -1) {
 										// a[3] is the height
-										iframeEmbed.height = a[3] + 'px';
+										iframe.style.height = a[3] + 'px';
 									}
 								}
 							}
 						});
-					}
+					});
 				}
-			},
-
-			getPath: function() {
-				return this.path;
-			},
-
-			getScriptElement: function() {
-				return this.scriptElement;
 			},
 
 			getTemplate: function(templateName,successCallback) {
@@ -258,26 +219,31 @@
 			},
 
 			// stolen from jQuery
-			loadScript: function(url,success) {
-				var head = document.getElementsByTagName("head")[0] || document.documentElement;
-				var script = document.createElement("script");
-				script.src = url;
+			loadScript: function(url,callback) {
+				var test = document.querySelectorAll('a[src="' + url + '"]');
+				if (test.length > 0) {
+					callback();
+				} else {
+					var head = document.getElementsByTagName("head")[0] || document.documentElement;
+					var script = document.createElement("script");
+					script.src = url;
 
-				// Handle Script loading
-				var done = false;
+					// Handle Script loading
+					var done = false;
 
-				// Attach handlers for all browsers
-				script.onload = script.onreadystatechange = function() {
-					if ( !done && (!this.readyState || this.readyState === "loaded" || this.readyState === "complete") ) {
-						done = true;
-						success();
-						
-						// Handle memory leak in IE
-						script.onload = script.onreadystatechange = null;
-						if (head && script.parentNode) {head.removeChild(script);}
-					}
-				};
-				head.insertBefore( script, head.firstChild );
+					// Attach handlers for all browsers
+					script.onload = script.onreadystatechange = function() {
+						if ( !done && (!this.readyState || this.readyState === "loaded" || this.readyState === "complete") ) {
+							done = true;
+							callback();
+							
+							// Handle memory leak in IE
+							script.onload = script.onreadystatechange = null;
+							if (head && script.parentNode) {head.removeChild(script);}
+						}
+					};
+					head.insertBefore( script, head.firstChild );
+				}
 			},
 
 			
@@ -375,13 +341,20 @@
 				}
 			},
 
+			/***************************************************************************************
+			 *
+			 * window.cashmusic.embeds (object)
+			 * Parsing third-party embeds into lightbox ifrmaes
+			 *
+			 * PUBLIC-ISH FUNCTIONS
+			 * window.cashmusic.embeds.injectIframe(url url)
+			 *
+			 ***************************************************************************************/
 			embeds: {
 
 				injectIframe: function(url) {
 					var cm = window.cashmusic;
 					var self = cm.embeds;
-					var divs = cm.overlay.getElementsByTagName('div');
-					var overlaycontent = divs[0];
 					
 					var vp = cm.measure.viewport();
 					var parsedUrl = self.parseVideoURL(url);
@@ -394,10 +367,7 @@
 						var iframePadding = (vp.y / 2) - ((iFrameWidth * 0.5625) /2);
 					}
 
-					overlaycontent.style.top = iframePadding + 'px';
-					overlaycontent.style.width = iFrameWidth + 'px';
-					overlaycontent.style.marginLeft = (0 - (iFrameWidth) / 2) + 'px';
-					overlaycontent.style.left = '50%';
+					cm.overlay.resize(iframePadding + 'px','50%',iFrameWidth + 'px',(0 - (iFrameWidth) / 2) + 'px');
 
 					var wrapper = document.createElement('div');
 					wrapper.style.position = 'relative';
@@ -407,7 +377,7 @@
 
 					wrapper.innerHTML = '<iframe src="' + parsedUrl + '" style="position:absolute;top:0;left:0;width:100%;height:100%;" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>';
 
-					overlaycontent.appendChild(wrapper);
+					cm.overlay.content.appendChild(wrapper);
 				},
 
 				parseVideoURL: function(url) {
@@ -416,7 +386,7 @@
 					Accepts a URL, checks for validity youtube/vimeo, and returns a direct URL for 
 					the embeddable URL. Returns false if no known format is found.
 					*/
-					var parsed = 'what';
+					var parsed = false;
 					if (url.toLowerCase().indexOf('youtube.com/watch?v=') !== -1) {
 						parsed = url.replace('watch?v=','embed/');
 						parsed = parsed.replace('http:','https:');
@@ -553,6 +523,16 @@
 				}
 			},
 
+			/***************************************************************************************
+			 *
+			 * window.cashmusic.measure (object)
+			 * Basic window/element measurements
+			 *
+			 * PUBLIC-ISH FUNCTIONS
+			 * window.cashmusic.measure.viewport()
+			 * window.cashmusic.measure.getClickPosition(event e)
+			 *
+			 ***************************************************************************************/
 			measure: {
 				viewport: function() {
 					return {
@@ -582,6 +562,76 @@
 						element = element.offsetParent;
 					}
 					return { x: xPosition, y: yPosition };
+				}
+			},
+
+			/***************************************************************************************
+			 *
+			 * window.cashmusic.overlay (object)
+			 * Building the actual lightbox bits
+			 *
+			 * PUBLIC-ISH FUNCTIONS
+			 * window.cashmusic.overlay.create(function callback)
+			 * window.cashmusic.overlay.resize(string top,string left,string width,string marginleft)
+			 *
+			 ***************************************************************************************/
+			overlay: {
+				bg: false,
+				content: false,
+				total: 0,
+				callbacks: [],
+
+				create: function(callback) {
+					var cm = window.cashmusic;
+					var self = cm.overlay;
+					if (self.bg === false) {
+						self.total++;
+						if (typeof callback === 'function') {
+							self.callbacks.push(callback);
+						}
+						if (self.total == 1) {
+							cm.loadScript(cm.path+'/lib/hogan/hogan-2.0.0.min.js',function() {
+								cm.getTemplate('overlay',function(t) {
+									var tmpDiv = document.createElement('div');
+									tmpDiv.innerHTML = t;
+									self.bg = tmpDiv.firstChild;
+									self.bg.style.display = 'none';
+									document.body.appendChild(self.bg);
+									tmpDiv = null;
+									var divs = self.bg.getElementsByTagName('div');
+									self.content = divs[0];
+									cm.events.add(window,'keyup', function(e) { 
+										if (e.keyCode == 27) {
+											if (self.bg.style.display = 'block') {
+												// hide all the overlays if they're visible
+												cm.fader.hide(self.bg);
+												self.content.innerHTML = '';
+											}
+										} 
+									});
+									cm.events.add(self.bg,'click', function(e) { 
+										if(e.target === this) {
+											cm.fader.hide(self.bg);
+											self.content.innerHTML = '';
+										}
+									});
+									for (var i = 0; i < self.callbacks.length; i++) {
+										self.callbacks[i]();
+									};
+								});
+							});
+						}
+					} else {
+						callback();
+					}
+				},
+
+				resize: function(top,left,width,marginleft) {
+					var cs = window.cashmusic.overlay.content.style;
+					cs.top = top;
+					cs.left = left;
+					cs.width = width;
+					cs.marginLeft = marginleft;
 				}
 			}
 		};
