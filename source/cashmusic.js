@@ -56,7 +56,9 @@
 				// determine file location and path
 				this.scriptElement = document.querySelector('script[src$="cashmusic.js"]');
 				if (this.scriptElement) {
-					this.path = this.scriptElement.src.replace('cashmusic.js','');
+					// chop off last 12 characters for 'cashmusic.js' -- not just a replace in case
+					// a directory is actually named 'cashmusic.js'
+					this.path = this.scriptElement.src.substr(0,this.scriptElement.src.length-12); 
 				}
 				this.options = String(this.scriptElement.getAttribute('data-options'));
 
@@ -204,15 +206,16 @@
 			},
 
 			getTemplate: function(templateName,successCallback) {
-				if (window.cashmusic.templates[templateName] !== undefined) {
-					successCallback(window.cashmusic.templates[templateName]);
+				var templates = window.cashmusic.templates;
+				if (templates[templateName] !== undefined) {
+					successCallback(templates[templateName]);
 				} else {
 					this.ajax.send(
-						this.path + 'templates/' + templateName + '.mustache',
+						window.cashmusic.path + 'templates/' + templateName + '.mustache',
 						false,
 						function(msg) {
-							window.cashmusic.templates[templateName] = msg;
-							successCallback(window.cashmusic.templates[templateName]);
+							templates[templateName] = msg;
+							successCallback(msg);
 						}
 					);
 				}
