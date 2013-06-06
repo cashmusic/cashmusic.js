@@ -63,14 +63,15 @@
 				self.options = String(self.scriptElement.getAttribute('data-options'));
 
 				if (typeof JSON.parse !== 'function') {
-					self.loadScript(self.path+'/lib/json_parse.js');
+					self.loadScript(self.path+'lib/json_parse.js');
 				}
 
 				if (this.options.indexOf('lightboxvideo') !== -1) {
 					// load lightbox.js
-					self.loadScript(self.path+'/lightbox/lightbox.js');
+					self.loadScript(self.path+'lightbox/lightbox.js');
 				}
-				//*/
+				
+				//self.loadScript(self.path+'soundplayer/soundplayer.js');
 
 				// look for .cashmusic.soundplayer divs
 

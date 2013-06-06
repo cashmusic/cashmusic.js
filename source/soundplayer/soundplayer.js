@@ -64,5 +64,30 @@
 		return { x: xPosition, y: yPosition };
 	};
 
-	cm.soundplayer = {};
+	window.SM2_DEFER = true;
+	cm.loadScript(cm.path+'lib/soundmanager/soundmanager2.js', function() {
+		window.soundManager = new SoundManager();
+		soundManager.setup({
+			url: cm.path+'lib/soundmanager/swf/',
+			flashVersion: 9,
+			onready: function() {
+				// soundManager.createSound() etc. here
+				soundManager.createSound({
+					url: 'http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3',
+					autoPlay: true
+				});
+			},
+			ontimeout: function(status) {
+				console.log('SM2 failed to start. Flash missing, blocked or security error?');
+				console.log('Trying: ' + soundManager.url);
+			},
+			defaultOptions: {
+				// set global default volume for all sound objects
+				
+			}
+		});
+		soundManager.beginDelayedInit();
+
+		cm.soundplayer = {};
+	});
 }());
