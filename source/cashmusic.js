@@ -2,7 +2,8 @@
  * The core cashmusic.js file
  *
  * COMPRESSION SETTINGS
- * YUI compressor with "preserve unnecessary semi-colons" then append a semi-colon to the front to be careful
+ * http://closure-compiler.appspot.com/
+ * Closure compiler, SIMPLE MODE, then append a semi-colon to the front to be careful
  *
  * @package cashmusic.org.cashmusic
  * @author CASH Music
@@ -43,44 +44,31 @@
 		// no window.cashmusic, so we build and return an object
 		cashmusic = {
 			loaded: false,
-			soundmanager: false,
 			soundplayer: false,
+			lightbox: false,
 			options:'',
 			path:'',
 			templates: {},
-			storage: {}, // basically just a namespace to use as a clipboard between scripts
 
 			_init: function() {
 				var self = window.cashmusic;
 
 				// determine file location and path
-				this.scriptElement = document.querySelector('script[src$="cashmusic.js"]');
-				if (this.scriptElement) {
+				self.scriptElement = document.querySelector('script[src$="cashmusic.js"]');
+				if (self.scriptElement) {
 					// chop off last 12 characters for 'cashmusic.js' -- not just a replace in case
 					// a directory is actually named 'cashmusic.js'
-					this.path = this.scriptElement.src.substr(0,this.scriptElement.src.length-12); 
+					self.path = self.scriptElement.src.substr(0,self.scriptElement.src.length-12); 
 				}
-				this.options = String(this.scriptElement.getAttribute('data-options'));
+				self.options = String(self.scriptElement.getAttribute('data-options'));
+
+				if (typeof JSON.parse !== 'function') {
+					self.loadScript(self.path+'/lib/json_parse.js');
+				}
 
 				if (this.options.indexOf('lightboxvideo') !== -1) {
-					// look for links to video sites
-					this.storage.embeddableLinks = document.querySelectorAll('a[href*="youtube.com"],a[href*="vimeo.com"]');
-					if (this.storage.embeddableLinks.length > 0) {
-						self.overlay.create(function() {
-							for (var i = 0; i < self.storage.embeddableLinks.length; ++i) {
-								self.events.add(self.storage.embeddableLinks[i],'click', function(e) {
-									if (self.measure.viewport().x > 400 && !e.metaKey) {
-										// do the overlay thing
-										var url = e.currentTarget.href;
-										self.fader.init(self.overlay.bg, 100, function() {self.embeds.injectIframe(url)});
-
-										e.preventDefault();
-										return false;
-									}
-								});
-							}
-						});
-					}
+					// load lightbox.js
+					self.loadScript(self.path+'/lightbox/lightbox.js');
 				}
 				//*/
 
@@ -205,19 +193,48 @@
 				}
 			},
 
+			getJSON: function(txt) {
+				var obj;
+				if (typeof JSON.parse === 'function') {
+					obj = JSON.parse(txt);
+				} else {
+					obj = json_parse(txt);
+				}
+				return obj;
+			},
+
 			getTemplate: function(templateName,successCallback) {
-				var templates = window.cashmusic.templates;
+				var cm = window.cashmusic;
+				var templates = cm.templates;
 				if (templates[templateName] !== undefined) {
 					successCallback(templates[templateName]);
 				} else {
 					this.ajax.send(
-						window.cashmusic.path + 'templates/' + templateName + '.mustache',
+						cm.path + 'templates/' + templateName + '.html',
 						false,
 						function(msg) {
 							templates[templateName] = msg;
 							successCallback(msg);
 						}
 					);
+					this.ajax.send(
+						// look for matching CSS file and add that to the head if found
+						// this *only happens once* on purpose — callback won't happen if
+						// we get a 404, so this is an easy test for file existence
+						cm.path + 'templates/' + templateName + '.css',
+						false,
+						function(msg) {
+							var head = document.getElementsByTagName('head')[0] || document.documentElement;
+							var css = document.createElement('style');
+							css.type = 'text/css';
+							css.innerHTML = msg;
+
+							// by injecting the css BEFORE any other style elements it means all
+							// styles can be manually overridden with ease — no !important or similar,
+							// no external files, etc...
+							head.insertBefore(css, head.firstChild);
+						}
+					)
 				}
 			},
 
@@ -225,10 +242,12 @@
 			loadScript: function(url,callback) {
 				var test = document.querySelectorAll('a[src="' + url + '"]');
 				if (test.length > 0) {
-					callback();
+					if (typeof callback === 'function') {
+						callback();
+					}
 				} else {
-					var head = document.getElementsByTagName("head")[0] || document.documentElement;
-					var script = document.createElement("script");
+					var head = document.getElementsByTagName('head')[0] || document.documentElement;
+					var script = document.createElement('script');
 					script.src = url;
 
 					// Handle Script loading
@@ -238,7 +257,9 @@
 					script.onload = script.onreadystatechange = function() {
 						if ( !done && (!this.readyState || this.readyState === "loaded" || this.readyState === "complete") ) {
 							done = true;
-							callback();
+							if (typeof callback === 'function') {
+								callback();
+							}
 							
 							// Handle memory leak in IE
 							script.onload = script.onreadystatechange = null;
@@ -341,66 +362,6 @@
 						querystring += (querystring.length ? '&' : '') + form[i].name +'='+ form[i].value; 
 					}
 					return encodeURI(querystring);
-				}
-			},
-
-			/***************************************************************************************
-			 *
-			 * window.cashmusic.embeds (object)
-			 * Parsing third-party embeds into lightbox ifrmaes
-			 *
-			 * PUBLIC-ISH FUNCTIONS
-			 * window.cashmusic.embeds.injectIframe(url url)
-			 *
-			 ***************************************************************************************/
-			embeds: {
-
-				injectIframe: function(url) {
-					var cm = window.cashmusic;
-					var self = cm.embeds;
-					
-					var vp = cm.measure.viewport();
-					var parsedUrl = self.parseVideoURL(url);
-
-					if (vp.x > vp.y && (vp.y * (16/9)) < vp.x) {
-						var iframePadding = vp.y / 10;
-						var iFrameWidth = Math.ceil((vp.y - (iframePadding * 2)) * (16/9));
-					} else {
-						var iFrameWidth = Math.ceil((vp.x / 12) * 10);
-						var iframePadding = (vp.y / 2) - ((iFrameWidth * 0.5625) /2);
-					}
-
-					cm.overlay.resize(iframePadding + 'px','50%',iFrameWidth + 'px',(0 - (iFrameWidth) / 2) + 'px');
-
-					var wrapper = document.createElement('div');
-					wrapper.style.position = 'relative';
-					wrapper.style.paddingBottom = '56.25%';
-					wrapper.style.height = 0;
-					wrapper.style.backgroundColor = '#000';
-
-					wrapper.innerHTML = '<iframe src="' + parsedUrl + '" style="position:absolute;top:0;left:0;width:100%;height:100%;" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>';
-
-					cm.overlay.content.appendChild(wrapper);
-				},
-
-				parseVideoURL: function(url) {
-					/*
-					Function parseVideoURL(string url)
-					Accepts a URL, checks for validity youtube/vimeo, and returns a direct URL for 
-					the embeddable URL. Returns false if no known format is found.
-					*/
-					var parsed = false;
-					if (url.toLowerCase().indexOf('youtube.com/watch?v=') !== -1) {
-						parsed = url.replace('watch?v=','embed/');
-						parsed = parsed.replace('http:','https:');
-						if (parsed.indexOf('&') > -1) {parsed = parsed.substr(0,parsed.indexOf('&'));}
-						parsed += '?autoplay=1&autohide=1&rel=0';
-					} else if (url.toLowerCase().indexOf('vimeo.com/') !== -1) {
-						parsed = url.replace('www.','');
-						parsed = parsed.replace('vimeo.com/','player.vimeo.com/video/');
-						parsed += '?title=1&byline=1&portrait=1&autoplay=1';
-					} 
-					return parsed;
 				}
 			},
 
@@ -542,29 +503,6 @@
 						x: document.body.offsetWidth || window.innerWidth || 0,
 						y: document.body.offsetHeight || window.innerHeight || 0
 					};
-				},
-
-				// Thanks Kirupa Chinnathambi!
-				// http://www.kirupa.com/html5/getting_mouse_click_position.htm
-				getClickPosition: function(e) {
-					var parentPosition = window.cashmusic.measure.getPosition(e.currentTarget);
-					var xPosition = e.clientX - parentPosition.x;
-					var yPosition = e.clientY - parentPosition.y;
-					return { x: xPosition, y: yPosition };
-				},
-				 
-				 // Thanks Kirupa Chinnathambi!
-				// http://www.kirupa.com/html5/getting_mouse_click_position.htm
-				getPosition: function(element) {
-					var xPosition = 0;
-					var yPosition = 0;
-					  
-					while (element) {
-						xPosition += (element.offsetLeft - element.scrollLeft + element.clientLeft);
-						yPosition += (element.offsetTop - element.scrollTop + element.clientTop);
-						element = element.offsetParent;
-					}
-					return { x: xPosition, y: yPosition };
 				}
 			},
 
@@ -593,35 +531,33 @@
 							self.callbacks.push(callback);
 						}
 						if (self.total == 1) {
-							cm.loadScript(cm.path+'/lib/hogan/hogan-2.0.0.min.js',function() {
-								cm.getTemplate('overlay',function(t) {
-									var tmpDiv = document.createElement('div');
-									tmpDiv.innerHTML = t;
-									self.bg = tmpDiv.firstChild;
-									self.bg.style.display = 'none';
-									document.body.appendChild(self.bg);
-									tmpDiv = null;
-									var divs = self.bg.getElementsByTagName('div');
-									self.content = divs[0];
-									cm.events.add(window,'keyup', function(e) { 
-										if (e.keyCode == 27) {
-											if (self.bg.style.display = 'block') {
-												// hide all the overlays if they're visible
-												cm.fader.hide(self.bg);
-												self.content.innerHTML = '';
-											}
-										} 
-									});
-									cm.events.add(self.bg,'click', function(e) { 
-										if(e.target === this) {
+							cm.getTemplate('overlay',function(t) {
+								var tmpDiv = document.createElement('div');
+								tmpDiv.innerHTML = t;
+								self.bg = tmpDiv.firstChild;
+								self.bg.style.display = 'none';
+								document.body.appendChild(self.bg);
+								tmpDiv = null;
+								var divs = self.bg.getElementsByTagName('div');
+								self.content = divs[0];
+								cm.events.add(window,'keyup', function(e) { 
+									if (e.keyCode == 27) {
+										if (self.bg.style.display = 'block') {
+											// hide all the overlays if they're visible
 											cm.fader.hide(self.bg);
 											self.content.innerHTML = '';
 										}
-									});
-									for (var i = 0; i < self.callbacks.length; i++) {
-										self.callbacks[i]();
-									};
+									} 
 								});
+								cm.events.add(self.bg,'click', function(e) { 
+									if(e.target === this) {
+										cm.fader.hide(self.bg);
+										self.content.innerHTML = '';
+									}
+								});
+								for (var i = 0; i < self.callbacks.length; i++) {
+									self.callbacks[i]();
+								};
 							});
 						}
 					} else {
