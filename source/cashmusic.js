@@ -72,7 +72,7 @@
 					self.loadScript(self.path+'lightbox/lightbox.js');
 				}
 				
-				//self.loadScript(self.path+'soundplayer/soundplayer.js');
+				self.loadScript(self.path+'soundplayer/soundplayer.js');
 
 				// look for .cashmusic.soundplayer divs
 

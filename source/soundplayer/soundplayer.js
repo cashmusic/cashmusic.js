@@ -119,10 +119,10 @@
 					});
 				},
 				whileplaying: function() {
-					var p = Math.round((this.position / this.duration) * 1000) / 10;
-					if (this.readyState = 1) {
-						p = Math.round(p * (this.bytesLoaded / this.bytesTotal));
-					}
+					var p = Math.round((this.position / this.duration) * 10000) / 100;
+					//if (this.readyState = 1) {
+						//p = Math.round(p * (this.bytesLoaded / this.bytesTotal));
+					//}
 					self._doPlaying({
 						id: this.id,
 						position: this.position,
@@ -163,7 +163,7 @@
 		};
 
 		self._doLoading = function(detail) {
-			console.log('loading: ' + detail.percentage + '%');
+			//console.log('loading: ' + detail.percentage + '%');
 		};
 
 		self._doPause = function(detail) {
@@ -175,7 +175,9 @@
 		};
 
 		self._doPlaying = function(detail) {
-			console.log('playing: ' + detail.percentage + '% / (' + detail.position + '/' + detail.duration + ')');
+			//console.log('playing: ' + detail.percentage + '% / (' + detail.position + '/' + detail.duration + ')');
+			var tweens = document.querySelectorAll('*.cashmusic.tween');;
+			self._updateTweens(tweens,'progress',detail.percentage);
 		};
 
 		self._doResume = function(detail) {
@@ -185,9 +187,54 @@
 
 
 
-
-		self._updateTweens = function() {
-
+		/*
+		{
+			"respondToId":"",
+			"respondToPlayer":"",
+			"progress":[
+				{
+					"name":"left",
+					"startAt":0
+					"endAt":50,
+					"startVal":0,
+					"endVal":250,
+					"units":"px"
+				}
+			],
+			"load":[
+				{
+					"name":"left",
+					"startAt":0
+					"endAt":50,
+					"startVal":0,
+					"endVal":250,
+					"units":"px"
+				}
+			]
+		}
+		*/
+		self._updateTweens = function(elements,type,percentage) {
+			var eLen = elements.length;
+			for (var i=0;i<eLen;i++) {
+				var el = elements[i];
+				var data = el.getAttribute('data-tween');
+				data = JSON.parse(data);
+				if (data) {
+					if (typeof data[type] !== 'undefined') {
+						var dLen = data[type].length;
+						var val = false;
+						var step = false
+						for (var n=0;n<dLen;n++) {
+							step = data[type][n];
+							if (percentage >= step.startAt && percentage <= step.endAt) {
+								// starting value + ((total value range / total percentage span) * true percentage - startAt percentage)
+								val = step.startVal + (((step.endVal - step.startVal) / (step.endAt - step.startAt)) * (percentage - step.startAt));
+								el.style[step.name] = val.toFixed(2) + step.units;
+							}
+						}
+					}
+				}
+			}
 		};
 	});
 }());
