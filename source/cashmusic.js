@@ -185,6 +185,7 @@
 								if (a[2] == elementId) {
 									if (embedURL.indexOf(e.origin) !== -1) {
 										// a[3] is the height
+										iframe.height = a[3];
 										iframe.style.height = a[3] + 'px';
 									}
 								}

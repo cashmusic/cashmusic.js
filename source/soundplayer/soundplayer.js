@@ -40,6 +40,7 @@
 (function() {
 	'use strict';
 	var cm = window.cashmusic;
+	cm.soundplayer = false;
 
 	// Thanks Kirupa Chinnathambi!
 	// http://www.kirupa.com/html5/getting_mouse_click_position.htm
@@ -66,6 +67,11 @@
 
 	window.SM2_DEFER = true;
 	cm.loadScript(cm.path+'lib/soundmanager/soundmanager2.js', function() {
+		cm.soundplayer = {
+			sound: false,
+			player: soundManager
+		};
+		var self = cm.soundplayer;
 		window.soundManager = new SoundManager();
 		soundManager.setup({
 			url: cm.path+'lib/soundmanager/swf/',
@@ -83,11 +89,105 @@
 			},
 			defaultOptions: {
 				// set global default volume for all sound objects
-				
+				// onload: function() {
+				//	self._doResume({id: this.id});
+				// },
+				// onstop: function() {
+				//	self._doStop({id: this.id});
+				// },
+				onfinish: function() {
+					self._doFinish({id: this.id});
+				},
+				onpause: function() {
+					self._doPause({id: this.id});
+				},
+				onplay: function() {
+					self._doPlay({id: this.id});
+				},
+				onresume: function() {
+					self._doResume({id: this.id});
+				},
+				stream: true,
+				usePolicyFile: true,
+				volume: 100,
+				whileloading: function() {
+					self._doLoading({
+						id: this.id,
+						loaded: this.bytesLoaded,
+						total: this.bytesTotal,
+						percentage: Math.round((this.bytesLoaded / this.bytesTotal) * 1000) / 10
+					});
+				},
+				whileplaying: function() {
+					var p = Math.round((this.position / this.duration) * 1000) / 10;
+					if (this.readyState = 1) {
+						p = Math.round(p * (this.bytesLoaded / this.bytesTotal));
+					}
+					self._doPlaying({
+						id: this.id,
+						position: this.position,
+						duration: this.duration,
+						percentage: p
+					});
+				}
 			}
 		});
 		soundManager.beginDelayedInit();
 
-		cm.soundplayer = {};
+
+
+
+
+		self.nextSound = function() {
+
+		};
+
+		self.pauseSound = function() {
+
+		};
+
+		self.playSound = function() {
+
+		};
+
+		self.previousSound = function() {
+
+		};
+
+
+
+
+
+		self._doFinish = function(detail) {
+
+		};
+
+		self._doLoading = function(detail) {
+			console.log('loading: ' + detail.percentage + '%');
+		};
+
+		self._doPause = function(detail) {
+
+		};
+
+		self._doPlay = function(detail) {
+
+		};
+
+		self._doPlaying = function(detail) {
+			console.log('playing: ' + detail.percentage + '% / (' + detail.position + '/' + detail.duration + ')');
+		};
+
+		self._doResume = function(detail) {
+
+		};
+
+
+
+
+
+		self._updateTweens = function() {
+
+		};
 	});
 }());
