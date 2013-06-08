@@ -68,8 +68,9 @@
 	window.SM2_DEFER = true;
 	cm.loadScript(cm.path+'lib/soundmanager/soundmanager2.js', function() {
 		cm.soundplayer = {
+			player: false,
 			sound: false,
-			player: soundManager
+			obj: soundManager
 		};
 		var self = cm.soundplayer;
 		window.soundManager = new SoundManager();
@@ -78,7 +79,8 @@
 			flashVersion: 9,
 			onready: function() {
 				// soundManager.createSound() etc. here
-				soundManager.createSound({
+				self.sound = soundManager.createSound({
+					id: 'http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3',
 					url: 'http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3',
 					autoPlay: true
 				});
@@ -198,7 +200,9 @@
 					"endAt":50,
 					"startVal":0,
 					"endVal":250,
-					"units":"px"
+					"units":"px",
+					"onSound":"url",
+					"onPlayer":"playerId"
 				}
 			],
 			"load":[
@@ -225,11 +229,35 @@
 						var val = false;
 						var step = false
 						for (var n=0;n<dLen;n++) {
+							var soundId = '';
+							var playerId = '';
+							var checkId = false;
+							var go = true;
 							step = data[type][n];
-							if (percentage >= step.startAt && percentage <= step.endAt) {
-								// starting value + ((total value range / total percentage span) * true percentage - startAt percentage)
-								val = step.startVal + (((step.endVal - step.startVal) / (step.endAt - step.startAt)) * (percentage - step.startAt));
-								el.style[step.name] = val.toFixed(2) + step.units;
+							// get any required sound/player ids
+							if (typeof step.onSound !== 'undefined') {soundId = step.onSound}
+							if (typeof step.onPlayer !== 'undefined') {playerId = step.onPlayer}
+							if (soundId !== '' && playerId !== '') {
+								// check player and id
+								if (self.sound.id != playerId + soundId) {go = false}
+							} else if (soundId !== '' && playerId === '') {
+								// check id
+								if (self.sound.id.substring((playerId.length + soundId.length) - soundId.length) != soundId) {go = false}
+							} else if (soundId === '' && playerId !== '') {
+								// check player
+								if (self.sound.id.substring(0, playerId.length) != playerId) {go = false}
+							}
+							if (go) {
+								if (percentage >= step.startAt && percentage <= step.endAt) {
+									// starting value + ((total value range / total percentage span) * true percentage - startAt percentage)
+									val = step.startVal + (((step.endVal - step.startVal) / (step.endAt - step.startAt)) * (percentage - step.startAt));
+									if (step.units == 'px') {
+										val = Math.floor(val); // round pixels to save CPU
+									} else {
+										val = val.toFixed(2); // percentage, etc need 2 points for better positioning
+									}
+									el.style[step.name] = val + step.units;
+								}
 							}
 						}
 					}
