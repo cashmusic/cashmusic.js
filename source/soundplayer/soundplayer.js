@@ -49,25 +49,37 @@
 
 			// look for .cashmusic.soundplayer divs/links
 			var inlineLinks = document.querySelectorAll('a.cashmusic.soundplayer');
-			if (inlineLinks.length > 0) {
-				var iLen = inlineLinks.length;
+			var iLen = inlineLinks.length;
+			if (iLen > 0) {
+				cm.styles.injectCSS(
+					'a.cashmusic.soundplayer.inline.stopped:after{content: " [▸]";}' +
+					'a.cashmusic.soundplayer.inline.playing:after{content: " [■]";}'
+				);
+
 				for (var i=0;i<iLen;i++) {
 					var a = inlineLinks[i];
 					soundManager.createSound({
 						id: a.href,
 						url: a.href
 					});
-					a.innerHTML = a.innerHTML + ' <span class="cashmusic textplaypause"> [▸]</span>';
+
+					cm.styles.addClass(a,'stopped');
 					cm.events.add(a,'click',function(e) {
-						var s = soundManager.getSoundById(a.href);
-						if (s.playState == 0) {
-							self.play(a.href);
+						if (cm.styles.hasClass(a,'toggle')) {
+							var s = soundManager.getSoundById(a.getAttribute('data-soundid'));
 						} else {
-							self.stop();
+							var s = soundManager.getSoundById(a.href);
 						}
-						
-						e.preventDefault();
-						return false;
+						if (s) {
+							if (s.playState == 0) {
+								self.play(s.id);
+							} else {
+								self.stop();
+							}
+							
+							e.preventDefault();
+							return false;
+						}
 					});
 				}
 			}
@@ -106,25 +118,20 @@
 		soundManager.setup({
 			url: cm.path+'lib/soundmanager/swf/',
 			flashVersion: 9,
-			flashLoadTimeout: 5000,
+			flashLoadTimeout: 7500,
+			flashPollingInterval:30,
+			html5PollingInterval:30,
+			useHighPerformance:true,
 			onready: function() {
-				/*
-				self.sound = soundManager.createSound({
-					id: 'http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3',
-					url: 'http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3',
-					autoPlay: true
-				});
-				*/
 				self._init();
 			},
-			ontimeout: function(status) {
-				console.log('SM2 failed to start. Flash missing, blocked or security error?');
-				console.log('Trying: ' + soundManager.url);
-			},
+			// ontimeout: function(status) {
+			// 	console.log('SM2 failed to start. Flash missing, blocked or security error?');
+			// 	console.log('Trying: ' + soundManager.url);
+			// },
 			defaultOptions: {
-				// set global default volume for all sound objects
 				// onload: function() {
-				//	self._doResume({id: this.id});
+				// 	self._doResume({id: this.id});
 				// },
 				onstop: function() {
 					self._doStop({id: this.id});
@@ -190,7 +197,7 @@
 			if (inlineLinks.length > 0) {
 				var iLen = inlineLinks.length;
 				for (var i=0;i<iLen;i++) {
-					inlineLinks[i].innerHTML = inlineLinks[i].innerHTML.replace('[▸]','[■]');
+					cm.styles.swapClasses(inlineLinks[i],'stopped','playing');
 				}
 			}
 		};
@@ -212,7 +219,7 @@
 				if (inlineLinks.length > 0) {
 					var iLen = inlineLinks.length;
 					for (var i=0;i<iLen;i++) {
-						inlineLinks[i].innerHTML = inlineLinks[i].innerHTML.replace('[■]','[▸]');
+						cm.styles.swapClasses(inlineLinks[i],'playing','stopped');
 					}
 				}
 			}
@@ -252,7 +259,7 @@
 
 		self._doStop = function(detail) {
 			var tweens = document.querySelectorAll('*.cashmusic.tween');
-			self._updateTweens(tweens,'play',0);
+			self._updateTweens(tweens,'stop',0);
 		};
 
 
