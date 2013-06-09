@@ -40,7 +40,41 @@
 (function() {
 	'use strict';
 	var cm = window.cashmusic;
-	cm.soundplayer = false;
+	cm.soundplayer = {
+		player: false,
+		sound: false,
+
+		_init: function() {
+			var self = cm.soundplayer;
+
+			// look for .cashmusic.soundplayer divs/links
+			var inlineLinks = document.querySelectorAll('a.cashmusic.soundplayer');
+			if (inlineLinks.length > 0) {
+				var iLen = inlineLinks.length;
+				for (var i=0;i<iLen;i++) {
+					var a = inlineLinks[i];
+					soundManager.createSound({
+						id: a.href,
+						url: a.href
+					});
+					a.innerHTML = a.innerHTML + ' <span class="cashmusic textplaypause"> [▸]</span>';
+					cm.events.add(a,'click',function(e) {
+						var s = soundManager.getSoundById(a.href);
+						if (s.playState == 0) {
+							self.play(a.href);
+						} else {
+							self.stop(a.href);
+						}
+						
+						e.preventDefault();
+						return false;
+					});
+				}
+			}
+		}
+	};
+
+
 
 	// Thanks Kirupa Chinnathambi!
 	// http://www.kirupa.com/html5/getting_mouse_click_position.htm
@@ -67,23 +101,20 @@
 
 	window.SM2_DEFER = true;
 	cm.loadScript(cm.path+'lib/soundmanager/soundmanager2.js', function() {
-		cm.soundplayer = {
-			player: false,
-			sound: false,
-			obj: soundManager
-		};
 		var self = cm.soundplayer;
 		window.soundManager = new SoundManager();
 		soundManager.setup({
 			url: cm.path+'lib/soundmanager/swf/',
 			flashVersion: 9,
 			onready: function() {
-				// soundManager.createSound() etc. here
+				/*
 				self.sound = soundManager.createSound({
 					id: 'http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3',
 					url: 'http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3',
 					autoPlay: true
 				});
+				*/
+				self._init();
 			},
 			ontimeout: function(status) {
 				console.log('SM2 failed to start. Flash missing, blocked or security error?');
@@ -94,9 +125,9 @@
 				// onload: function() {
 				//	self._doResume({id: this.id});
 				// },
-				// onstop: function() {
-				//	self._doStop({id: this.id});
-				// },
+				onstop: function() {
+					self._doStop({id: this.id});
+				},
 				onfinish: function() {
 					self._doFinish({id: this.id});
 				},
@@ -140,20 +171,47 @@
 
 
 
-		self.nextSound = function() {
+		self.next = function() {
 
 		};
 
-		self.pauseSound = function() {
+		self.pause = function() {
 
 		};
 
-		self.playSound = function() {
+		self.play = function(id) {
+			var s = soundManager.getSoundById(id);
+			self.sound = s;
+			s.play();
+
+			// deal with inline buttons
+			var inlineLinks = document.querySelectorAll('a.cashmusic.soundplayer[href="' + id + '"]');
+			if (inlineLinks.length > 0) {
+				var iLen = inlineLinks.length;
+				for (var i=0;i<iLen;i++) {
+					inlineLinks[i].innerHTML = inlineLinks[i].innerHTML.replace('[▸]','[◾]');
+				}
+			}
+		};
+
+		self.previous = function() {
 
 		};
 
-		self.previousSound = function() {
+		self.stop = function(id) {
+			var s = soundManager.getSoundById(id);
+			s.setPosition(0);
+			s.stop();
+			self.sound = false;
 
+			// deal with inline buttons
+			var inlineLinks = document.querySelectorAll('a.cashmusic.soundplayer[href="' + id + '"]');
+			if (inlineLinks.length > 0) {
+				var iLen = inlineLinks.length;
+				for (var i=0;i<iLen;i++) {
+					inlineLinks[i].innerHTML = inlineLinks[i].innerHTML.replace('[◾]','[▸]');
+				}
+			}
 		};
 
 
@@ -166,6 +224,8 @@
 
 		self._doLoading = function(detail) {
 			//console.log('loading: ' + detail.percentage + '%');
+			var tweens = document.querySelectorAll('*.cashmusic.tween');;
+			self._updateTweens(tweens,'load',detail.percentage);
 		};
 
 		self._doPause = function(detail) {
@@ -178,12 +238,17 @@
 
 		self._doPlaying = function(detail) {
 			//console.log('playing: ' + detail.percentage + '% / (' + detail.position + '/' + detail.duration + ')');
-			var tweens = document.querySelectorAll('*.cashmusic.tween');;
-			self._updateTweens(tweens,'progress',detail.percentage);
+			var tweens = document.querySelectorAll('*.cashmusic.tween');
+			self._updateTweens(tweens,'play',detail.percentage);
 		};
 
 		self._doResume = function(detail) {
 
+		};
+
+		self._doStop = function(detail) {
+			var tweens = document.querySelectorAll('*.cashmusic.tween');
+			self._updateTweens(tweens,'play',0);
 		};
 
 
@@ -193,7 +258,7 @@
 		{
 			"respondToId":"",
 			"respondToPlayer":"",
-			"progress":[
+			"play":[
 				{
 					"name":"left",
 					"startAt":0

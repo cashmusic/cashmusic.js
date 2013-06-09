@@ -67,14 +67,17 @@
 					self.loadScript(self.path+'lib/json_parse.js');
 				}
 
+				// check lightbox options
 				if (this.options.indexOf('lightboxvideo') !== -1) {
 					// load lightbox.js
 					self.loadScript(self.path+'lightbox/lightbox.js');
 				}
 				
-				self.loadScript(self.path+'soundplayer/soundplayer.js');
-
-				// look for .cashmusic.soundplayer divs
+				// look for .cashmusic.soundplayer divs/links
+				var soundTest = document.querySelectorAll('a.cashmusic.soundplayer,div.cashmusic.soundplayer');
+				if (soundTest.length > 0) {
+					self.loadScript(self.path+'soundplayer/soundplayer.js');
+				}
 
 				// we're loaded
 				this.loaded = true;
