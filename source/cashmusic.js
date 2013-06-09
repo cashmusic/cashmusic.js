@@ -43,6 +43,7 @@
 	} else {
 		// no window.cashmusic, so we build and return an object
 		cashmusic = {
+			embeds: [],
 			loaded: false,
 			soundplayer: false,
 			lightbox: false,
@@ -63,16 +64,20 @@
 				self.options = String(self.scriptElement.getAttribute('data-options'));
 
 				if (typeof JSON.parse !== 'function') {
-					self.loadScript(self.path+'/lib/json_parse.js');
+					self.loadScript(self.path+'lib/json_parse.js');
 				}
 
+				// check lightbox options
 				if (this.options.indexOf('lightboxvideo') !== -1) {
 					// load lightbox.js
-					self.loadScript(self.path+'/lightbox/lightbox.js');
+					self.loadScript(self.path+'lightbox/lightbox.js');
 				}
-				//*/
-
-				// look for .cashmusic.soundplayer divs
+				
+				// look for .cashmusic.soundplayer divs/links
+				var soundTest = document.querySelectorAll('a.cashmusic.soundplayer,div.cashmusic.soundplayer');
+				if (soundTest.length > 0) {
+					self.loadScript(self.path+'soundplayer/soundplayer.js');
+				}
 
 				// we're loaded
 				this.loaded = true;
@@ -113,7 +118,7 @@
 			},
 
 			/*
-			 * window.cashmusic.embed(string publicURL, string elementId, bool lightboxed, bool lightboxTxt)
+			 * window.cashmusic.embed(string publicURL, string/int elementId, bool lightboxed, bool lightboxTxt)
 			 * Generates the embed iFrame code for embedding a given element.
 			 * Optional third and fourth parameters allow the element to be 
 			 * embedded with a lightbox and to customize the text of lightbox
@@ -134,7 +139,7 @@
 				var iframe = document.createElement('iframe');
 					iframe.src = embedURL;
 					iframe.style.width = '100%';
-					iframe.style.height = '1px';
+					//iframe.style.height = '1px';
 					iframe.style.border = '0';
 				if (targetNode) {
 					// for AJAX, specify target node: '#id', '#id .class', etc. NEEDS to be specific
@@ -161,7 +166,7 @@
 								embedNode.appendChild(a);
 								currentNode.parentNode.insertBefore(embedNode,currentNode);
 								cm.events.add(a,'click',function(e) {
-									cm.overlay.resize('80px','30%','40%','0');
+									cm.overlay.resize('40px','30%','40%','0');
 									cm.overlay.content.appendChild(iframe);
 									window.cashmusic.fader.init(cm.overlay.bg, 100);
 									e.preventDefault();
@@ -174,22 +179,26 @@
 						currentNode.parentNode.insertBefore(embedNode,currentNode);
 					}
 
-					cm.contentLoaded(function() {
+					cm.embeds.push({el:iframe,id:elementId});
+
+					if (cm.embeds.length === 1) {
+					//cm.contentLoaded(function() {
 						// using messages passed between the request and this script to resize the iframe
 						cm.events.add(window,'message',function(e) {
 							// look for cashmusic_embed...if not then we don't care
 							if (e.data.substring(0,15) == 'cashmusic_embed') {
 								var a = e.data.split('_');
-								// double-check that we're going with the correct element embed a[2] is the id
-								if (a[2] == elementId) {
-									if (embedURL.indexOf(e.origin) !== -1) {
-										// a[3] is the height
-										iframe.style.height = a[3] + 'px';
+								// run through embeds and match the id
+								for (var i=0;i<cm.embeds.length;i++) {
+									if (cm.embeds[i].id == a[2]) {
+										cm.embeds[i].el.height = a[3];
+										cm.embeds[i].el.style.height = a[3] + 'px';
 									}
 								}
 							}
 						});
-					});
+					//});
+					}
 				}
 			},
 
