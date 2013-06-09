@@ -56,14 +56,30 @@
 		<p>
 			<script type="text/javascript" src="source/cashmusic.js" data-options="lightboxvideo"></script><script type="text/javascript">window.cashmusic.embed('http://x.cashmusic.org/public/','2');</script>
 			<br /><br />
-			<script type="text/javascript">window.cashmusic.embed('http://x.cashmusic.org/public/','2',true);</script>
+			<script type="text/javascript">window.cashmusic.embed('http://x.cashmusic.org/public/','577',true,'lightboxed @cashmusic twitter element');</script>
 
 			<!--script type="text/javascript" src="source/cashmusic.js"></script><script type="text/javascript">window.cashmusic.embed('http://x.cashmusic.org/public/','1');</script-->
 		</p>
+		<h2>Video lightboxes</h2>
 		<p>
-			YouTube link: <a href="https://www.youtube.com/watch?v=WQPfQvLIseA">RED FANG - "Wires"</a><br />
-			Vimeo link: <a href="https://vimeo.com/15744536">XIU XIU - "Boy Soprano"</a>
+			YouTube link: <a href="https://www.youtube.com/watch?v=WQPfQvLIseA">RED FANG - "Wires" (Lightboxed YouTube)</a><br />
+			Vimeo link: <a href="https://vimeo.com/15744536">XIU XIU - "Boy Soprano" (Lightboxed Vimeo)</a>
 		</p>
+		<h2>Tween</h2>
+		<div style="position:relative;top:0;left:20px;"</div>
+			<div 
+				class="cashmusic tween"
+				style="position:absolute;left:-20px;top:4px;border-radius:50%;width:12px;height:12px;background-color:#ff0;"
+				data-tween='{"play":[
+					{"name":"left","startAt":0,"endAt":25,"startVal":-20,"endVal":475,"units":"px","onSound":"http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3"},
+					{"name":"left","startAt":25,"endAt":90,"startVal":475,"endVal":-20,"units":"px","onSound":"http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3"},
+					{"name":"width","startAt":10,"endAt":50,"startVal":12,"endVal":400,"units":"px","onSound":"http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3"},
+					{"name":"height","startAt":10,"endAt":50,"startVal":12,"endVal":400,"units":"px","onSound":"http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3"},
+					{"name":"width","startAt":50,"endAt":100,"startVal":400,"endVal":12,"units":"px","onSound":"http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3"},
+					{"name":"height","startAt":50,"endAt":100,"startVal":400,"endVal":12,"units":"px","onSound":"http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3"}
+				]}'
+			></div>
+			<a href="http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3" class="cashmusic soundplayer inline">Throwing Muses - "Film [demo]" (Inline player and tween example)</a>
 	</div>
 	
 </body>
