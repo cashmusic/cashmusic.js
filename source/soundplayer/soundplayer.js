@@ -106,6 +106,7 @@
 		soundManager.setup({
 			url: cm.path+'lib/soundmanager/swf/',
 			flashVersion: 9,
+			flashLoadTimeout: 5000,
 			onready: function() {
 				/*
 				self.sound = soundManager.createSound({
