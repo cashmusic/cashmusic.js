@@ -63,7 +63,7 @@
 						if (s.playState == 0) {
 							self.play(a.href);
 						} else {
-							self.stop(a.href);
+							self.stop();
 						}
 						
 						e.preventDefault();
@@ -190,7 +190,7 @@
 			if (inlineLinks.length > 0) {
 				var iLen = inlineLinks.length;
 				for (var i=0;i<iLen;i++) {
-					inlineLinks[i].innerHTML = inlineLinks[i].innerHTML.replace('[▸]','[◾]');
+					inlineLinks[i].innerHTML = inlineLinks[i].innerHTML.replace('[▸]','[■]');
 				}
 			}
 		};
@@ -199,18 +199,21 @@
 
 		};
 
-		self.stop = function(id) {
-			var s = soundManager.getSoundById(id);
-			s.setPosition(0);
-			s.stop();
-			self.sound = false;
+		self.stop = function() {
+			var s = self.sound;
+			var id = s.id;
+			if (s) {
+				s.setPosition(0);
+				s.stop();
+				self.sound = false;
 
-			// deal with inline buttons
-			var inlineLinks = document.querySelectorAll('a.cashmusic.soundplayer[href="' + id + '"]');
-			if (inlineLinks.length > 0) {
-				var iLen = inlineLinks.length;
-				for (var i=0;i<iLen;i++) {
-					inlineLinks[i].innerHTML = inlineLinks[i].innerHTML.replace('[◾]','[▸]');
+				// deal with inline buttons
+				var inlineLinks = document.querySelectorAll('a.cashmusic.soundplayer[href="' + id + '"]');
+				if (inlineLinks.length > 0) {
+					var iLen = inlineLinks.length;
+					for (var i=0;i<iLen;i++) {
+						inlineLinks[i].innerHTML = inlineLinks[i].innerHTML.replace('[■]','[▸]');
+					}
 				}
 			}
 		};
