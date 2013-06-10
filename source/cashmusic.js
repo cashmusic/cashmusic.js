@@ -582,6 +582,7 @@
 				},
 
 				hasClass: function(el,classname) {
+					// borrowed the idea from http://stackoverflow.com/a/5898748/1964808
     				return (' ' + el.className + ' ').indexOf(' ' + classname + ' ') > -1;
 				},
 

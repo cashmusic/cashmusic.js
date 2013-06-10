@@ -42,6 +42,8 @@
 	var cm = window.cashmusic;
 	cm.soundplayer = {
 		player: false,
+		playlist: false,
+		playlists: {},
 		sound: false,
 
 		_init: function() {
@@ -184,7 +186,9 @@
 		};
 
 		self.pause = function() {
-
+			if (self.sound) {
+				self.sound.pause();
+			}
 		};
 
 		self.play = function(id) {
@@ -206,45 +210,49 @@
 
 		};
 
-		self.stop = function() {
-			var s = self.sound;
-			var id = s.id;
-			if (s) {
-				s.setPosition(0);
-				s.stop();
-				self.sound = false;
-
-				// deal with inline buttons
-				var inlineLinks = document.querySelectorAll('a.cashmusic.soundplayer[href="' + id + '"]');
-				if (inlineLinks.length > 0) {
-					var iLen = inlineLinks.length;
-					for (var i=0;i<iLen;i++) {
-						cm.styles.swapClasses(inlineLinks[i],'playing','stopped');
-					}
+		self.resume = function() {
+			if (self.sound) {
+				if (self.sound.paused) {
+					self.sound.resume();
 				}
 			}
 		};
 
+		self.stop = function() {
+			if (self.sound) {
+				self.sound.setPosition(0);
+				self.sound.stop();
+			}
+		};
+
+		self.toggle = function() {
+
+		};
 
 
 
-
+		// All of the querySelectorAll calls seem excessive, but we should respect the idea of 
+		// dynamic DOM injection, AJAX, etc. Also these are mostly user-initiated so not often on
+		// a hundreds-per-second scale.
 		self._doFinish = function(detail) {
-
+			var setstyles = document.querySelectorAll('*.cashmusic.setstyles');
+			self._updateStyles(setstyles,'finish');
 		};
 
 		self._doLoading = function(detail) {
 			//console.log('loading: ' + detail.percentage + '%');
-			var tweens = document.querySelectorAll('*.cashmusic.tween');;
+			var tweens = document.querySelectorAll('*.cashmusic.tween');
 			self._updateTweens(tweens,'load',detail.percentage);
 		};
 
 		self._doPause = function(detail) {
-
+			var setstyles = document.querySelectorAll('*.cashmusic.setstyles');
+			self._updateStyles(setstyles,'pause');
 		};
 
 		self._doPlay = function(detail) {
-
+			var setstyles = document.querySelectorAll('*.cashmusic.setstyles');
+			self._updateStyles(setstyles,'play');
 		};
 
 		self._doPlaying = function(detail) {
@@ -254,25 +262,56 @@
 		};
 
 		self._doResume = function(detail) {
-
+			var setstyles = document.querySelectorAll('*.cashmusic.setstyles');
+			self._updateStyles(setstyles,'resume');
 		};
 
 		self._doStop = function(detail) {
-			var tweens = document.querySelectorAll('*.cashmusic.tween');
-			self._updateTweens(tweens,'stop',0);
+			// deal with inline buttons
+			var inlineLinks = document.querySelectorAll('a.cashmusic.soundplayer[href="' + self.sound.id + '"]');
+			if (inlineLinks.length > 0) {
+				var iLen = inlineLinks.length;
+				for (var i=0;i<iLen;i++) {
+					cm.styles.swapClasses(inlineLinks[i],'playing','stopped');
+				}
+			}
+
+			var setstyles = document.querySelectorAll('*.cashmusic.setstyles');
+			self._updateStyles(setstyles,'stop');
+			self.sound = false;
 		};
 
 
 
 
+
+		self._checkIds = function(id,data) {
+			var soundId = '';
+			var playerId = '';
+			// get any required sound/player ids
+			if (typeof data.onSound !== 'undefined') {soundId = data.onSound}
+			if (typeof data.onPlayer !== 'undefined') {playerId = data.onPlayer}
+			if (soundId !== '' && playerId !== '') {
+				// check player and id
+				if (id != playerId + soundId) {return false}
+			} else if (soundId !== '' && playerId === '') {
+				// check id
+				if (id.substring((playerId.length + soundId.length) - soundId.length) != soundId) {return false}
+			} else if (soundId === '' && playerId !== '') {
+				// check player
+				if (id.substring(0, playerId.length) != playerId) {return false}
+			}
+			return true;
+		};
+
 		/*
+		fires on progress for: play, load 
+
 		{
-			"respondToId":"",
-			"respondToPlayer":"",
 			"play":[
 				{
 					"name":"left",
-					"startAt":0
+					"startAt":0,
 					"endAt":50,
 					"startVal":0,
 					"endVal":250,
@@ -284,7 +323,7 @@
 			"load":[
 				{
 					"name":"left",
-					"startAt":0
+					"startAt":0,
 					"endAt":50,
 					"startVal":0,
 					"endVal":250,
@@ -305,25 +344,8 @@
 						var val = false;
 						var step = false
 						for (var n=0;n<dLen;n++) {
-							var soundId = '';
-							var playerId = '';
-							var checkId = false;
-							var go = true;
 							step = data[type][n];
-							// get any required sound/player ids
-							if (typeof step.onSound !== 'undefined') {soundId = step.onSound}
-							if (typeof step.onPlayer !== 'undefined') {playerId = step.onPlayer}
-							if (soundId !== '' && playerId !== '') {
-								// check player and id
-								if (self.sound.id != playerId + soundId) {go = false}
-							} else if (soundId !== '' && playerId === '') {
-								// check id
-								if (self.sound.id.substring((playerId.length + soundId.length) - soundId.length) != soundId) {go = false}
-							} else if (soundId === '' && playerId !== '') {
-								// check player
-								if (self.sound.id.substring(0, playerId.length) != playerId) {go = false}
-							}
-							if (go) {
+							if (self._checkIds(self.sound.id,step)) {
 								if (percentage >= step.startAt && percentage <= step.endAt) {
 									// starting value + ((total value range / total percentage span) * true percentage - startAt percentage)
 									val = step.startVal + (((step.endVal - step.startVal) / (step.endAt - step.startAt)) * (percentage - step.startAt));
@@ -340,5 +362,40 @@
 				}
 			}
 		};
+
+		/*
+		fires on events for: finish, pause, play, resume, stop
+
+		{
+			"stop":[
+				{
+					"name":"left",
+					"val":250,
+					"units":"px",
+					"onSound":"url",
+					"onPlayer":"playerId"
+				}
+			]
+		}
+		*/
+		self._updateStyles = function(elements,type) {
+			var eLen = elements.length;
+			for (var i=0;i<eLen;i++) {
+				var el = elements[i];
+				var data = el.getAttribute('data-styles');
+				data = JSON.parse(data);
+				if (data) {
+					if (typeof data[type] !== 'undefined') {
+						var dLen = data[type].length;
+						for (var n=0;n<dLen;n++) {
+							if (self._checkIds(self.sound.id,data[type][n])) {
+								el.style[data[type][n].name] = data[type][n].val + data[type][n].units;
+							}
+						}
+					}
+				}
+			}
+		};
+
 	});
 }());
