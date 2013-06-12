@@ -1,0 +1,13 @@
+div.cashmusic.soundplayer.playlist.container {position:relative;background-color:transparent;margin-bottom:32px;}
+div.cashmusic.soundplayer.playlist.nowplaying {width:85%;float:left;margin-bottom:3px;}
+div.cashmusic.soundplayer.playlist.playtime {font-size:0.75em;opacity:0.5;}
+div.cashmusic.soundplayer.playlist.playtime {text-align:right;width:12%;float:right;}
+div.cashmusic.soundplayer.playlist.seekbarcontainer {position:relative;width:100%;height:6px;background-color:#ccc;clear:both;overflow:hidden;}
+div.cashmusic.soundplayer.playlist.seekbar {cursor:pointer;height:6px;width:0.1%;background-color:#666;z-index:1;}
+div.cashmusic.soundplayer.playlist.position {position:absolute;width:3px;height:6px;top:0;right:100%;background-color:#fff;z-index:2;}
+div.cashmusic.soundplayer.playlist.controls {clear:both;margin-top:6px;}
+div.cashmusic.soundplayer.playlist.prevtrack {cursor:pointer;width:24px;height:24px;background-color:#666;float:left;}
+div.cashmusic.soundplayer.playlist.playpause {cursor:pointer;width:24px;height:24px;background-color:#666;float:left;margin:0 6px 0 6px;}
+div.cashmusic.soundplayer.playlist.nexttrack {cursor:pointer;width:24px;height:24px;background-color:#666;float:left;}
+div.cashmusic.soundplayer.playlist.toggletracklist {cursor:pointer;font-size:0.75em;margin-left:24px;float:left;}
+div.cashmusic.soundplayer.playlist.tracklist {clear:both;}

@@ -146,7 +146,7 @@
 					var currentNode = document.querySelector(targetNode);
 				} else {
 					// if used non-AJAX we just grab the current place in the doc
-					var allScripts = document.querySelectorAll('script[src$="cashmusic.js"]');
+					var allScripts = document.querySelectorAll('script[src$="cashmusic.js"],script.cashmusic');
 					var currentNode = allScripts[allScripts.length - 1];
 				}
 				// be nice neighbors. if we can't find currentNode, don't do the rest or pitch errors. silently fail.

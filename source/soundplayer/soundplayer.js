@@ -40,55 +40,6 @@
 (function() {
 	'use strict';
 	var cm = window.cashmusic;
-	cm.soundplayer = {
-		player: false,
-		playlist: false,
-		playlists: {},
-		sound: false,
-
-		_init: function() {
-			var self = cm.soundplayer;
-
-			// look for .cashmusic.soundplayer divs/links
-			var inlineLinks = document.querySelectorAll('a.cashmusic.soundplayer');
-			var iLen = inlineLinks.length;
-			if (iLen > 0) {
-				cm.styles.injectCSS(
-					'a.cashmusic.soundplayer.inline.stopped:after{content: " [▸]";}' +
-					'a.cashmusic.soundplayer.inline.playing:after{content: " [■]";}'
-				);
-
-				for (var i=0;i<iLen;i++) {
-					var a = inlineLinks[i];
-					soundManager.createSound({
-						id: a.href,
-						url: a.href
-					});
-
-					cm.styles.addClass(a,'stopped');
-					cm.events.add(a,'click',function(e) {
-						if (cm.styles.hasClass(a,'toggle')) {
-							var s = soundManager.getSoundById(a.getAttribute('data-soundid'));
-						} else {
-							var s = soundManager.getSoundById(a.href);
-						}
-						if (s) {
-							if (s.playState == 0) {
-								self.play(s.id);
-							} else {
-								self.stop();
-							}
-							
-							e.preventDefault();
-							return false;
-						}
-					});
-				}
-			}
-		}
-	};
-
-
 
 	// Thanks Kirupa Chinnathambi!
 	// http://www.kirupa.com/html5/getting_mouse_click_position.htm
@@ -111,6 +62,159 @@
 			element = element.offsetParent;
 		}
 		return { x: xPosition, y: yPosition };
+	};
+
+	// we need indexOf for the sake of figuring out if an id is part of a 
+	// larger playlist. IE8 is an asshole. so here goes.
+	// http://stackoverflow.com/a/1181586/1964808
+	if(!Array.prototype.indexOf) {
+		Array.prototype.indexOf = function(needle) {
+			for(var i = 0; i < this.length; i++) {
+				if(this[i] === needle) {
+					return i;
+				}
+			}
+			return -1;
+		};
+	}
+
+	cm.soundplayer = {
+		playlist: false,
+		playlists: {},
+		sound: false,
+
+		_init: function() {
+			var self = cm.soundplayer;
+
+			// build any actualy players, etc
+			var playlistdivs = document.querySelectorAll('div.cashmusic.soundplayer.playlist');
+			len = playlistdivs.length;
+			if (len > 0) {
+				for (var i=0;i<len;i++) {
+					var d = playlistdivs[i];
+					var pl = cm.getJSON(d.getAttribute('data-playlist'));
+					pl = self._formatPlaylist(pl,d.id,i);
+					d.id = d.id ? d.id : pl.id;
+
+					var soundlinks = document.querySelectorAll(
+						'#' + d.id + ' ' + 'a[href$=".mp3"],' +
+						'#' + d.id + ' ' + 'a[href$=".MP3"],' +
+						'#' + d.id + ' ' + 'a[href$=".ogg"],' +
+						'#' + d.id + ' ' + 'a[href$=".OGG"],' +
+						'#' + d.id + ' ' + 'a[href$=".m4a"],' +
+						'#' + d.id + ' ' + 'a[href$=".M4A"],' +
+						'#' + d.id + ' ' + 'a[href$=".wav"],' +
+						'#' + d.id + ' ' + 'a[href$=".WAV"]'
+					);
+					var sllen = soundlinks.length;
+					for (var n=0;n<sllen;n++) {
+						var sl = soundlinks[n];
+						pl.tracks.push(self._formatTrack(sl));
+						sl.parentNode.removeChild(sl);
+					}
+
+					sllen = pl.tracks.length;
+					for (var n=0;n<sllen;n++) {
+						pl._index.push(pl.tracks[n].id);
+					}
+					
+					self.playlists[pl.id] = pl;
+
+					(function(container,playlist) {
+						cm.getTemplate('soundplayer',function(t) {
+							t = t.replace(/data-playerid=\"/g,'data-playerid="' + playlist.id);
+							t = t.replace(/onPlayer\":\"/g,'onPlayer":"' + playlist.id);
+							container.innerHTML = t;
+							container.style.visibility = 'visible';
+							container.style.display = 'block';
+							container.style.position = 'relative';
+
+							var docontent = document.querySelectorAll(
+								'div.cashmusic.soundplayer.playlist.nowplaying, ' + 
+								'div.cashmusic.soundplayer.playlist.playtime, ' + 
+								'div.cashmusic.soundplayer.playlist.toggletracklist'
+							);
+							var l = docontent.length;
+							if (l > 0) {
+								for (var li=0;li<l;li++) {
+									docontent[li].innerHTML = docontent[li].getAttribute('data-content') + '';
+								}
+							}
+						});
+					})(d,pl); // ha. closures look silly.
+				}
+			}
+
+			// look for .cashmusic.soundplayer toggle/inline links
+			var inlineLinks = document.querySelectorAll('*.cashmusic.soundplayer.playstop,a.cashmusic.soundplayer.inline');
+			var len = inlineLinks.length;
+			if (len > 0) {
+				cm.styles.injectCSS(
+					'a.cashmusic.soundplayer.inline.stopped:after{content: " [▸]";}' +
+					'a.cashmusic.soundplayer.inline.playing:after{content: " [■]";}'
+				);
+
+				for (var i=0;i<len;i++) {
+					var a = inlineLinks[i];
+					if (cm.styles.hasClass(a,'inline')) {
+						soundManager.createSound({
+							id: a.href,
+							url: a.href
+						});
+					}
+					cm.styles.addClass(a,'stopped');
+					cm.events.add(a,'click',function(e) {
+						if (cm.styles.hasClass(a,'playstop')) {
+							var s = soundManager.getSoundById(a.getAttribute('data-soundid'));
+						} else {
+							var s = soundManager.getSoundById(a.href);
+						}
+						if (s) {
+							self.toggle(s.id,true);
+							
+							e.preventDefault();
+							return false;
+						}
+					});
+				}
+			}
+
+			// look for .cashmusic.soundplayer play/pause toggles
+			var playpause = document.querySelectorAll('*.cashmusic.soundplayer.playpause');
+			len = playpause.length;
+			if (len > 0) {
+				for (var i=0;i<len;i++) {
+					var pp = playpause[i];
+
+					cm.styles.addClass(pp,'paused');
+					var soundid = pp.getAttribute('data-soundid');
+					var playlistid = pp.getAttribute('data-playlistid');
+					if (playlistid) {
+						if (self.playlists[playlistid] !== 'undefined') {
+							if (self.playlist) {
+								if (self.playlist.id == playlistid) {
+									self.sound.toggle(self.sound.id);
+								} else {
+									//
+								}
+							} else {
+								//
+							}
+						}
+					} else {
+						cm.events.add(pp,'click',function(e) {
+							var s = soundManager.getSoundById(soundid);
+							if (s) {
+								self.toggle(s.id);
+								e.preventDefault();
+								return false;
+							}
+						});
+					}
+				}
+			}
+			//*/
+		}
 	};
 
 	window.SM2_DEFER = true;
@@ -181,62 +285,13 @@
 
 
 
-		self.next = function() {
-
-		};
-
-		self.pause = function() {
-			if (self.sound) {
-				self.sound.pause();
-			}
-		};
-
-		self.play = function(id) {
-			var s = soundManager.getSoundById(id);
-			self.sound = s;
-			s.play();
-
-			// deal with inline buttons
-			var inlineLinks = document.querySelectorAll('a.cashmusic.soundplayer[href="' + id + '"]');
-			if (inlineLinks.length > 0) {
-				var iLen = inlineLinks.length;
-				for (var i=0;i<iLen;i++) {
-					cm.styles.swapClasses(inlineLinks[i],'stopped','playing');
-				}
-			}
-		};
-
-		self.previous = function() {
-
-		};
-
-		self.resume = function() {
-			if (self.sound) {
-				if (self.sound.paused) {
-					self.sound.resume();
-				}
-			}
-		};
-
-		self.stop = function() {
-			if (self.sound) {
-				self.sound.setPosition(0);
-				self.sound.stop();
-			}
-		};
-
-		self.toggle = function() {
-
-		};
-
-
-
 		// All of the querySelectorAll calls seem excessive, but we should respect the idea of 
 		// dynamic DOM injection, AJAX, etc. Also these are mostly user-initiated so not often on
 		// a hundreds-per-second scale.
 		self._doFinish = function(detail) {
 			var setstyles = document.querySelectorAll('*.cashmusic.setstyles');
 			self._updateStyles(setstyles,'finish');
+			self.next();
 		};
 
 		self._doLoading = function(detail) {
@@ -251,6 +306,15 @@
 		};
 
 		self._doPlay = function(detail) {
+			// deal with inline buttons
+			var inlineLinks = document.querySelectorAll('a.cashmusic.soundplayer[href="' + self.sound.id + '"]');
+			if (inlineLinks.length > 0) {
+				var iLen = inlineLinks.length;
+				for (var i=0;i<iLen;i++) {
+					cm.styles.swapClasses(inlineLinks[i],'stopped','playing');
+				}
+			}
+
 			var setstyles = document.querySelectorAll('*.cashmusic.setstyles');
 			self._updateStyles(setstyles,'play');
 		};
@@ -285,22 +349,103 @@
 
 
 
+		self.next = function(force) {
+			var next = false;
+			var play = false;
+			var pl = self.playlist;
+			self.stop();
+			if (pl) {
+				if (pl.current < pl.tracks.length) {
+					next = pl.current + 1;
+					play = true;
+				} else {
+					next = 1;
+					if (force) {play = true;}
+				}
+				pl.current = next;
+			}
+			if (play) {
+				self.play(pl.tracks[next - 1].id);
+			}
+		};
+
+		self.pause = function() {
+			if (self.sound) {
+				self.sound.pause();
+			}
+		};
+
+		self.play = function(id) {
+			var s = soundManager.getSoundById(id);
+			if (s) {
+				if (self.sound && self.sound.id != id) self.stop();
+				if (!self.inPlaylist(self.playlist,id)) self.playlist = false;
+				self.sound = s;
+				s.play();
+			}
+		};
+
+		self.previous = function() {
+			var next = false;
+			var pl = self.playlist;
+			self.stop();
+			if (pl) {
+				if (pl.current > 1) {
+					next = pl.current - 1;
+				} else {
+					next = pl.tracks.length;
+				}
+				pl.current = next;
+				self.play(pl.tracks[next - 1].id);
+			}
+		};
+
+		self.resume = function() {
+			if (self.sound) {
+				if (self.sound.paused) {
+					self.sound.resume();
+				}
+			}
+		};
+
+		self.stop = function() {
+			if (self.sound) {
+				self.sound.setPosition(0);
+				self.sound.stop();
+			}
+		};
+
+		// id is optional to also enable play...
+		self.toggle = function(id,usestop) {
+			if (self.sound) {
+				if (usestop) {
+					self.stop();
+				} else {
+					self.sound.togglePause();
+				}
+			} else {
+				self.play(id);
+			}
+		};
+
+
+
+
+
 		self._checkIds = function(id,data) {
 			var soundId = '';
 			var playerId = '';
 			// get any required sound/player ids
-			if (typeof data.onSound !== 'undefined') {soundId = data.onSound}
-			if (typeof data.onPlayer !== 'undefined') {playerId = data.onPlayer}
-			if (soundId !== '' && playerId !== '') {
-				// check player and id
-				if (id != playerId + soundId) {return false}
-			} else if (soundId !== '' && playerId === '') {
-				// check id
-				if (id.substring((playerId.length + soundId.length) - soundId.length) != soundId) {return false}
-			} else if (soundId === '' && playerId !== '') {
-				// check player
-				if (id.substring(0, playerId.length) != playerId) {return false}
+			if (typeof data.onSound !== 'undefined') soundId = data.onSound;
+			if (typeof data.onPlayer !== 'undefined') playerId = data.onPlayer;
+			
+			if (soundId) {
+				if (id.indexOf(soundId) === -1) return false;
 			}
+			if (playerId) {
+				if (!self.inPlaylist(playerId,id)) return false;
+			}
+
 			return true;
 		};
 
@@ -337,7 +482,7 @@
 			for (var i=0;i<eLen;i++) {
 				var el = elements[i];
 				var data = el.getAttribute('data-tween');
-				data = JSON.parse(data);
+				data = cm.getJSON(data);
 				if (data) {
 					if (typeof data[type] !== 'undefined') {
 						var dLen = data[type].length;
@@ -397,5 +542,69 @@
 			}
 		};
 
+
+
+
+
+		/*
+		playlist:
+		{
+			id: string,
+			current: int (tracknumber) / null,
+			artist: string / null,
+			album: string / null,
+			cover: url / null,
+			url: url / null,
+			options: null,
+			tracks: [
+				{
+					id: string,
+					url: url,
+					title: string,
+					artist: string,
+					ISRC: string,
+					album: string,
+					label: string,
+					cover: url,
+					link: url,
+					resolve: bool
+				}
+			]
+		}
+		*/
+		self._formatPlaylist = function(playlist,useid,uniqueseed) {
+			playlist = playlist ? playlist : {};
+			if (!playlist.id) {
+				playlist.id = useid ? useid : 'pl---' + uniqueseed; // the 'pl---' is unusual on purpose
+			}
+			playlist.current = 1;//int (tracknumber) / null
+			playlist.tracks = playlist.tracks ? playlist.tracks : [];// []
+			playlist._index = [];
+
+			return playlist;
+		};
+
+		self._formatTrack = function(a,playlist) {
+			var track = cm.getJSON(a.getAttribute('data-track'));
+			track = track ? track : {};
+			track.url = track.url ? track.url : a.href;
+			track.title = track.title ? track.title : (a.innerText || a.textContent);
+			track.id = playlist + track.url;
+
+			soundManager.createSound({
+				id: track.id,
+				url: track.url	
+			});
+
+			return track;
+		};
+
+		self.inPlaylist = function(playlistid,soundid) {
+			if (playlistid) {
+				return (self.playlists[playlistid]._index.indexOf(soundid) > -1) ? true : false;
+			} else {
+				return false;
+			}
+		};
 	});
 }());
