@@ -47,7 +47,8 @@
 		var parentPosition = cm.measure.getPosition(e.currentTarget);
 		var xPosition = e.clientX - parentPosition.x;
 		var yPosition = e.clientY - parentPosition.y;
-		return { x: xPosition, y: yPosition };
+		var percent = xPosition / e.currentTarget.clientWidth;
+		return { x: xPosition, y: yPosition, percentage: percent };
 	};
 
 	// Thanks Kirupa Chinnathambi!
@@ -109,13 +110,17 @@
 					var sllen = soundlinks.length;
 					for (var n=0;n<sllen;n++) {
 						var sl = soundlinks[n];
-						pl.tracks.push(self._formatTrack(sl));
+						pl.tracks.push(self._formatTrack(sl,pl.id));
 						sl.parentNode.removeChild(sl);
 					}
 
 					sllen = pl.tracks.length;
 					for (var n=0;n<sllen;n++) {
 						pl._index.push(pl.tracks[n].id);
+						soundManager.createSound({
+							id: pl.tracks[n].id,
+							url: pl.tracks[n].url
+						});
 					}
 					
 					self.playlists[pl.id] = pl;
@@ -129,16 +134,50 @@
 							container.style.display = 'block';
 							container.style.position = 'relative';
 
+							// pull desired starter content from template, insert it
 							var docontent = document.querySelectorAll(
-								'div.cashmusic.soundplayer.playlist.nowplaying, ' + 
-								'div.cashmusic.soundplayer.playlist.playtime, ' + 
-								'div.cashmusic.soundplayer.playlist.toggletracklist'
+								'#' + container.id + ' div.cashmusic.soundplayer.playlist.nowplaying, ' + 
+								'#' + container.id + ' div.cashmusic.soundplayer.playlist.playtime, ' + 
+								'#' + container.id + ' div.cashmusic.soundplayer.playlist.toggletracklist'
 							);
 							var l = docontent.length;
-							if (l > 0) {
-								for (var li=0;li<l;li++) {
-									docontent[li].innerHTML = docontent[li].getAttribute('data-content') + '';
+							for (var li=0;li<l;li++) {
+								docontent[li].innerHTML = docontent[li].getAttribute('data-content') + '';
+							}
+
+							// add controller events
+							var controls = document.querySelectorAll(
+								'#' + container.id + ' div.cashmusic.soundplayer.playlist.controls *'
+							);
+							var l = controls.length;
+							for (var li=0;li<l;li++) {
+								var el = controls[li];
+								if (cm.styles.hasClass(el,'playpause')) {
+									cm.events.add(el,'click',function(e) {
+										self.togglePlaylist(playlist.id);
+									});
 								}
+								if (cm.styles.hasClass(el,'nexttrack')) {
+									cm.events.add(el,'click',function(e) {
+										self.next(playlist.id,true);
+									});
+								}
+								if (cm.styles.hasClass(el,'prevtrack')) {
+									cm.events.add(el,'click',function(e) {
+										self.previous(playlist.id);
+									});
+								}
+							}
+
+							// add seekbar control
+							controls = document.querySelectorAll(
+								'#' + container.id + ' div.cashmusic.soundplayer.playlist.seekbar'
+							);
+							var l = controls.length;
+							for (var li=0;li<l;li++) {
+								cm.events.add(controls[li],'click',function(e) {
+									self.seekTo(cm.measure.getClickPosition(e).percentage,playlist.id);
+								});
 							}
 						});
 					})(d,pl); // ha. closures look silly.
@@ -323,6 +362,7 @@
 			//console.log('playing: ' + detail.percentage + '% / (' + detail.position + '/' + detail.duration + ')');
 			var tweens = document.querySelectorAll('*.cashmusic.tween');
 			self._updateTweens(tweens,'play',detail.percentage);
+			self._updateTimes(detail.percentage);
 		};
 
 		self._doResume = function(detail) {
@@ -349,7 +389,10 @@
 
 
 
-		self.next = function(force) {
+		self.next = function(playlistId,force) {
+			if (playlistId) {
+				if (self.playlist.id !== playlistId) self.playlist = self.playlists[playlistId];
+			}
 			var next = false;
 			var play = false;
 			var pl = self.playlist;
@@ -379,13 +422,17 @@
 			var s = soundManager.getSoundById(id);
 			if (s) {
 				if (self.sound && self.sound.id != id) self.stop();
-				if (!self.inPlaylist(self.playlist,id)) self.playlist = false;
+				if (!self.inPlaylist(self.playlist.id,id)) self.playlist = false;
 				self.sound = s;
 				s.play();
+				self._updateTitle();
 			}
 		};
 
-		self.previous = function() {
+		self.previous = function(playlistId) {
+			if (playlistId) {
+				if (self.playlist.id !== playlistId) self.playlist = self.playlists[playlistId];
+			}
 			var next = false;
 			var pl = self.playlist;
 			self.stop();
@@ -408,8 +455,19 @@
 			}
 		};
 
+		self.seekTo = function(position,playlistId) {
+			if (playlistId) {
+				if (!self.playlist) {
+					return false;
+				} else {
+					if (playlistId !== self.playlist.id) return false;
+				}
+				self.sound.setPosition(Math.floor(position * self.sound.duration));
+			}
+		};
+
 		self.stop = function() {
-			if (self.sound) {
+			if (self.sound && self.sound.playState == 1) {
 				self.sound.setPosition(0);
 				self.sound.stop();
 			}
@@ -419,13 +477,42 @@
 		self.toggle = function(id,usestop) {
 			if (self.sound) {
 				if (usestop) {
-					self.stop();
+					if (self.sound.playState == 1) {
+						if (!self.playlist) {
+							self.stop();							
+						} else {
+							if (!self.inPlaylist(self.playlist.id,id)) {
+								// we're playing something outside the playlist
+								// pause playlist and move on
+								self.pause();
+								self.sound = false; // unset so we don't lose playlist progress.
+								self.play(id);
+							} else {
+								// the song is part of a playlist...just toggle
+								self.sound.togglePause();
+							}
+						}
+					} else {
+						self.play(id);
+					}
 				} else {
 					self.sound.togglePause();
 				}
 			} else {
 				self.play(id);
 			}
+		};
+
+		self.togglePlaylist = function(id) {
+			if (self.sound && self.playlist) {
+				if (self.playlist.id != id) self.sound.pause();
+			}
+			if (self.sound && !self.playlist) self.stop();
+
+			self.playlist = self.playlists[id];
+			self.sound = soundManager.getSoundById(self.playlist.tracks[self.playlist.current - 1].id);
+			self.sound.togglePause();
+			self._updateTitle();
 		};
 
 
@@ -542,6 +629,33 @@
 			}
 		};
 
+		self._updateTimes = function(position) {
+			if (self.playlist) {
+				var times = document.querySelectorAll('div.cashmusic.soundplayer.playlist.playtime');
+				var l = times.length;
+				for (var n=0;n<l;n++) {
+					if (times[n].getAttribute('data-playerid') == self.playlist.id) {
+						var min = Math.floor(position/60);
+						var sec = Math.floor(position - (min * 60));
+						sec = (sec < 10 ? '0' : '') + sec; // zero pad the seconds
+						times[n].innerHTML = min + ':' + sec;
+					}
+				}
+			}
+		}
+
+		self._updateTitle = function() {
+			if (self.playlist) {
+				var titles = document.querySelectorAll('div.cashmusic.soundplayer.playlist.nowplaying');
+				var l = titles.length;
+				for (var n=0;n<l;n++) {
+					if (titles[n].getAttribute('data-playerid') == self.playlist.id) {
+						titles[n].innerHTML = self.playlist.tracks[self.playlist.current - 1].title;
+					}
+				}
+			}
+		}
+
 
 
 
@@ -590,11 +704,6 @@
 			track.url = track.url ? track.url : a.href;
 			track.title = track.title ? track.title : (a.innerText || a.textContent);
 			track.id = playlist + track.url;
-
-			soundManager.createSound({
-				id: track.id,
-				url: track.url	
-			});
 
 			return track;
 		};
