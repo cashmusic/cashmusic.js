@@ -275,9 +275,9 @@
 			// 	console.log('Trying: ' + soundManager.url);
 			// },
 			defaultOptions: {
-				// onload: function() {
-				// 	self._doResume({id: this.id});
-				// },
+				onload: function() {
+				 	self._doLoad({id: this.id});
+				},
 				onstop: function() {
 					self._doStop({id: this.id});
 				},
@@ -331,6 +331,11 @@
 			var setstyles = document.querySelectorAll('*.cashmusic.setstyles');
 			self._updateStyles(setstyles,'finish');
 			self.next();
+		};
+
+		self._doLoad = function(detail) {
+			var setstyles = document.querySelectorAll('*.cashmusic.setstyles');
+			self._updateStyles(setstyles,'load');
 		};
 
 		self._doLoading = function(detail) {
