@@ -146,7 +146,7 @@
 					var currentNode = document.querySelector(targetNode);
 				} else {
 					// if used non-AJAX we just grab the current place in the doc
-					var allScripts = document.querySelectorAll('script[src$="cashmusic.js"]');
+					var allScripts = document.querySelectorAll('script[src$="cashmusic.js"],script.cashmusic');
 					var currentNode = allScripts[allScripts.length - 1];
 				}
 				// be nice neighbors. if we can't find currentNode, don't do the rest or pitch errors. silently fail.
@@ -154,6 +154,7 @@
 					// create a div to contain the link/iframe
 					var embedNode = document.createElement('div');
 					embedNode.className = 'cashmusic_embed';
+					embedNode.style.position = 'relative';
 					if (lightboxed) {
 						cm.contentLoaded(function() {
 							// open in a lightbox with a link in the target div
@@ -233,15 +234,7 @@
 						cm.path + 'templates/' + templateName + '.css',
 						false,
 						function(msg) {
-							var head = document.getElementsByTagName('head')[0] || document.documentElement;
-							var css = document.createElement('style');
-							css.type = 'text/css';
-							css.innerHTML = msg;
-
-							// by injecting the css BEFORE any other style elements it means all
-							// styles can be manually overridden with ease — no !important or similar,
-							// no external files, etc...
-							head.insertBefore(css, head.firstChild);
+							cm.styles.injectCSS(msg);
 						}
 					)
 				}
@@ -580,6 +573,35 @@
 					cs.left = left;
 					cs.width = width;
 					cs.marginLeft = marginleft;
+				}
+			},
+
+			styles: {
+				addClass: function(el,classname) {
+					el.className = el.className + ' ' + classname;
+				},
+
+				hasClass: function(el,classname) {
+					// borrowed the idea from http://stackoverflow.com/a/5898748/1964808
+    				return (' ' + el.className + ' ').indexOf(' ' + classname + ' ') > -1;
+				},
+
+				injectCSS: function(css) {
+					var head = document.getElementsByTagName('head')[0] || document.documentElement;
+					var el = document.createElement('style');
+					el.type = 'text/css';
+					el.innerHTML = css;
+
+					// by injecting the css BEFORE any other style elements it means all
+					// styles can be manually overridden with ease — no !important or similar,
+					// no external files, etc...
+					head.insertBefore(el, head.firstChild);
+				},
+
+				swapClasses: function(el,oldclass,newclass) {
+					// add spaces to ensure we're not doing a partial find/replace, 
+					// trim off extra spaces before setting
+					el.className = ((' ' + el.className + ' ').replace(' ' + oldclass + ' ',' ' + newclass + ' ')).replace(/^\s+/, '').replace(/\s+$/, '');
 				}
 			}
 		};
