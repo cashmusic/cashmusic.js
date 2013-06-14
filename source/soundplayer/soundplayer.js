@@ -114,6 +114,7 @@
 						sl.parentNode.removeChild(sl);
 					}
 
+					var tlol = '<ol>';
 					sllen = pl.tracks.length;
 					for (var n=0;n<sllen;n++) {
 						pl._index.push(pl.tracks[n].id);
@@ -121,11 +122,13 @@
 							id: pl.tracks[n].id,
 							url: pl.tracks[n].url
 						});
+						tlol += ('<li class="cashmusic soundplayer changetrack" data-track="' + (n+1) + '">' + pl.tracks[n].title + '</li>');
 					}
+					tlol += '</ol>';
 					
 					self.playlists[pl.id] = pl;
 
-					(function(container,playlist) {
+					(function(container,playlist,ol) {
 						cm.getTemplate('soundplayer',function(t) {
 							t = t.replace(/data-playerid=\"/g,'data-playerid="' + playlist.id);
 							t = t.replace(/onPlayer\":\"/g,'onPlayer":"' + playlist.id);
@@ -133,6 +136,14 @@
 							container.style.visibility = 'visible';
 							container.style.display = 'block';
 							container.style.position = 'relative';
+
+							// add the genrated <ol> from above
+							var tl = document.querySelectorAll(
+								'#' + container.id + ' div.cashmusic.soundplayer.playlist.tracklist'
+							);
+							if (tl[0] !== 'undefined') {
+								tl[0].innerHTML = ol;
+							}
 
 							// pull desired starter content from template, insert it
 							var docontent = document.querySelectorAll(
@@ -147,7 +158,9 @@
 
 							// add controller events
 							var controls = document.querySelectorAll(
-								'#' + container.id + ' div.cashmusic.soundplayer.playlist.controls *'
+								'#' + container.id + ' div.cashmusic.soundplayer.playlist.controls *, ' +
+								'#' + container.id + ' div.cashmusic.soundplayer.playlist.toggletracklist, ' +
+								'#' + container.id + ' li.cashmusic.soundplayer.changetrack'
 							);
 							var l = controls.length;
 							for (var li=0;li<l;li++) {
@@ -167,6 +180,28 @@
 										self.previous(playlist.id);
 									});
 								}
+								if (cm.styles.hasClass(el,'toggletracklist')) {
+									cm.events.add(el,'click',function(e) {
+										var tracklist = document.querySelectorAll(
+											'#' + container.id + ' div.cashmusic.soundplayer.playlist.tracklist'
+										);
+										var style = tracklist[0].style;
+										if (style !== 'undefined') {
+											if (style.height !== 'auto') {
+												style.height = 'auto';
+											} else {
+												style.height = '1px';
+											}
+										}
+										el.blur();
+									});
+								}
+								if (cm.styles.hasClass(el,'changetrack')) {
+									cm.events.add(el,'click',function(e) {
+										var track = e.currentTarget.getAttribute('data-track');
+										self.playlistPlayTrack(playlist.id,track);
+									});
+								}
 							}
 
 							// add seekbar control
@@ -180,7 +215,7 @@
 								});
 							}
 						});
-					})(d,pl); // ha. closures look silly.
+					})(d,pl,tlol); // ha. closures look silly.
 				}
 			}
 
@@ -227,19 +262,13 @@
 
 					cm.styles.addClass(pp,'paused');
 					var soundid = pp.getAttribute('data-soundid');
-					var playlistid = pp.getAttribute('data-playlistid');
-					if (playlistid) {
-						if (self.playlists[playlistid] !== 'undefined') {
-							if (self.playlist) {
-								if (self.playlist.id == playlistid) {
-									self.sound.toggle(self.sound.id);
-								} else {
-									//
-								}
-							} else {
-								//
-							}
-						}
+					var playerid = pp.getAttribute('data-playerid');
+					if (playerid) {
+						cm.events.add(pp,'click',function(e) {
+							self.togglePlaylist(playerid);
+							e.preventDefault();
+							return false;
+						});
 					} else {
 						cm.events.add(pp,'click',function(e) {
 							var s = soundManager.getSoundById(soundid);
@@ -520,6 +549,21 @@
 			self._updateTitle();
 		};
 
+		self.playlistPlayTrack = function(playlistId,track) {
+			if (self.playlist && self.sound) {
+				if (playlistId !== self.playlist.id) {
+					self.pause();
+				} else {
+					self.pause();
+					self.sound.setPosition(0);
+				}
+			} else {
+				self.stop();
+			}
+			self.playlist = self.playlists[playlistId];
+			self.play(self.playlist.tracks[track - 1].id);
+		};
+
 
 
 
@@ -642,8 +686,10 @@
 					if (times[n].getAttribute('data-playerid') == self.playlist.id) {
 						var min = Math.floor(position/60);
 						var sec = Math.floor(position - (min * 60));
-						sec = (sec < 10 ? '0' : '') + sec; // zero pad the seconds
-						times[n].innerHTML = min + ':' + sec;
+						if (!isNaN(min) && !isNaN(sec)) {
+							sec = (sec < 10 ? '0' : '') + sec; // zero pad the seconds
+							times[n].innerHTML = min + ':' + sec;
+						}
 					}
 				}
 			}

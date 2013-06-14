@@ -1,4 +1,4 @@
-div.cashmusic.soundplayer.playlist.container {position:relative;background-color:transparent;margin-bottom:32px;}
+div.cashmusic.soundplayer.playlist.container {position:relative;background-color:transparent;margin-bottom:18px;}
 div.cashmusic.soundplayer.playlist.nowplaying {width:85%;float:left;margin-bottom:3px;}
 div.cashmusic.soundplayer.playlist.playtime {font-size:0.75em;opacity:0.5;}
 div.cashmusic.soundplayer.playlist.playtime {text-align:right;width:12%;float:right;}
@@ -10,4 +10,6 @@ div.cashmusic.soundplayer.playlist.prevtrack {cursor:pointer;width:24px;height:2
 div.cashmusic.soundplayer.playlist.playpause {cursor:pointer;width:24px;height:24px;background-color:#666;float:left;margin:0 6px 0 6px;}
 div.cashmusic.soundplayer.playlist.nexttrack {cursor:pointer;width:24px;height:24px;background-color:#666;float:left;}
 div.cashmusic.soundplayer.playlist.toggletracklist {cursor:pointer;font-size:0.75em;margin-left:24px;float:left;}
-div.cashmusic.soundplayer.playlist.tracklist {clear:both;}
+div.cashmusic.soundplayer.playlist.tracklist {clear:both;height:1px;overflow:hidden;padding-top:12px;font-size:0.75em;line-height:2.25em;}
+div.cashmusic.soundplayer.playlist.tracklist ol {margin:0;padding:0;list-style:decimal-leading-zero inside none;}
+div.cashmusic.soundplayer.playlist.tracklist ol li.changetrack {cursor:pointer;}
