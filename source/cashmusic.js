@@ -141,6 +141,7 @@
 					iframe.style.width = '100%';
 					//iframe.style.height = '1px';
 					iframe.style.border = '0';
+					iframe.style.overflow = 'hidden'; // important for overlays, which flicker scrollbars on open
 				if (targetNode) {
 					// for AJAX, specify target node: '#id', '#id .class', etc. NEEDS to be specific
 					var currentNode = document.querySelector(targetNode);
@@ -151,11 +152,11 @@
 				}
 				// be nice neighbors. if we can't find currentNode, don't do the rest or pitch errors. silently fail.
 				if (currentNode) {
-					// create a div to contain the link/iframe
-					var embedNode = document.createElement('div');
-					embedNode.className = 'cashmusic_embed';
-					embedNode.style.position = 'relative';
 					if (lightboxed) {
+						// create a div to contain the link/iframe
+						var embedNode = document.createElement('span');
+						embedNode.className = 'cashmusic_embed';
+						embedNode.style.position = 'relative';
 						cm.contentLoaded(function() {
 							// open in a lightbox with a link in the target div
 							if (!lightboxTxt) {lightboxTxt = 'open element';}
@@ -176,6 +177,10 @@
 							});
 						});
 					} else {
+						// create a div to contain the link/iframe
+						var embedNode = document.createElement('div');
+						embedNode.className = 'cashmusic_embed';
+						embedNode.style.position = 'relative';
 						embedNode.appendChild(iframe);
 						currentNode.parentNode.insertBefore(embedNode,currentNode);
 					}
@@ -341,6 +346,12 @@
 						}
 						xhr.send(postString);
 					}
+				},
+
+				jsonp: function(url) {
+					var s = document.createElement('script');
+					s.src = url;
+					document.getElementsByTagName('head')[0].appendChild(s);
 				},
 
 				/*

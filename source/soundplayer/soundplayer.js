@@ -211,7 +211,7 @@
 							var l = controls.length;
 							for (var li=0;li<l;li++) {
 								cm.events.add(controls[li],'click',function(e) {
-									self.seekTo(cm.measure.getClickPosition(e).percentage,playlist.id);
+									self.seek(cm.measure.getClickPosition(e).percentage,playlist.id);
 								});
 							}
 						});
@@ -230,12 +230,10 @@
 
 				for (var i=0;i<len;i++) {
 					var a = inlineLinks[i];
-					if (cm.styles.hasClass(a,'inline')) {
-						soundManager.createSound({
-							id: a.href,
-							url: a.href
-						});
-					}
+					soundManager.createSound({
+						id: a.href,
+						url: a.href
+					});
 					cm.styles.addClass(a,'stopped');
 					cm.events.add(a,'click',function(e) {
 						if (cm.styles.hasClass(a,'playstop')) {
@@ -271,12 +269,10 @@
 						});
 					} else {
 						cm.events.add(pp,'click',function(e) {
-							var s = soundManager.getSoundById(soundid);
-							if (s) {
-								self.toggle(s.id);
-								e.preventDefault();
-								return false;
-							}
+
+							self.toggle(e.currentTarget.getAttribute('data-soundid'));
+							e.preventDefault();
+							return false;
 						});
 					}
 				}
@@ -404,9 +400,9 @@
 			self._updateStyles(setstyles,'resume');
 		};
 
-		self._doStop = function(detail) {
+		self._doStop = function(id) {
 			// deal with inline buttons
-			var inlineLinks = document.querySelectorAll('a.cashmusic.soundplayer[href="' + self.sound.id + '"]');
+			var inlineLinks = document.querySelectorAll('a.cashmusic.soundplayer[href="' + id + '"]');
 			if (inlineLinks.length > 0) {
 				var iLen = inlineLinks.length;
 				for (var i=0;i<iLen;i++) {
@@ -416,35 +412,15 @@
 
 			var setstyles = document.querySelectorAll('*.cashmusic.setstyles');
 			self._updateStyles(setstyles,'stop');
-			self.sound = false;
 		};
 
 
 
 
 
-		self.next = function(playlistId,force) {
-			if (playlistId) {
-				if (self.playlist.id !== playlistId) self.playlist = self.playlists[playlistId];
-			}
-			var next = false;
-			var play = false;
-			var pl = self.playlist;
-			self.stop();
-			if (pl) {
-				if (pl.current < pl.tracks.length) {
-					next = pl.current + 1;
-					play = true;
-				} else {
-					next = 1;
-					if (force) {play = true;}
-				}
-				pl.current = next;
-			}
-			if (play) {
-				self.play(pl.tracks[next - 1].id);
-			}
-		};
+		/*
+			
+		*/
 
 		self.pause = function() {
 			if (self.sound) {
@@ -452,32 +428,9 @@
 			}
 		};
 
-		self.play = function(id) {
-			var s = soundManager.getSoundById(id);
-			if (s) {
-				if (self.sound && self.sound.id != id) self.stop();
-				if (!self.inPlaylist(self.playlist.id,id)) self.playlist = false;
-				self.sound = s;
-				s.play();
-				self._updateTitle();
-			}
-		};
-
-		self.previous = function(playlistId) {
-			if (playlistId) {
-				if (self.playlist.id !== playlistId) self.playlist = self.playlists[playlistId];
-			}
-			var next = false;
-			var pl = self.playlist;
-			self.stop();
-			if (pl) {
-				if (pl.current > 1) {
-					next = pl.current - 1;
-				} else {
-					next = pl.tracks.length;
-				}
-				pl.current = next;
-				self.play(pl.tracks[next - 1].id);
+		self.play = function() {
+			if (self.sound) {
+				self.sound.play();
 			}
 		};
 
@@ -489,7 +442,7 @@
 			}
 		};
 
-		self.seekTo = function(position,playlistId) {
+		self.seek = function(position,playlistId) {
 			if (playlistId) {
 				if (!self.playlist) {
 					return false;
@@ -501,69 +454,85 @@
 		};
 
 		self.stop = function() {
-			if (self.sound && self.sound.playState == 1) {
+			if (self.sound) {
+				self.pause();
 				self.sound.setPosition(0);
-				self.sound.stop();
+				self._doStop(self.sound.id);
 			}
 		};
 
 		// id is optional to also enable play...
 		self.toggle = function(id,usestop) {
-			if (self.sound) {
-				if (usestop) {
-					if (self.sound.playState == 1) {
-						if (!self.playlist) {
-							self.stop();							
-						} else {
-							if (!self.inPlaylist(self.playlist.id,id)) {
-								// we're playing something outside the playlist
-								// pause playlist and move on
-								self.pause();
-								self.sound = false; // unset so we don't lose playlist progress.
-								self.play(id);
-							} else {
-								// the song is part of a playlist...just toggle
-								self.sound.togglePause();
-							}
-						}
-					} else {
-						self.play(id);
-					}
-				} else {
-					self.sound.togglePause();
-				}
+			var action = usestop ? self.stop : self.pause;
+			if (self.sound.id !== id) {
+				action();
+				self.sound = soundManager.getSoundById(id);				
+			}
+			if (usestop && !self.sound.paused && self.sound.playState != 0) {
+				self.stop();
 			} else {
-				self.play(id);
+				self.sound.togglePause();
+			}
+			self._updateTitle();
+		};
+
+
+
+		self.next = function(playlistId,force) {
+			self.loadPlaylist(playlistId);
+			var next = false;
+			var play = false;
+			var pl = self.playlist;
+			if (pl) {
+				if (pl.current < pl.tracks.length) {
+					next = parseInt(pl.current) + 1;
+					play = true;
+				} else {
+					next = 1;
+					if (force) play = true;
+				}
+				pl.current = next;
+			}
+			if (play) {
+
+				self.playlistPlayTrack(pl.id,next);
+			}
+		};
+
+		self.previous = function(playlistId) {
+			self.loadPlaylist(playlistId);
+			var next = false;
+			var pl = self.playlist;
+			if (pl) {
+				if (pl.current > 1) {
+					next = parseInt(pl.current) - 1;
+				} else {
+					next = pl.tracks.length;
+				}
+				pl.current = next;
+				self.playlistPlayTrack(pl.id,next);
 			}
 		};
 
 		self.togglePlaylist = function(id) {
+			self.loadPlaylist(id);
+			self.toggle(self.playlist.tracks[self.playlist.current - 1].id);
+		};
+
+		self.playlistPlayTrack = function(id,track) {
+			self.loadPlaylist(id);
+			self.stop();
+			self.playlist.current = track;
+			self.toggle(self.playlist.tracks[track - 1].id);
+		};
+
+		self.loadPlaylist = function(id) {
 			if (self.sound && self.playlist) {
-				if (self.playlist.id != id) self.sound.pause();
+				if (self.playlist.id != id) self.pause();
 			}
 			if (self.sound && !self.playlist) self.stop();
-
 			self.playlist = self.playlists[id];
-			self.sound = soundManager.getSoundById(self.playlist.tracks[self.playlist.current - 1].id);
-			self.sound.togglePause();
-			self._updateTitle();
-		};
-
-		self.playlistPlayTrack = function(playlistId,track) {
-			if (self.playlist && self.sound) {
-				if (playlistId !== self.playlist.id) {
-					self.pause();
-				} else {
-					self.pause();
-					self.sound.setPosition(0);
-				}
-			} else {
-				self.stop();
-			}
-			self.playlist = self.playlists[playlistId];
-			self.play(self.playlist.tracks[track - 1].id);
-		};
-
+		}
 
 
 
