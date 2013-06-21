@@ -166,6 +166,7 @@
 							for (var li=0;li<l;li++) {
 								var el = controls[li];
 								if (cm.styles.hasClass(el,'playpause')) {
+									cm.styles.addClass(el,'paused');
 									cm.events.add(el,'click',function(e) {
 										self.togglePlaylist(playlist.id);
 									});
@@ -370,6 +371,10 @@
 		};
 
 		self._doPause = function(detail) {
+			// deal with playpause buttons
+			// deal with playpause buttons
+			self._switchStylesForCollection(document.querySelectorAll('*.cashmusic.playpause'),'playing','paused');
+
 			var setstyles = document.querySelectorAll('*.cashmusic.setstyles');
 			self._updateStyles(setstyles,'pause');
 		};
@@ -377,12 +382,13 @@
 		self._doPlay = function(detail) {
 			// deal with inline buttons
 			var inlineLinks = document.querySelectorAll('a.cashmusic.soundplayer[href="' + self.sound.id + '"]');
-			if (inlineLinks.length > 0) {
-				var iLen = inlineLinks.length;
-				for (var i=0;i<iLen;i++) {
-					cm.styles.swapClasses(inlineLinks[i],'stopped','playing');
-				}
+			var l = inlineLinks.length;
+			for (var i=0;i<l;i++) {
+				cm.styles.swapClasses(inlineLinks[i],'stopped','playing');
 			}
+
+			// deal with playpause buttons
+			self._switchStylesForCollection(document.querySelectorAll('*.cashmusic.playpause'),'paused','playing');
 
 			var setstyles = document.querySelectorAll('*.cashmusic.setstyles');
 			self._updateStyles(setstyles,'play');
@@ -396,6 +402,9 @@
 		};
 
 		self._doResume = function(detail) {
+			// deal with playpause buttons
+			self._switchStylesForCollection(document.querySelectorAll('*.cashmusic.playpause'),'paused','playing');
+
 			var setstyles = document.querySelectorAll('*.cashmusic.setstyles');
 			self._updateStyles(setstyles,'resume');
 		};
@@ -403,11 +412,9 @@
 		self._doStop = function(id) {
 			// deal with inline buttons
 			var inlineLinks = document.querySelectorAll('a.cashmusic.soundplayer[href="' + id + '"]');
-			if (inlineLinks.length > 0) {
-				var iLen = inlineLinks.length;
-				for (var i=0;i<iLen;i++) {
-					cm.styles.swapClasses(inlineLinks[i],'playing','stopped');
-				}
+			var l = inlineLinks.length;
+			for (var i=0;i<l;i++) {
+				cm.styles.swapClasses(inlineLinks[i],'playing','stopped');
 			}
 
 			var setstyles = document.querySelectorAll('*.cashmusic.setstyles');
@@ -554,6 +561,13 @@
 			return true;
 		};
 
+		self._checkIdsForElement = function(id,el) {
+			var data = {};
+			data.onSound = el.getAttribute('data-soundid');
+			data.onPlayer = el.getAttribute('data-playerid');
+			return self._checkIds(id,data);
+		};
+
 		/*
 		fires on progress for: play, load 
 
@@ -676,6 +690,15 @@
 			}
 		}
 
+		self._switchStylesForCollection = function(collection,oldclass,newclass) {
+			var l = collection.length;
+			for (var i=0;i<l;i++) {
+				if (self._checkIdsForElement(self.sound.id,collection[i])) {
+					cm.styles.swapClasses(collection[i],oldclass,newclass);
+				}
+			}
+		}
+			
 
 
 
