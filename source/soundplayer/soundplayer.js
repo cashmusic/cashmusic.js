@@ -257,7 +257,8 @@
 						if (s) {
 							self.toggle(s.id,true);
 							
-							e.preventDefault();
+							e.returnValue = false;
+							if(e.preventDefault) e.preventDefault();
 							return false;
 						}
 					});
@@ -277,14 +278,15 @@
 					if (playerid) {
 						cm.events.add(pp,'click',function(e) {
 							self.togglePlaylist(playerid);
-							e.preventDefault();
+							e.returnValue = false;
+							if(e.preventDefault) e.preventDefault();
 							return false;
 						});
 					} else {
 						cm.events.add(pp,'click',function(e) {
-
 							self.toggle(e.currentTarget.getAttribute('data-soundid'));
-							e.preventDefault();
+							e.returnValue = false;
+							if(e.preventDefault) e.preventDefault();
 							return false;
 						});
 					}
