@@ -5,9 +5,6 @@
  * http://closure-compiler.appspot.com/
  * Closure compiler, SIMPLE MODE, then append a semi-colon to the front to be careful
  *
- * PUBLIC-ISH FUNCTIONS
- * window.cashmusic.lightbox.injectIframe(url url)
- *
  * @package cashmusic.org.cashmusic
  * @author CASH Music
  * @link http://cashmusic.org/
@@ -79,15 +76,28 @@
 		};
 	}
 
+	/***************************************************************************************
+	 *
+	 * window.cashmusic.soundplayer (object)
+	 * SoundManager2 front and song-based tweening
+	 *
+	 * PUBLIC-ISH FUNCTIONS
+	 * window.cashmusic.soundplayer
+	 *
+	 ***************************************************************************************/
 	cm.soundplayer = {
 		playlist: false,
 		playlists: {},
 		sound: false,
 
+		/*
+		 * window.cashmusic.soundplayer._init()
+		 * A defered call to _init() will set up the object once SM2 is loaded below
+		 */
 		_init: function() {
 			var self = cm.soundplayer;
 
-			// build any actualy players, etc
+			// build any actualy players using the soundplayer.html / soundplayer.css
 			var playlistdivs = document.querySelectorAll('div.cashmusic.soundplayer.playlist');
 			len = playlistdivs.length;
 			if (len > 0) {
@@ -166,6 +176,7 @@
 							for (var li=0;li<l;li++) {
 								var el = controls[li];
 								if (cm.styles.hasClass(el,'playpause')) {
+									cm.styles.addClass(el,'paused');
 									cm.events.add(el,'click',function(e) {
 										self.togglePlaylist(playlist.id);
 									});
@@ -225,16 +236,18 @@
 			if (len > 0) {
 				cm.styles.injectCSS(
 					'a.cashmusic.soundplayer.inline.stopped:after{content: " [▸]";}' +
-					'a.cashmusic.soundplayer.inline.playing:after{content: " [■]";}'
+					'a.cashmusic.soundplayer.inline.playing:after{content: " [▪]";}'
 				);
 
 				for (var i=0;i<len;i++) {
 					var a = inlineLinks[i];
-					soundManager.createSound({
-						id: a.href,
-						url: a.href
-					});
 					cm.styles.addClass(a,'stopped');
+					if (!cm.styles.hasClass(a,'playstop')) {
+						soundManager.createSound({
+							id: a.href,
+							url: a.href
+						});
+					}
 					cm.events.add(a,'click',function(e) {
 						if (cm.styles.hasClass(a,'playstop')) {
 							var s = soundManager.getSoundById(a.getAttribute('data-soundid'));
@@ -277,14 +290,20 @@
 					}
 				}
 			}
-			//*/
 		}
 	};
 
-	window.SM2_DEFER = true;
+	window.SM2_DEFER = true; // force SM2 to defer auto-init, allow us to change defaults, etc.
 	cm.loadScript(cm.path+'lib/soundmanager/soundmanager2.js', function() {
 		var self = cm.soundplayer;
 		window.soundManager = new SoundManager();
+
+		/***************************************************************************************
+		 *
+		 * SM2 SETUP AND INITIALIZATION
+		 *
+		 ***************************************************************************************/
+
 		soundManager.setup({
 			url: cm.path+'lib/soundmanager/swf/',
 			flashVersion: 9,
@@ -331,9 +350,6 @@
 				},
 				whileplaying: function() {
 					var p = Math.round((this.position / this.duration) * 10000) / 100;
-					//if (this.readyState = 1) {
-						//p = Math.round(p * (this.bytesLoaded / this.bytesTotal));
-					//}
 					self._doPlaying({
 						id: this.id,
 						position: this.position,
@@ -343,15 +359,19 @@
 				}
 			}
 		});
+		// Deals with SM2 initialization. By default, SM2 does all this automatically if not deferred.
 		soundManager.beginDelayedInit();
 
 
+		/***************************************************************************************
+		 *
+		 * PSEUDO-EVENT CALLS
+		 * All of the querySelectorAll calls seem excessive, but we should respect the idea of 
+		 * dynamic DOM injection, AJAX, etc. Also these are mostly user-initiated so not often on
+		 * a hundreds-per-second scale.
+		 *
+		 ***************************************************************************************/
 
-
-
-		// All of the querySelectorAll calls seem excessive, but we should respect the idea of 
-		// dynamic DOM injection, AJAX, etc. Also these are mostly user-initiated so not often on
-		// a hundreds-per-second scale.
 		self._doFinish = function(detail) {
 			var setstyles = document.querySelectorAll('*.cashmusic.setstyles');
 			self._updateStyles(setstyles,'finish');
@@ -364,28 +384,22 @@
 		};
 
 		self._doLoading = function(detail) {
-			//console.log('loading: ' + detail.percentage + '%');
 			var tweens = document.querySelectorAll('*.cashmusic.tween');
 			self._updateTweens(tweens,'load',detail.percentage);
 		};
 
 		self._doPause = function(detail) {
+			// deal with playpause buttons
+			self._switchStylesForCollection(document.querySelectorAll('*.cashmusic.playpause'),'playing','paused');
+
 			var setstyles = document.querySelectorAll('*.cashmusic.setstyles');
 			self._updateStyles(setstyles,'pause');
 		};
 
 		self._doPlay = function(detail) {
-			// deal with inline buttons
-			var inlineLinks = document.querySelectorAll('a.cashmusic.soundplayer[href="' + self.sound.id + '"]');
-			if (inlineLinks.length > 0) {
-				var iLen = inlineLinks.length;
-				for (var i=0;i<iLen;i++) {
-					cm.styles.swapClasses(inlineLinks[i],'stopped','playing');
-				}
-			}
-
-			var setstyles = document.querySelectorAll('*.cashmusic.setstyles');
-			self._updateStyles(setstyles,'play');
+			// we're faking stop with a setposition(0) and pause...so this only fires once
+			// routing to doResume instead which fires reliably
+			self._doResume(detail);
 		};
 
 		self._doPlaying = function(detail) {
@@ -396,18 +410,30 @@
 		};
 
 		self._doResume = function(detail) {
+			// deal with inline buttons
+			var inlineLinks = document.querySelectorAll('a.cashmusic.soundplayer.inline[href="' + self.sound.id + '"]');
+			var l = inlineLinks.length;
+			for (var i=0;i<l;i++) {
+				cm.styles.swapClasses(inlineLinks[i],'stopped','playing');
+			}
+
+			// deal with playpause buttons
+			self._switchStylesForCollection(document.querySelectorAll('*.cashmusic.playpause'),'paused','playing');
+
 			var setstyles = document.querySelectorAll('*.cashmusic.setstyles');
-			self._updateStyles(setstyles,'resume');
+			if (self.sound.position > 0) {
+				self._updateStyles(setstyles,'play');
+			} else {
+				self._updateStyles(setstyles,'resume');
+			}
 		};
 
 		self._doStop = function(id) {
 			// deal with inline buttons
-			var inlineLinks = document.querySelectorAll('a.cashmusic.soundplayer[href="' + id + '"]');
-			if (inlineLinks.length > 0) {
-				var iLen = inlineLinks.length;
-				for (var i=0;i<iLen;i++) {
-					cm.styles.swapClasses(inlineLinks[i],'playing','stopped');
-				}
+			var inlineLinks = document.querySelectorAll('a.cashmusic.soundplayer.inline[href="' + id + '"]');
+			var l = inlineLinks.length;
+			for (var i=0;i<l;i++) {
+				cm.styles.swapClasses(inlineLinks[i],'playing','stopped');
 			}
 
 			var setstyles = document.querySelectorAll('*.cashmusic.setstyles');
@@ -418,9 +444,16 @@
 
 
 
-		/*
-			
-		*/
+		/***************************************************************************************
+		 *
+		 * PUBLIC-ISH FUNCTIONS
+		 * Easily accessible wrappers for SM2 interaction. We also mock/replace some functions
+		 * to guarantee state and make playlist management easier. The idea being that we only
+		 * want one sound playing at a given time, so we force that behavior by managing 
+		 * window.cashmusic.soundplayer.playlist and window.cashmusic.soundplayer.sound and
+		 * only calling pause/play in central functions.
+		 *
+		 ***************************************************************************************/
 
 		self.pause = function() {
 			if (self.sound) {
@@ -476,7 +509,9 @@
 			self._updateTitle();
 		};
 
-
+		/*
+		 * Playlist-specific functions
+		 */
 
 		self.next = function(playlistId,force) {
 			self.loadPlaylist(playlistId);
@@ -536,7 +571,18 @@
 
 
 
+		/***************************************************************************************
+		 *
+		 * TWEENS AND STYLE UPDATES
+		 *
+		 ***************************************************************************************/
 
+		/*
+		 * window.cashmusic.soundplayer._checkIds(id,data)
+		 * Takes a sound id to match and an object, checks that object for onSound and onPlayer
+		 * attributes, and compares to the passed id. If a sound id matches or if the id is part
+		 * of the playlist in a playerId it returns true.
+		 */
 		self._checkIds = function(id,data) {
 			var soundId = '';
 			var playerId = '';
@@ -548,40 +594,57 @@
 				if (id.indexOf(soundId) === -1) return false;
 			}
 			if (playerId) {
-				if (!self.inPlaylist(playerId,id)) return false;
+				if (!self._inPlaylist(playerId,id)) return false;
 			}
 
 			return true;
 		};
 
 		/*
-		fires on progress for: play, load 
+		 * window.cashmusic.soundplayer._checkIds(id,el)
+		 * Grabs data attributes and formats them to pass into _checkIds
+		 */
+		self._checkIdsForElement = function(id,el) {
+			var data = {};
+			data.onSound = el.getAttribute('data-soundid');
+			data.onPlayer = el.getAttribute('data-playerid');
+			return self._checkIds(id,data);
+		};
 
-		{
-			"play":[
-				{
-					"name":"left",
-					"startAt":0,
-					"endAt":50,
-					"startVal":0,
-					"endVal":250,
-					"units":"px",
-					"onSound":"url",
-					"onPlayer":"playerId"
-				}
-			],
-			"load":[
-				{
-					"name":"left",
-					"startAt":0,
-					"endAt":50,
-					"startVal":0,
-					"endVal":250,
-					"units":"px"
-				}
-			]
-		}
-		*/
+		/*
+		 * window.cashmusic.soundplayer._updateTweens(elements,type,percentage)
+		 * Takes a collection of DOM elements and reads the JSON data stored in
+		 * their data-tween attribute, updating the styles based on the passed-in
+		 * percentage. A sample JSON object is below. 
+		 *
+		 * Fires on progress for: play, load 
+		 * 
+		 * {
+		 * 	"play":[
+		 * 		{
+		 * 			"name":"left",
+		 * 			"startAt":0,
+		 * 			"endAt":50,
+		 * 			"startVal":0,
+		 * 			"endVal":250,
+		 * 			"units":"px",
+		 * 			"onSound":"url",
+		 * 			"onPlayer":"playerId"
+		 * 		}
+		 * 	],
+		 * 	"load":[
+		 * 		{
+		 * 			"name":"left",
+		 * 			"startAt":0,
+		 * 			"endAt":50,
+		 * 			"startVal":0,
+		 * 			"endVal":250,
+		 * 			"units":"px"
+		 * 		}
+		 * 	]
+		 * }
+		 * 
+		 */
 		self._updateTweens = function(elements,type,percentage) {
 			var eLen = elements.length;
 			for (var i=0;i<eLen;i++) {
@@ -614,20 +677,25 @@
 		};
 
 		/*
-		fires on events for: finish, pause, play, resume, stop
-
-		{
-			"stop":[
-				{
-					"name":"left",
-					"val":250,
-					"units":"px",
-					"onSound":"url",
-					"onPlayer":"playerId"
-				}
-			]
-		}
-		*/
+		 * window.cashmusic.soundplayer._updateStyles(elements,type)
+		 * Updates styles to fixed values for various audio-related events. This 
+		 * reads the data-styles attribute from a collection of DOM elements, 
+		 * updating them accordingly. A sample JSON object is below. 
+		 *
+		 * Fires on events for: finish, pause, play, resume, stop
+		 * 
+		 * {
+		 * 	"stop":[
+		 * 		{
+		 * 			"name":"left",
+		 * 			"val":250,
+		 * 			"units":"px",
+		 * 			"onSound":"url",
+		 * 			"onPlayer":"playerId"
+		 * 		}
+		 * 	]
+		 * }
+		 */
 		self._updateStyles = function(elements,type) {
 			var eLen = elements.length;
 			for (var i=0;i<eLen;i++) {
@@ -647,12 +715,29 @@
 			}
 		};
 
+		/*
+		 * window.cashmusic.soundplayer._switchStylesForCollection(collection,oldclass,newclass)
+		 * Shortcut — swaps out old styles for new in a given collection
+		 */
+		self._switchStylesForCollection = function(collection,oldclass,newclass) {
+			var l = collection.length;
+			for (var i=0;i<l;i++) {
+				if (self._checkIdsForElement(self.sound.id,collection[i]) && !cm.styles.hasClass(self.sound.id,collection[i],'inline')) {
+					cm.styles.swapClasses(collection[i],oldclass,newclass);
+				}
+			}
+		}
+
+		/*
+		 * window.cashmusic.soundplayer._updateTimes(position)
+		 * Updates all times for playtime elements matching the current sound/playlist.
+		 */
 		self._updateTimes = function(position) {
 			if (self.playlist) {
 				var times = document.querySelectorAll('div.cashmusic.soundplayer.playlist.playtime');
 				var l = times.length;
 				for (var n=0;n<l;n++) {
-					if (times[n].getAttribute('data-playerid') == self.playlist.id) {
+					if (self._checkIdsForElement(self.sound.id,times[n])) {
 						var min = Math.floor(position/60);
 						var sec = Math.floor(position - (min * 60));
 						if (!isNaN(min) && !isNaN(sec)) {
@@ -664,48 +749,57 @@
 			}
 		}
 
+		/*
+		 * window.cashmusic.soundplayer._updateTitle()
+		 * Updates all titles for nowplaying elements matching the current sound/playlist.
+		 */
 		self._updateTitle = function() {
 			if (self.playlist) {
 				var titles = document.querySelectorAll('div.cashmusic.soundplayer.playlist.nowplaying');
 				var l = titles.length;
 				for (var n=0;n<l;n++) {
-					if (titles[n].getAttribute('data-playerid') == self.playlist.id) {
+					if (self._checkIdsForElement(self.sound.id,titles[n])) {
 						titles[n].innerHTML = self.playlist.tracks[self.playlist.current - 1].title;
 					}
 				}
 			}
 		}
-
+			
 
 
 
 
 		/*
-		playlist:
-		{
-			id: string,
-			current: int (tracknumber) / null,
-			artist: string / null,
-			album: string / null,
-			cover: url / null,
-			url: url / null,
-			options: null,
-			tracks: [
-				{
-					id: string,
-					url: url,
-					title: string,
-					artist: string,
-					ISRC: string,
-					album: string,
-					label: string,
-					cover: url,
-					link: url,
-					resolve: bool
-				}
-			]
-		}
-		*/
+		 * window.cashmusic.soundplayer._formatPlaylist(playlist,useid,uniqueseed)
+		 * Takes a playlist and formats it, ensuring all required attributes are 
+		 * set and assigns a unique id if none has been defined.
+		 *
+		 * Example playlist:
+		 * {
+		 * 	id: string,
+		 * 	current: int (tracknumber) / null,
+		 * 	artist: string / null,
+		 * 	album: string / null,
+		 * 	cover: url / null,
+		 * 	url: url / null,
+		 * 	options: null,
+		 * 	tracks: [
+		 * 		{
+		 * 			id: string,
+		 * 			url: url,
+		 * 			title: string,
+		 * 			artist: string,
+		 * 			ISRC: string,
+		 * 			album: string,
+		 * 			label: string,
+		 * 			cover: url,
+		 * 			link: url,
+		 * 			resolve: bool
+		 * 		}
+		 * 	]
+		 * }
+		 * 
+		 */
 		self._formatPlaylist = function(playlist,useid,uniqueseed) {
 			playlist = playlist ? playlist : {};
 			if (!playlist.id) {
@@ -718,6 +812,10 @@
 			return playlist;
 		};
 
+		/*
+		 * window.cashmusic.soundplayer._formatTrack(a,playlist)
+		 * Formats a track pulled from an anchor to ensure all attributes are set.
+		 */
 		self._formatTrack = function(a,playlist) {
 			var track = cm.getJSON(a.getAttribute('data-track'));
 			track = track ? track : {};
@@ -728,7 +826,13 @@
 			return track;
 		};
 
-		self.inPlaylist = function(playlistid,soundid) {
+		/*
+		 * window.cashmusic.soundplayer._inPlaylist(playlistid,soundid)
+		 * Tests if a current sound id is present in a given playlist. Matches using indexof so 
+		 * any playlist id appended in front of a known/set id won't break the match. This makes
+		 * it a slightly fuzzy match, but provides more upside than down.
+		 */
+		self._inPlaylist = function(playlistid,soundid) {
 			if (playlistid) {
 				return (self.playlists[playlistid]._index.indexOf(soundid) > -1) ? true : false;
 			} else {
