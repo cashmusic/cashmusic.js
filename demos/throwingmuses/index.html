@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<!-- paulirish.com/2008/conditional-stylesheets-vs-css-hacks-answer-neither/ -->
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="width=380,user-scalable=no" />
+	<link rel="icon" type="image/png" href="http://cashmusic.org/images/icons/cash.png" />
+
+	<title>Purgatory / Paradise</title>
+
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300,300italic' rel='stylesheet' type='text/css'>
+	<style type="text/css">
+		html {margin:0;padding:0;height:100%;}
+		body {color:#fff;background-color:#2c342c;background-image:url(assets/images/bg.jpg);background-size:cover;text-align:left;font:15px/24px 'Open Sans Condensed',helveticaneue,"helvetica neue",helvetica,"segoe ui","segoe wp",arial,sans-serif;margin:0;padding:0;min-height:300px;text-rendering:optimizelegibility;height:100%;min-height:500px;overflow:hidden;}
+		h1 {color:#ffcb05;font-size:15px;line-height:1.25em;margin:0;font-weight:300;letter-spacing:0.5em;text-transform:uppercase;}
+		img {border:0;}
+		a {color:#ffcb05;text-decoration:none;}
+		a:hover {color:#fff;}
+		p {margin:0 0 1.5em 0;padding:0.5em 0.5em 0 0;}
+		p.big {margin-bottom:3em;line-height:24px;}
+
+		img.strip {height:100%;width:auto;position:absolute;top:0;z-index:10;}
+
+		h1 img {position:absolute;left:-66px;top:-1px;width:56px;height:56px;}
+
+		#center {position:absolute;left:50%;margin-left:-165px;top:0;width:380px;height:100%;background-image:url(assets/images/center.jpg);background-size:cover;z-index:1000;}
+		#listen {position:absolute;top:50%;margin-top:-40px;left:-200px;width:290px;z-index:1200;text-align:right;}
+		#email {position:absolute;top:50%;margin-top:-40px;left:295px;width:285px;z-index:1200;}
+		#slash {position:absolute;left:50%;top:50%;margin-top:-150px;margin-left:-8px;width:16px;height:300px;background-color:#0f100b;-moz-transform:rotate(22deg);-o-transform:rotate(22deg);-webkit-transform:rotate(22deg);-ms-transform:rotate(22deg);transform:rotate(22deg);overflow:hidden;}
+
+		div.mobileonly {display:none;}
+		span.mobileonly {display:none;}
+		div.desktoponly {display:block;}
+		span.desktoponly {display:inline;}
+
+		@media only screen and (max-width:480px){
+			img.strip {display:none;}
+			@-ms-viewport {width:380px;zoom:auto;user-zoom:fixed;} 
+			@-o-viewport {width:380px;zoom:auto;user-zoom:fixed;} 
+			@viewport {width:380px;zoom:auto;user-zoom:fixed;}
+
+			div.mobileonly {display:block;}
+			span.mobileonly {display:inline;}
+			div.desktoponly {display:none;}
+			span.desktoponly {display:none;}
+
+			#center {left:0;margin-left:0;top:0;width:100%;}
+			#listen, #email {position:relative;top:0;margin-top:0;left:0;width:300px;padding-left:48px;text-align:left;}
+			#listen {margin-top:42px;}
+			#slash {left:0;top:0;margin-top:0;margin-left:0;height:100%;-moz-transform:rotate(0deg);-o-transform:rotate(0deg);-webkit-transform:rotate(0deg);-ms-transform:rotate(0deg);transform:rotate(0deg);overflow:hidden;}
+		}
+	</style>
+	
+	<!-- IE Fix for HTML5 Tags -->
+	<!--[if lt IE 9]>
+		<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<script type="text/javascript" src="../../source/cashmusic.js" data-options="lightboxvideo"></script>
+</head>
+<body>
+	<a style="display:none;" href="http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3" class="cashmusic soundplayer inline">DOWNLOAD TRACK</a>
+	<img src="assets/images/strip1.jpg" alt="" class="strip cashmusic tween" 
+		style="left:9%;"
+		data-tween='{"play":[
+			{"name":"left","startAt":4,"endAt":55,"startVal":9,"endVal":105,"units":"%","onSound":"http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3"},
+			{"name":"left","startAt":56,"endAt":90,"startVal":105,"endVal":9,"units":"%","onSound":"http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3"}
+		]}'
+	/>
+	<img src="assets/images/strip2.jpg" alt="" class="strip cashmusic tween" 
+		style="left:32%;"
+		data-tween='{"play":[
+			{"name":"left","startAt":6,"endAt":52,"startVal":32,"endVal":105,"units":"%","onSound":"http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3"},
+			{"name":"left","startAt":53,"endAt":92,"startVal":105,"endVal":32,"units":"%","onSound":"http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3"}
+		]}'
+	/>
+	<img src="assets/images/strip3.jpg" alt="" class="strip cashmusic tween" 
+		style="right:28%;"
+		data-tween='{"play":[
+			{"name":"right","startAt":2,"endAt":41,"startVal":28,"endVal":105,"units":"%","onSound":"http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3"},
+			{"name":"right","startAt":42,"endAt":88,"startVal":105,"endVal":28,"units":"%","onSound":"http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3"}
+		]}'
+	/>
+	<img src="assets/images/strip4.jpg" alt="" class="strip cashmusic tween" 
+		style="right:4%;"
+		data-tween='{"play":[
+			{"name":"right","startAt":18,"endAt":66,"startVal":4,"endVal":105,"units":"%","onSound":"http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3"},
+			{"name":"right","startAt":67,"endAt":95,"startVal":105,"endVal":4,"units":"%","onSound":"http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3"}
+		]}'
+	/>
+
+	<div id="center">
+		<div id="listen">
+			<h1>Purgatory / Paradise</h1>
+			<p>
+				New from Throwing Muses, fall 2013. <a href="#" class="cashmusic soundplayer playpause" data-soundid="http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3">Click to preview.</a>
+			</p>
+		</div>
+		<div id="slash">
+			<div class="cashmusic tween"
+				style="position:absolute;bottom:-1%;left:0;width:16px;height:0.1%;background-color:#ffcb05;"
+				data-tween='{"play":[
+					{"name":"height","startAt":0,"endAt":100,"startVal":1,"endVal":101,"units":"%","onSound":"http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3"}
+				]}'
+			></div>
+		</div>
+		<div id="email">
+			<h1>Stay in touch</h1>
+			<p>
+				Follow <a href="http://twitter.com/throwingmuses" target="_blank">@throwingmuses</a> on twitter.<br />
+				For more details, 
+				<span class="desktoponly">
+					<script type="text/javascript" class="cashmusic">window.cashmusic.embed('http://x.cashmusic.org/public/','596',true,'join our mailing list.');</script>
+				</span>
+				<span class="mobileonly">
+					join our mailing list.
+				</span>
+			</p>
+			<div class="mobileonly">
+				<script type="text/javascript" class="cashmusic">window.cashmusic.embed('http://x.cashmusic.org/public/','596');</script>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
