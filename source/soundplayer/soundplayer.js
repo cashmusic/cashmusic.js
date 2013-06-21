@@ -41,10 +41,11 @@
 	// Thanks Kirupa Chinnathambi!
 	// http://www.kirupa.com/html5/getting_mouse_click_position.htm
 	cm.measure.getClickPosition = function(e) {
-		var parentPosition = cm.measure.getPosition(e.currentTarget);
+		var t = (e.currentTarget) ? e.currentTarget : e.srcElement;
+		var parentPosition = cm.measure.getPosition(t);
 		var xPosition = e.clientX - parentPosition.x;
 		var yPosition = e.clientY - parentPosition.y;
-		var percent = xPosition / e.currentTarget.clientWidth;
+		var percent = xPosition / t.clientWidth;
 		return { x: xPosition, y: yPosition, percentage: percent };
 	};
 
@@ -209,7 +210,8 @@
 								}
 								if (cm.styles.hasClass(el,'changetrack')) {
 									cm.events.add(el,'click',function(e) {
-										var track = e.currentTarget.getAttribute('data-track');
+										var t = (e.currentTarget) ? e.currentTarget : e.srcElement;
+										var track = t.getAttribute('data-track');
 										self.playlistPlayTrack(playlist.id,track);
 									});
 								}
@@ -277,14 +279,16 @@
 					var playerid = pp.getAttribute('data-playerid');
 					if (playerid) {
 						cm.events.add(pp,'click',function(e) {
-							self.togglePlaylist(playerid);
+							var t = (e.currentTarget) ? e.currentTarget : e.srcElement;
+							self.togglePlaylist(t.getAttribute('data-playerid'));
 							e.returnValue = false;
 							if(e.preventDefault) e.preventDefault();
 							return false;
 						});
 					} else {
 						cm.events.add(pp,'click',function(e) {
-							self.toggle(e.currentTarget.getAttribute('data-soundid'));
+							var t = (e.currentTarget) ? e.currentTarget : e.srcElement;
+							self.toggle(t.getAttribute('data-soundid'));
 							e.returnValue = false;
 							if(e.preventDefault) e.preventDefault();
 							return false;
@@ -499,6 +503,7 @@
 		// id is optional to also enable play...
 		self.toggle = function(id,usestop) {
 			var action = usestop ? self.stop : self.pause;
+			self.sound = self.sound ? self.sound : soundManager.getSoundById(id); // necesito para ie
 			if (self.sound.id !== id) {
 				action();
 				self.sound = soundManager.getSoundById(id);				
