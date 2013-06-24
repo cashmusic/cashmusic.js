@@ -95,7 +95,7 @@
 
 		<div class="row" style="padding-top:0;">
 			<div class="twelve columns">
-				<h2>CASH Embeds</h2>
+				<h2>CASH Music platform embeds</h2>
 				<p>
 					These are the standard embed codes offered via the CASH Music platform — HTML5-friendly
 					workflows embedded in your page with a single line of JavaScript.
@@ -104,7 +104,7 @@
 					<div class="eight columns">
 						<script type="text/javascript" src="source/cashmusic.js" data-options="lightboxvideo"></script><script type="text/javascript">window.cashmusic.embed('http://x.cashmusic.org/public/','2');</script>
 					</div><div class="four columns">
-						<script type="text/javascript" class="cashmusic">window.cashmusic.embed('http://x.cashmusic.org/public/','2',true,'Or open it in a lightbox.');</script>
+						<script type="text/javascript" class="cashmusic">window.cashmusic.embed('http://x.cashmusic.org/public/','2',true,'Or open it in a lightbox.',false,{'top':'35%','width':'30%','left':'35%','marginLeft':'0'});</script>
 					</div>
 				</div>
 
@@ -116,10 +116,10 @@
 				</p>
 				<div class="row">
 					<div class="three columns">
-						<a href="https://www.youtube.com/watch?v=WQPfQvLIseA">RED FANG - "Wires"</a><br />(YouTube)
+						<a href="https://www.youtube.com/watch?v=WQPfQvLIseA"><img src="demos/mainpage/assets/images/redfang.jpg" width="100%" alt="Red Fang" /><br />RED FANG - "Wires"</a><br />(YouTube)
 					</div><div class="three columns">
-						<a href="https://vimeo.com/15744536">XIU XIU - "Boy Soprano"</a><br />(Vimeo)
-					</div><div class="three columns"></div>
+						<a href="https://vimeo.com/15744536"><img src="demos/mainpage/assets/images/xiuxiu.jpg" width="100%" alt="Xiu Xiu" /><br />XIU XIU - "Boy Soprano"</a><br />(Vimeo)
+					</div><div class="six columns"></div>
 				</div>
 
 				<h2 style="margin-top:48px;">Tween</h2>
@@ -182,8 +182,23 @@
 					The whole idea is to make truly unique music player expeiences possible for everyone, 
 					mobile-friendly, with little to no actual coding needed. Here are more examples.
 				</p>
+				<div class="row">
+					<div class="six columns">
+						<p>
+							<a href="demos/throwingmuses/"><img src="demos/mainpage/assets/images/throwingmuses.jpg" width="100%" alt="Throwing Muses" /><br />Throwing Muses page player</a>
+						</p>
+					</div><div class="six columns">
+					</div>
+				</div>
+
+
+				<br /><br />
+				<h2 style="margin-top:48px;">License and dependencies</h2>
 				<p>
-					<a href="demos/throwingmuses/">Throwing Muses player</a>
+					cashmusic.js is distributed under a <a href="https://github.com/cashmusic/cashmusic.js/blob/master/LICENSE">simplified BSD License</a> 
+					— so pretty much go nuts. Build rad stuff. Give back where you can. There are no external dependencies other than 
+					<a href="http://www.schillmania.com/projects/soundmanager2/">SoundManager 2</a> for audio playback. We've 
+					taken lengths to make sure we don't interfere with jQuery or similar libraries, so cashmusic.js should play well with others.
 				</p>
 			</div>
 		</div>
