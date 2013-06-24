@@ -133,7 +133,7 @@
 			 * a targetNode to serve as the anchor — with the embed chucked immediately after that 
 			 * element in the DOM.
 			 */
-			embed: function(publicURL, elementId, lightboxed, lightboxTxt, targetNode) {
+			embed: function(publicURL, elementId, lightboxed, lightboxTxt, targetNode, position) {
 				var cm = window.cashmusic;
 				var embedURL = publicURL.replace(/\/$/, '') + '/request/embed/' + elementId + '/location/' + encodeURIComponent(window.location.href.replace(/\//g,'!slash!'));
 				var iframe = document.createElement('iframe');
@@ -167,13 +167,24 @@
 									a.innerHTML = lightboxTxt;
 								embedNode.appendChild(a);
 								currentNode.parentNode.insertBefore(embedNode,currentNode);
-								cm.events.add(a,'click',function(e) {
-									cm.overlay.resize('40px','30%','40%','0');
-									cm.overlay.content.appendChild(iframe);
-									window.cashmusic.fader.init(cm.overlay.bg, 100);
-									e.preventDefault();
-									return false;
-								});
+								(function(position) {
+									if (typeof position !== 'object') {
+										position = {
+											'top':'40px',
+											'left':'30%',
+											'width':'40%',
+											'marginLeft':'0'
+										}
+									}
+									cm.events.add(a,'click',function(e) {
+										// top, left, width, marginLeft
+										cm.overlay.resize(position.top,position.left,position.width,position.marginLeft);
+										cm.overlay.content.appendChild(iframe);
+										window.cashmusic.fader.init(cm.overlay.bg, 100);
+										e.preventDefault();
+										return false;
+									});
+								})(position);
 							});
 						});
 					} else {
@@ -526,7 +537,7 @@
 			 *
 			 * PUBLIC-ISH FUNCTIONS
 			 * window.cashmusic.overlay.create(function callback)
-			 * window.cashmusic.overlay.resize(string top,string left,string width,string marginleft)
+			 * window.cashmusic.overlay.resize(string top,string left,string width,string marginLeft)
 			 *
 			 ***************************************************************************************/
 			overlay: {
@@ -578,12 +589,12 @@
 					}
 				},
 
-				resize: function(top,left,width,marginleft) {
+				resize: function(top,left,width,marginLeft) {
 					var cs = window.cashmusic.overlay.content.style;
 					cs.top = top;
 					cs.left = left;
 					cs.width = width;
-					cs.marginLeft = marginleft;
+					cs.marginLeft = marginLeft;
 				}
 			},
 
