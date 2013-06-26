@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<!-- paulirish.com/2008/conditional-stylesheets-vs-css-hacks-answer-neither/ -->
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="width=device-width" />
+	<link rel="icon" type="image/png" href="http://cashmusic.org/images/icons/cash.png" />
+
+	<title>CASH Music</title>
+
+	<link rel="stylesheet" href="../demos/mainpage/assets/css/foundation.min.css">
+	<link href='https://fonts.googleapis.com/css?family=Amatic+SC|Roboto+Condensed:400,700italic,400italic,700,300,300italic|Noto+Serif:400,700italic,400italic,700' rel='stylesheet' type='text/css'>
+	<style type="text/css">
+		html {margin:0;padding:0;height:100%;}
+		body {color:#2c2222;background-color:#e4e4e4;text-align:left;font:13px/20px "Noto Serif",helveticaneue,"helvetica neue",helvetica,"segoe ui","segoe wp",arial,sans-serif;margin:0;padding:0;min-height:300px;text-rendering:optimizelegibility;height:100%;min-height:500px;}
+		h1 {color:#000;font-size:52px;font-family:'Amatic SC';line-height:52px;margin:0 0 12px 0;font-weight:400;}
+		h2 {color:#000;font-size:19px;font-family:'Roboto Condensed';line-height:19px;margin:0 0 6px 0;font-weight:700;}
+		h3, ul li {color:#aaa;font-size:15px;font-family:'Roboto Condensed';line-height:15px;margin:0 0 3px 0;font-weight:700;} 
+		h4 {color:inherit;}
+		h5 {color:#ff0;font-size:11px;margin:6px 0 12px 0;font-weight:bold;}
+		img {border:0;}
+		a {color:#df0854;}
+		a:hover {color:#000 !important;}
+		a:visited {color:#df0854;}
+		p {margin:0 0 1.5em 0;}
+		big,.big {font:16px/16px "Noto Serif",helveticaneue,"helvetica neue",helvetica,"segoe ui","segoe wp",arial,sans-serif;}
+		p.big {margin-bottom:3em;line-height:24px;}
+
+		ul li {list-style-type:none;margin-bottom:0.75em;}
+
+		h1 img {position:absolute;left:-86px;top:3px;width:76px;height:76px;}
+
+		.issue {font-size:11px;margin-left:6px;}
+		.cash_notation {font-size:10px;color:#aaa;margin-top:4px;}
+		.cash_notation a {color:#aaa !important;}
+
+		#topspc {position:absolute;top:0;left:0;width:100%;height:482px;background-image:url(../demos/mainpage/assets/images/mthood.jpg);background-position:center center;z-index:10;}
+		#copyspc {position:relative;z-index:100;background-color:#e4e4e4;margin-top:460px;min-height:400px;}
+		#headerspc {position:absolute;top:-140px;width:100%;}
+
+		#headerspc h1 {font-size:80px;line-height:80px;color:#ff0;}
+		#headerspc .big {color:#fff;padding-left:4px;}
+		#headerspc p {margin:0 0 0.75em 0;}
+
+		.logo {width:100%;margin:10px 0 20px 0;}
+		.logo.small {width:45%;margin-top:20px;margin-left:3px;}
+
+		@media only screen and (max-width:480px){
+			#topspc {min-height:220px;background-position:center bottom;}
+			#copyspc {background-color:#e4e4e4;margin-top:220px;}
+			#headerspc {top:-215px;}
+			#headerspc h1 {font-size:40px;line-height:40px;color:#ff0;}
+			h1 img {position:relative;left:0;top:0;width:76px;height:76px;display:block;margin-bottom:20px;}
+			#madepossibleby {margin-top:48px;}
+		}
+	</style>
+	<!-- IE Fix for HTML5 Tags -->
+	<!--[if lt IE 9]>
+		<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+</head>
+<body>
+
+	<div id="topspc"></div><br />
+
+	<div id="copyspc" data-0="marginTop:460px;" data-320="marginTop:140px;" >
+		<div id="headerspc">
+			<div class="row">
+				<div class="twelve columns">
+					<h1 style="position:relative;">
+					<img alt="" src="../demos/mainpage/assets/images/littlebo.png" />
+						cashmusic.js
+					</h1>
+					<p class="big" style="margin-bottom:0 !important;">
+						Embed stuff, play stuff, move stuff — now with 90% less JavaScript
+					</p>
+				</div>
+			</div>
+		</div>
+
+		<div class="row" style="padding-top:16px;">
+			<div class="twelve columns">
+				<p class="big">
+					cashmusic.js is meant to be simple to use, providing its functionality without the 
+					need for much additional scripting. Simply include the main cashmusic.js script (7.2kb)
+					and additional scripts will be loaded as needed. The global namespace is kept 
+					clean with the addition of just a single window.cashmusic object under which
+					all cashmusic.js objects and functions live. Family style.
+					<br /><br />
+					All examples assume that cashmusic.js has been included.
+				</p>
+			</div>
+		</div>
+
+		<div class="row" style="padding-top:0;">
+			<div class="three columns" style="padding-bottom:48px;">
+				<ul>
+					<li><a href="#embeds">CASH Music embeds</a></li>
+					<li><a href="#lightboxes">Video lightboxes</a></li>
+					<li><a href="#inline">Inline players</a></li>
+					<li><a href="#toggles">Play/pause/stop toggles</a></li>
+					<li><a href="#players">Full UI players</a></li>
+					<li><a href="#advanced">Tweening/advanced styling</a></li>
+				</ul>
+			</div>
+			<div class="nine columns">
+				<a name="embeds"></a>
+				<h2>CASH Music platform embeds</h2>
+				<p>
+					These embeds are the only parts of cashmusic.js that require the full CASH Music 
+					platform. They are the standard method of embedding iframe-based elements from
+					an instance of the platform on any other site.
+				</p><p>
+					In this basic example, an element is embedded in place by id only:
+				</p>
+				<script src="https://gist.github.com/jessevondoom/5856499.js"></script>
+				<p>
+					This example shows all options for the embeds. Endpoint and id are always required,
+					but you can also choose to have the element appear in an overlay (lightboxed.) A 
+					lightboxed element will create a link inline with the caption passed in to the 
+					window.cashmusic.embed function. You can also pass in an object specifying size and
+					position of the element inside the overlay. Follow the format below.
+				</p><p>
+					For embed calls after page load, provide a target element as the final argument to 
+					window.cashmusic.embed. This will place the embed, iframe or lightbox link, inside
+					the first matching element. The target should be a string that will work with 
+					document.querySelector, like "#id", "#id .class", or similar.
+				</p><p>
+					For styling, all iframe embeds are placed in a &lt;div&gt; classed with "cashmusic embed" 
+					and lightboxed embed links are placed in a &lt;span&gt; classed "cashmusic embed".
+				</p><p>
+					All options:
+				</p>
+				<script src="https://gist.github.com/jessevondoom/5860605.js"></script>
+
+				<a name="lightboxes"></a>
+				<h2 style="margin-top:48px;">Video lightboxes</h2>
+				<p>
+					Lightboxed video is easy. So easy it's dumb I'm even writing documentation for it. 
+					All you need to do is add 'data-options="lightboxvideo"' to the initial cashmusic.js
+					&lt;script&gt; tag when you include it. Like this:
+				</p>
+				<script src="https://gist.github.com/jessevondoom/5861103.js"></script>
+				<p>
+					I'm not even saying anything else. Link to regular YouTube/Vimeo links and they 
+					turn into lightboxes. On mobile they just work like normal. The size is automatic. 
+					You've seen it before. Whatever. Moving on.
+				</p><p>
+					Styles for the overlays can be found in the templates folder in overlay.css, with
+					markup in the overlay.html file. You can overwrite these files to change, or simply
+					redeclare the styles in a stylesheet of your own. 
+				</p>
+
+				<a name="inline"></a>
+				<h2 style="margin-top:48px;">Inline audio players</h2>
+				<p>
+					The inline audio player option lets you turn a link to an MP3 into a play/pause
+					button. Any link tagged with "cashmusic soundplayer inline" will turn into a toggle
+					link. 
+				</p><p>
+					Inline players will get "stopped" and "playing" classes added to them as appropriate.
+				</p>
+				<script src="https://gist.github.com/jessevondoom/5862424.js"></script>
+
+				<a name="toggles"></a>
+				<h2 style="margin-top:48px;">Play/pause/stop toggles</h2>
+				<p>
+					Toggles make links or other DOM elements into play/pause or play/stop buttons for 
+					specific sounds or playlists. They work like inline players but need to have a 
+					sound or player id set. To turn a link or element into a toggle use the 
+					"cashmusic soundplayer playpause" and "cashmusic soundplayer playstop" classes. 
+					Add sound id or player id is required, using the "data-soundid" or 
+					"data-playerid" data attribute of the DOM element.
+				</p><p>
+					Player ids are set on creation of a playlist, covered below. The sound id can be
+					set as part of the playlist, or will be automatically set to the url of the sound
+					when it is added as an inline player or as part of a playlist.
+				</p>
+				<script src="https://gist.github.com/jessevondoom/5862453.js"></script>
+
+				<a name="players"></a>
+				<h2 style="margin-top:48px;">Full UI players</h2>
+				<p>
+					These players are HTML5-compatible highly-styleable audio players created from a 
+					simple collection of links or JSON-based playlist. They use the tweening
+					techniques mentioned below with a simple HTML/CSS template, so it's very easy
+					to customize a little or a whole lot. 
+				</p><p>
+					To create a new player you first need to define a &lt;div&gt; and add the 
+					"cashmusic soundplayer playlist" classes. If you set an id for the &lt;div&gt; it
+					will become the playler id, if not you need to specify a unique player id in the
+					JSON or the window.cashmusic.soundplayer object will assign it a random id.
+				</p><p>
+					Tracks are added two ways. If you're using HTML markup to add your player tracks 
+					will be created for all links to audio. (Note the "display:none;" style to avoid)
+					a brief flicker as links turn into the player. If you use JSON you'll be able to 
+					specify more options per track and you don't need to add links to the div. 
+				</p><p>
+					The following examples show basic players. We've set aside space in the definitions
+					for more advanced features like album art, deep track metadata, tagging, reporting
+					ISRC and playtime, and resolution of private assets for secure players.
+				</p><p>
+					To customize players you can simply add styles based on the templates/soundplayer.css
+					to your own stylesheets. cashmusic.js prepends styles to the beginning of the 
+					document &lt;head&gt; so your styles will override defaults. For deeper customization
+					alter the markup in the templates/soundplayer.html file.
+				</p>
+				<script src="https://gist.github.com/jessevondoom/5862620.js"></script>
+				<p>
+					An example of a player built with a JSON playlist. Fun with HTML whitespace.
+				</p>
+				<script src="https://gist.github.com/jessevondoom/5862770.js"></script>
+
+				<a name="advanced"></a>
+				<h2 style="margin-top:48px;">Tweening/advanced player styling</h2>
+				<p>
+					The default players are built using CSS tweens that can be applied to any DOM 
+					element. Altering styles based on audio progress is pretty simple. You need to 
+					add the "cashmusic tween" styles to an element, then specify style changes for
+					play or load progress (in percentage) of the piece of audio — it will work with 
+					any style that takes a numeric value. These style changes are defined as JSON in
+					the "data-tween" attribute of the element. Like so:
+				</p>
+				<script src="https://gist.github.com/jessevondoom/5863670.js"></script>
+				<p>
+					You'll notice that there is a similar "data-styles" attribute defined there. 
+					Well not every style change is a tween on load/play progress. Sometimes you just
+					want to set things after an event. That's cool. To use the "data-styles" attribute 
+					just add the "cashmusic setstyles" classes to your element and go for it. You can
+					change any style, numeric or otherwise, in response to these events:
+				</p><p>
+					finish, pause, play, resume, stop, load
+				</p><p>
+					You can set styles for one or more of these events by setting the corresponding 
+					property in the JSON definition. Each is an array and can accept multiple stlye
+					definitions.
+				</p><p>
+					Tween and setstyle elements respond to either a sound or a playlist by setting
+					the onSound or onPlayer property in the JSON object. You must set one to have 
+					any effect. The player id is set at playlist definition, as is the sound id. If 
+					you do not set a sound id it will be set to the URL of the sound, so that's a 
+					good bet for most inline / one-off sounds. 
+				</p><p>
+					Look at the <a href="../demos/throwingmuses/">Throwing Muses demo</a> for advanced tweening/styling in practice.
+				</p>
+			</div>
+		</div>
+	</div>
+
+	<br /><br /><br />
+
+	<script type="text/javascript" src="../demos/mainpage/assets/scripts/skrollr.min.js"></script>
+	<script type="text/javascript">
+		if (document.documentElement.clientWidth > 480) {
+			skrollr.init();
+		}
+	</script>
+	
+	<a href="https://github.com/cashmusic/cashmusic.js"><img style="position: absolute; top: 0; right: 0; border: 0;z-index:2500;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_white_ffffff.png" alt="Fork me on GitHub"></a>
+</body>
+</html>

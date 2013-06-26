@@ -133,7 +133,7 @@
 			 * a targetNode to serve as the anchor — with the embed chucked immediately after that 
 			 * element in the DOM.
 			 */
-			embed: function(publicURL, elementId, lightboxed, lightboxTxt, targetNode, position) {
+			embed: function(publicURL, elementId, lightboxed, lightboxTxt, position, targetNode) {
 				var cm = window.cashmusic;
 				var embedURL = publicURL.replace(/\/$/, '') + '/request/embed/' + elementId + '/location/' + encodeURIComponent(window.location.href.replace(/\//g,'!slash!'));
 				var iframe = document.createElement('iframe');
@@ -147,7 +147,9 @@
 					var currentNode = document.querySelector(targetNode);
 				} else {
 					// if used non-AJAX we just grab the current place in the doc
-					var allScripts = document.querySelectorAll('script[src$="cashmusic.js"],script.cashmusic');
+					// because we're running as the document is loading in a blocking fashion, the 
+					// last script element will be the current script asset. 
+					var allScripts = document.querySelectorAll('script');
 					var currentNode = allScripts[allScripts.length - 1];
 				}
 				// be nice neighbors. if we can't find currentNode, don't do the rest or pitch errors. silently fail.
@@ -155,7 +157,7 @@
 					if (lightboxed) {
 						// create a div to contain the link/iframe
 						var embedNode = document.createElement('span');
-						embedNode.className = 'cashmusic_embed';
+						embedNode.className = 'cashmusic embed';
 						embedNode.style.position = 'relative';
 						cm.contentLoaded(function() {
 							// open in a lightbox with a link in the target div
@@ -190,7 +192,7 @@
 					} else {
 						// create a div to contain the link/iframe
 						var embedNode = document.createElement('div');
-						embedNode.className = 'cashmusic_embed';
+						embedNode.className = 'cashmusic embed';
 						embedNode.style.position = 'relative';
 						embedNode.appendChild(iframe);
 						currentNode.parentNode.insertBefore(embedNode,currentNode);
@@ -632,7 +634,7 @@
 		 *	Post-definition (runtime) calls. For the _init() function to "auto" load...
 		 */
 		var init = function(){cashmusic._init(cashmusic);}; // function traps cashmusic in a closure
-		cashmusic.contentLoaded(init);
+		cashmusic.contentLoaded(init); // loads only after the page is complete
 	}
 
 	/*
