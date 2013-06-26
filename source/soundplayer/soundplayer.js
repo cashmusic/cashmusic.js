@@ -689,14 +689,13 @@
 		 * reads the data-styles attribute from a collection of DOM elements, 
 		 * updating them accordingly. A sample JSON object is below. 
 		 *
-		 * Fires on events for: finish, pause, play, resume, stop
+		 * Fires on events for: finish, pause, play, resume, stop, load
 		 * 
 		 * {
 		 * 	"stop":[
 		 * 		{
 		 * 			"name":"left",
-		 * 			"val":250,
-		 * 			"units":"px",
+		 * 			"val":"250px",
 		 * 			"onSound":"url",
 		 * 			"onPlayer":"playerId"
 		 * 		}
@@ -714,7 +713,7 @@
 						var dLen = data[type].length;
 						for (var n=0;n<dLen;n++) {
 							if (self._checkIds(self.sound.id,data[type][n])) {
-								el.style[data[type][n].name] = data[type][n].val + data[type][n].units;
+								el.style[data[type][n].name] = data[type][n].val;
 							}
 						}
 					}
