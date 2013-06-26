@@ -23,11 +23,13 @@
 		h5 {color:#ff0;font-size:11px;margin:6px 0 12px 0;font-weight:bold;}
 		img {border:0;}
 		a {color:#df0854;}
-		a:hover {color:#000;}
+		a:hover {color:#000 !important;}
 		a:visited {color:#df0854;}
 		p {margin:0 0 1.5em 0;}
 		big,.big {font:16px/16px "Noto Serif",helveticaneue,"helvetica neue",helvetica,"segoe ui","segoe wp",arial,sans-serif;}
 		p.big {margin-bottom:3em;line-height:24px;}
+
+		.altbig {color:#000;font-size:22px;font-family:'Roboto Condensed';line-height:32px;font-weight:700;margin-bottom:42px;}
 
 		h1 img {position:absolute;left:-86px;top:3px;width:76px;height:76px;}
 
@@ -69,7 +71,7 @@
 			<div class="row">
 				<div class="twelve columns">
 					<h1 style="position:relative;">
-					<img alt="" src="demos/mainpage/assets/images/jackson.png" />
+					<img alt="" src="demos/mainpage/assets/images/littlebo.png" />
 						cashmusic.js
 					</h1>
 					<p class="big" style="margin-bottom:0 !important;">
@@ -81,14 +83,18 @@
 
 		<div class="row" style="padding-top:16px;">
 			<div class="twelve columns">
-				<p class="big">
+				<p class="big" style="margin-bottom:2em;">
 					cashmusic.js is a lightweight library that handles CASH Music embeds, does some 
 					basic video lightboxing, and provides a simple interface to audio (via SoundManager 2.) 
 					It also introduces animating all elements of a page against audio progress, all 
 					with no scripting at all. Define waypoints in an element's data attributes using 
 					simple JSON and the library handles all tweening.
+				</p>
+				<p class="altbig">
+					<a href="https://github.com/cashmusic/cashmusic.js/archive/master.zip">Download it</a><br />
+					<a href="docs/">Read the docs</a>
 					<br /><br />
-					Some other stuff too. More documentation soon.
+					See it:
 				</p>
 			</div>
 		</div>
@@ -104,7 +110,7 @@
 					<div class="eight columns">
 						<script type="text/javascript" src="source/cashmusic.js" data-options="lightboxvideo"></script><script type="text/javascript">window.cashmusic.embed('http://x.cashmusic.org/public/','2');</script>
 					</div><div class="four columns">
-						<script type="text/javascript" class="cashmusic">window.cashmusic.embed('http://x.cashmusic.org/public/','2',true,'Or open it in a lightbox.',false,{'top':'35%','width':'30%','left':'35%','marginLeft':'0'});</script>
+						<script type="text/javascript">window.cashmusic.embed('http://x.cashmusic.org/public/','2',true,'Or open it in a lightbox.',{'top':'35%','width':'30%','left':'35%','marginLeft':'0'});</script>
 					</div>
 				</div>
 
@@ -137,9 +143,9 @@
 							{"name":"height","startAt":50,"endAt":100,"startVal":400,"endVal":12,"units":"px","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"}
 						]}'
 						data-styles='{"stop":[
-							{"name":"left","val":-20,"units":"px","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"},
-							{"name":"width","val":12,"units":"px","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"},
-							{"name":"height","val":12,"units":"px","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"}
+							{"name":"left","val":"-20px","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"},
+							{"name":"width","val":"12px","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"},
+							{"name":"height","val":"12px","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"}
 						]}'
 					></div>
 					<a href="http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3" class="cashmusic soundplayer inline">Learning Music - "Life-Cycle"</a><br />
