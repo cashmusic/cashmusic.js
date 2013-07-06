@@ -615,20 +615,26 @@
 			return true;
 		};
 
-		self._getSeconds = function(timecode) {
-			if ((timecode + '').indexOf(':') == -1) {
-				return timecode;
-			} else {
-				var timearray = timecode.split(':');
-				var seconds = 0;
-				var l = timearray.length;
-				for (var n=0;n<l;n++) {
-					seconds += timearray[timearray.length - (1+n)] * (60*n);
-				}
-				return seconds;
+		/*
+		 * window.cashmusic.soundplayer._getMS(timecode)
+		 * Takes an hh:mm:ss (or mm:ss) timecode and returns it as miliseconds
+		 */
+		self._getMS = function(timecode) {
+			var timearray = timecode.split(':');
+			var miliseconds = 0;
+			var l = timearray.length;
+			timearray.reverse();
+			for (var n=0;n<l;n++) {
+				// integer value of the hh/mm/ss chunk, 1/60/3600 as needed, 1000 to go to miliseconds
+				miliseconds += parseInt(timearray[n]) * ((n==0) ? 1 : (60 * ((n>1) ? 60 : 1))) * 1000;
 			}
+			return miliseconds;
 		};
 
+		/*
+		 * window.cashmusic.soundplayer._getTimecode(miliseconds)
+		 * Takes miliseconds and returns hh:mm:ss (or mm:ss or m:ss) timecode
+		 */
 		self._getTimecode = function(miliseconds) {
 			var total = Math.floor(miliseconds / 1000);
 			var h = Math.floor(total / 3600);
@@ -693,7 +699,7 @@
 		 * }
 		 * 
 		 */
-		self._updateTweens = function(elements,type,percentage) {
+		self._updateTweens = function(elements,type,percentage,duration) {
 			var eLen = elements.length;
 			for (var i=0;i<eLen;i++) {
 				var el = elements[i];
@@ -707,6 +713,14 @@
 						for (var n=0;n<dLen;n++) {
 							step = data[type][n];
 							if (self._checkIds(self.sound.id,step)) {
+								// if startAt is timecode get percentage
+								if ((step.startAt + '').indexOf(':') !== -1) {
+									step.startAt = Math.round((self._getMS(step.startAt) / duration) * 10000) / 100;
+								}
+								// if endAt is timecode get percentage
+								if ((step.endAt + '').indexOf(':') !== -1) {
+									step.endAt = Math.round((self._getMS(step.endAt) / duration) * 10000) / 100;
+								}
 								if (percentage >= step.startAt && percentage <= step.endAt) {
 									// starting value + ((total value range / total percentage span) * true percentage - startAt percentage)
 									val = step.startVal + (((step.endVal - step.startVal) / (step.endAt - step.startAt)) * (percentage - step.startAt));
