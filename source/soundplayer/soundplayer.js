@@ -90,6 +90,7 @@
 		playlist: false,
 		playlists: {},
 		sound: false,
+		lastTimeEvent: '0:00',
 
 		/*
 		 * window.cashmusic.soundplayer._init()
@@ -391,7 +392,7 @@
 
 		self._doLoading = function(detail) {
 			var tweens = document.querySelectorAll('*.cashmusic.tween');
-			self._updateTweens(tweens,'load',detail.percentage);
+			self._updateTweens(tweens,'load',detail.percentage,detail.duration);
 		};
 
 		self._doPause = function(detail) {
@@ -411,8 +412,15 @@
 		self._doPlaying = function(detail) {
 			//console.log('playing: ' + detail.percentage + '% / (' + detail.position + '/' + detail.duration + ')');
 			var tweens = document.querySelectorAll('*.cashmusic.tween');
-			self._updateTweens(tweens,'play',detail.percentage);
-			self._updateTimes(detail.percentage);
+			self._updateTweens(tweens,'play',detail.percentage,detail.duration);
+			self._updateTimes(detail.position);
+			// get timecode, fire event if different
+			var timecode = self._getTimecode(detail.position);
+			if (timecode != self.lastTimeEvent) {
+				self.lastTimeEvent = timecode;
+				var setstyles = document.querySelectorAll('*.cashmusic.setstyles');
+				self._updateStyles(setstyles,timecode);
+			}
 		};
 
 		self._doResume = function(detail) {
@@ -607,6 +615,39 @@
 			return true;
 		};
 
+		self._getSeconds = function(timecode) {
+			if ((timecode + '').indexOf(':') == -1) {
+				return timecode;
+			} else {
+				var timearray = timecode.split(':');
+				var seconds = 0;
+				var l = timearray.length;
+				for (var n=0;n<l;n++) {
+					seconds += timearray[timearray.length - (1+n)] * (60*n);
+				}
+				return seconds;
+			}
+		};
+
+		self._getTimecode = function(miliseconds) {
+			var total = Math.floor(miliseconds / 1000);
+			var h = Math.floor(total / 3600);
+			if (h > 0) {
+				// zero-pad if there are hours
+				var m = ('00' + (Math.floor((total - (h * 3600)) / 60))).substr(-2);
+			} else {
+				// no zero-pad if not
+				var m = Math.floor(total / 60);
+			}
+			var s = ('00' + (total - (h * 3600) - (m * 60))).substr(-2);
+
+			if (h > 0) {
+				return h + ':' + m + ':' + s;
+			} else {
+				return m + ':' + s;
+			}
+		}
+
 		/*
 		 * window.cashmusic.soundplayer._checkIds(id,el)
 		 * Grabs data attributes and formats them to pass into _checkIds
@@ -739,18 +780,11 @@
 		 * Updates all times for playtime elements matching the current sound/playlist.
 		 */
 		self._updateTimes = function(position) {
-			if (self.playlist) {
-				var times = document.querySelectorAll('div.cashmusic.soundplayer.playlist.playtime');
-				var l = times.length;
-				for (var n=0;n<l;n++) {
-					if (self._checkIdsForElement(self.sound.id,times[n])) {
-						var min = Math.floor(position/60);
-						var sec = Math.floor(position - (min * 60));
-						if (!isNaN(min) && !isNaN(sec)) {
-							sec = (sec < 10 ? '0' : '') + sec; // zero pad the seconds
-							times[n].innerHTML = min + ':' + sec;
-						}
-					}
+			var times = document.querySelectorAll('div.cashmusic.soundplayer.playtime');
+			var l = times.length;
+			for (var n=0;n<l;n++) {
+				if (self._checkIdsForElement(self.sound.id,times[n])) {
+					times[n].innerHTML = self._getTimecode(position);
 				}
 			}
 		}
@@ -760,13 +794,11 @@
 		 * Updates all titles for nowplaying elements matching the current sound/playlist.
 		 */
 		self._updateTitle = function() {
-			if (self.playlist) {
-				var titles = document.querySelectorAll('div.cashmusic.soundplayer.playlist.nowplaying');
-				var l = titles.length;
-				for (var n=0;n<l;n++) {
-					if (self._checkIdsForElement(self.sound.id,titles[n])) {
-						titles[n].innerHTML = self.playlist.tracks[self.playlist.current - 1].title;
-					}
+			var titles = document.querySelectorAll('div.cashmusic.soundplayer.nowplaying');
+			var l = titles.length;
+			for (var n=0;n<l;n++) {
+				if (self._checkIdsForElement(self.sound.id,titles[n])) {
+					titles[n].innerHTML = self.playlist.tracks[self.playlist.current - 1].title;
 				}
 			}
 		}
