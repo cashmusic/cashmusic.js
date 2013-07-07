@@ -220,9 +220,10 @@
 					The default players are built using CSS tweens that can be applied to any DOM 
 					element. Altering styles based on audio progress is pretty simple. You need to 
 					add the "cashmusic tween" styles to an element, then specify style changes for
-					play or load progress (in percentage) of the piece of audio — it will work with 
-					any style that takes a numeric value. These style changes are defined as JSON in
-					the "data-tween" attribute of the element. Like so:
+					play or load progress (in percentage or timecode "m:ss") of the piece of audio — 
+					it will work with any style that takes a numeric value. You may mix percentage 
+					and timecode in one declaration. These style changes are defined as JSON in the 
+					"data-tween" attribute of the element. Like so:
 				</p>
 				<script src="https://gist.github.com/jessevondoom/5863670.js"></script>
 				<p>
@@ -232,11 +233,12 @@
 					just add the "cashmusic setstyles" classes to your element and go for it. You can
 					change any style, numeric or otherwise, in response to these events:
 				</p><p>
-					finish, pause, play, resume, stop, load
+					finish, pause, play, resume, stop, load, [timecode, format: 'm:ss', 'h:mm:ss']
 				</p><p>
 					You can set styles for one or more of these events by setting the corresponding 
 					property in the JSON definition. Each is an array and can accept multiple stlye
-					definitions.
+					definitions. You can set styles for any timecode by referencing timecode as
+					"m:ss" or "h:mm:ss" — the format matching the play time on the standard player.
 				</p><p>
 					Tween and setstyle elements respond to either a sound or a playlist by setting
 					the onSound or onPlayer property in the JSON object. You must set one to have 
