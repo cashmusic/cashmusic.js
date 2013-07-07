@@ -90,6 +90,9 @@
 		playlist: false,
 		playlists: {},
 		sound: false,
+		lastTimeEvent: '0:00',
+		styleDivs: null,
+		tweenDivs: null,
 
 		/*
 		 * window.cashmusic.soundplayer._init()
@@ -97,6 +100,12 @@
 		 */
 		_init: function() {
 			var self = cm.soundplayer;
+
+			// get style/tween divs for caching — we update these on every play event in case new
+			// elements are added to the DOM, but caching allows us to skip the querySelectorAll on
+			// every tween/style refresh
+			self.styleDivs = document.querySelectorAll('*.cashmusic.setstyles');
+			self.tweenDivs = document.querySelectorAll('*.cashmusic.tween');
 
 			// build any actualy players using the soundplayer.html / soundplayer.css
 			var playlistdivs = document.querySelectorAll('div.cashmusic.soundplayer.playlist');
@@ -379,27 +388,22 @@
 		 ***************************************************************************************/
 
 		self._doFinish = function(detail) {
-			var setstyles = document.querySelectorAll('*.cashmusic.setstyles');
-			self._updateStyles(setstyles,'finish');
+			self._updateStyles(self.styleDivs,'finish');
 			self.next();
 		};
 
 		self._doLoad = function(detail) {
-			var setstyles = document.querySelectorAll('*.cashmusic.setstyles');
-			self._updateStyles(setstyles,'load');
+			self._updateStyles(self.styleDivs,'load');
 		};
 
 		self._doLoading = function(detail) {
-			var tweens = document.querySelectorAll('*.cashmusic.tween');
-			self._updateTweens(tweens,'load',detail.percentage);
+			self._updateTweens(self.tweenDivs,'load',detail.percentage,detail.duration);
 		};
 
 		self._doPause = function(detail) {
 			// deal with playpause buttons
 			self._switchStylesForCollection(document.querySelectorAll('*.cashmusic.playpause'),'playing','paused');
-
-			var setstyles = document.querySelectorAll('*.cashmusic.setstyles');
-			self._updateStyles(setstyles,'pause');
+			self._updateStyles(self.styleDivs,'pause');
 		};
 
 		self._doPlay = function(detail) {
@@ -410,12 +414,21 @@
 
 		self._doPlaying = function(detail) {
 			//console.log('playing: ' + detail.percentage + '% / (' + detail.position + '/' + detail.duration + ')');
-			var tweens = document.querySelectorAll('*.cashmusic.tween');
-			self._updateTweens(tweens,'play',detail.percentage);
-			self._updateTimes(detail.percentage);
+			self._updateTweens(self.tweenDivs,'play',detail.percentage,detail.duration);
+			self._updateTimes(detail.position);
+			// get timecode, fire event if different
+			var timecode = self._getTimecode(detail.position);
+			if (timecode != self.lastTimeEvent) {
+				self.lastTimeEvent = timecode;
+				self._updateStyles(self.styleDivs,timecode);
+			}
 		};
 
 		self._doResume = function(detail) {
+			// update tween/style cache
+			self.styleDivs = document.querySelectorAll('*.cashmusic.setstyles');
+			self.tweenDivs = document.querySelectorAll('*.cashmusic.tween');
+
 			// deal with inline buttons
 			var inlineLinks = document.querySelectorAll('a.cashmusic.soundplayer.inline[href="' + self.sound.id + '"]');
 			var l = inlineLinks.length;
@@ -426,11 +439,10 @@
 			// deal with playpause buttons
 			self._switchStylesForCollection(document.querySelectorAll('*.cashmusic.playpause'),'paused','playing');
 
-			var setstyles = document.querySelectorAll('*.cashmusic.setstyles');
 			if (self.sound.position > 0) {
-				self._updateStyles(setstyles,'play');
+				self._updateStyles(self.styleDivs,'play');
 			} else {
-				self._updateStyles(setstyles,'resume');
+				self._updateStyles(self.styleDivs,'resume');
 			}
 		};
 
@@ -442,8 +454,7 @@
 				cm.styles.swapClasses(inlineLinks[i],'playing','stopped');
 			}
 
-			var setstyles = document.querySelectorAll('*.cashmusic.setstyles');
-			self._updateStyles(setstyles,'stop');
+			self._updateStyles(self.styleDivs,'stop');
 		};
 
 
@@ -608,6 +619,45 @@
 		};
 
 		/*
+		 * window.cashmusic.soundplayer._getMS(timecode)
+		 * Takes an hh:mm:ss (or mm:ss) timecode and returns it as miliseconds
+		 */
+		self._getMS = function(timecode) {
+			var timearray = timecode.split(':');
+			var miliseconds = 0;
+			var l = timearray.length;
+			timearray.reverse();
+			for (var n=0;n<l;n++) {
+				// integer value of the hh/mm/ss chunk, 1/60/3600 as needed, 1000 to go to miliseconds
+				miliseconds += parseInt(timearray[n]) * ((n==0) ? 1 : (60 * ((n>1) ? 60 : 1))) * 1000;
+			}
+			return miliseconds;
+		};
+
+		/*
+		 * window.cashmusic.soundplayer._getTimecode(miliseconds)
+		 * Takes miliseconds and returns hh:mm:ss (or mm:ss or m:ss) timecode
+		 */
+		self._getTimecode = function(miliseconds) {
+			var total = Math.floor(miliseconds / 1000);
+			var h = Math.floor(total / 3600);
+			if (h > 0) {
+				// zero-pad if there are hours
+				var m = ('00' + (Math.floor((total - (h * 3600)) / 60))).substr(-2);
+			} else {
+				// no zero-pad if not
+				var m = Math.floor(total / 60);
+			}
+			var s = ('00' + (total - (h * 3600) - (m * 60))).substr(-2);
+
+			if (h > 0) {
+				return h + ':' + m + ':' + s;
+			} else {
+				return m + ':' + s;
+			}
+		}
+
+		/*
 		 * window.cashmusic.soundplayer._checkIds(id,el)
 		 * Grabs data attributes and formats them to pass into _checkIds
 		 */
@@ -652,7 +702,7 @@
 		 * }
 		 * 
 		 */
-		self._updateTweens = function(elements,type,percentage) {
+		self._updateTweens = function(elements,type,percentage,duration) {
 			var eLen = elements.length;
 			for (var i=0;i<eLen;i++) {
 				var el = elements[i];
@@ -666,6 +716,14 @@
 						for (var n=0;n<dLen;n++) {
 							step = data[type][n];
 							if (self._checkIds(self.sound.id,step)) {
+								// if startAt is timecode get percentage
+								if ((step.startAt + '').indexOf(':') !== -1) {
+									step.startAt = Math.round((self._getMS(step.startAt) / duration) * 10000) / 100;
+								}
+								// if endAt is timecode get percentage
+								if ((step.endAt + '').indexOf(':') !== -1) {
+									step.endAt = Math.round((self._getMS(step.endAt) / duration) * 10000) / 100;
+								}
 								if (percentage >= step.startAt && percentage <= step.endAt) {
 									// starting value + ((total value range / total percentage span) * true percentage - startAt percentage)
 									val = step.startVal + (((step.endVal - step.startVal) / (step.endAt - step.startAt)) * (percentage - step.startAt));
@@ -739,18 +797,11 @@
 		 * Updates all times for playtime elements matching the current sound/playlist.
 		 */
 		self._updateTimes = function(position) {
-			if (self.playlist) {
-				var times = document.querySelectorAll('div.cashmusic.soundplayer.playlist.playtime');
-				var l = times.length;
-				for (var n=0;n<l;n++) {
-					if (self._checkIdsForElement(self.sound.id,times[n])) {
-						var min = Math.floor(position/60);
-						var sec = Math.floor(position - (min * 60));
-						if (!isNaN(min) && !isNaN(sec)) {
-							sec = (sec < 10 ? '0' : '') + sec; // zero pad the seconds
-							times[n].innerHTML = min + ':' + sec;
-						}
-					}
+			var times = document.querySelectorAll('div.cashmusic.soundplayer.playtime');
+			var l = times.length;
+			for (var n=0;n<l;n++) {
+				if (self._checkIdsForElement(self.sound.id,times[n])) {
+					times[n].innerHTML = self._getTimecode(position);
 				}
 			}
 		}
@@ -760,13 +811,11 @@
 		 * Updates all titles for nowplaying elements matching the current sound/playlist.
 		 */
 		self._updateTitle = function() {
-			if (self.playlist) {
-				var titles = document.querySelectorAll('div.cashmusic.soundplayer.playlist.nowplaying');
-				var l = titles.length;
-				for (var n=0;n<l;n++) {
-					if (self._checkIdsForElement(self.sound.id,titles[n])) {
-						titles[n].innerHTML = self.playlist.tracks[self.playlist.current - 1].title;
-					}
+			var titles = document.querySelectorAll('div.cashmusic.soundplayer.nowplaying');
+			var l = titles.length;
+			for (var n=0;n<l;n++) {
+				if (self._checkIdsForElement(self.sound.id,titles[n])) {
+					titles[n].innerHTML = self.playlist.tracks[self.playlist.current - 1].title;
 				}
 			}
 		}
