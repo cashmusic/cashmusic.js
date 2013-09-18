@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<!-- paulirish.com/2008/conditional-stylesheets-vs-css-hacks-answer-neither/ -->
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="width=380,user-scalable=no" />
+	<link rel="icon" type="image/png" href="http://cashmusic.org/images/icons/cash.png" />
+
+	<title>Not The 1s / Lite Years</title>
+
+	<style type="text/css">
+		html {margin:0;padding:0;height:100%;}
+		body {color:#fff;background-color:#000;text-align:left;font:22px/24px "Geo",helvetica,"segoe ui","segoe wp",arial,sans-serif;margin:0;padding:0;min-height:300px;text-rendering:optimizelegibility;height:100%;min-height:500px;overflow:hidden;}
+		h1 {color:#ffcb05;font-size:15px;line-height:1.25em;margin:0;font-weight:300;letter-spacing:0.5em;text-transform:uppercase;}
+		img {border:0;}
+		a {color:#fff;text-decoration:none;}
+		a:hover {color:#0f0;}
+		a:active {outline:none;}  
+		a:focus{-moz-outline-style:none;outline-style:none;}
+
+		div.bg {position:relative;width:100%;height:100%;background-position:center center;background-repeat:repeat-x;background-attachment:fixed;}
+		div.preload {position:absolute;visibility:hidden;z-index:1;}
+
+		#circle {position:absolute;top:50%;left:50%;margin-left:-154px;margin-top:-168px;width:304px;height:304px;border-radius:50%;background-color:#000;z-index:500;box-shadow:0px 0px 18px #ffc;background-position:center center;background-repeat:repeat-x;background-attachment:fixed;}
+		#listen {display:block;width:143px;height:244px;position:absolute;top:30px;left:50%;margin-left:-74px;background-position:center center;background-repeat:no-repeat;z-index:1200;}
+		#circlebg {position:absolute;top:0;left:0;width:304px;height:304px;border-radius:50%;background-size:cover;background-color:transparent;z-index:10;}
+		#email {position:absolute;top:50%;margin-top:-40px;left:295px;width:285px;z-index:1200;}
+
+		a.cashmusic.soundplayer.playpause.playing {background-image:url(./assets/images/liteyears_pause.png);}
+		a.cashmusic.soundplayer.playpause.paused {background-image:url(./assets/images/liteyears_play.png);}
+
+		div.mobileonly {display:none;}
+		span.mobileonly {display:none;}
+		div.desktoponly {display:block;}
+		span.desktoponly {display:inline;}
+
+		@media only screen and (max-width:480px){
+			@-ms-viewport {width:380px;zoom:auto;user-zoom:fixed;} 
+			@-o-viewport {width:380px;zoom:auto;user-zoom:fixed;} 
+			@viewport {width:380px;zoom:auto;user-zoom:fixed;}
+
+			div.mobileonly {display:block;}
+			span.mobileonly {display:inline;}
+			div.desktoponly {display:none;}
+			span.desktoponly {display:none;}
+		}
+	</style>
+	
+	<!-- IE Fix for HTML5 Tags -->
+	<!--[if lt IE 9]>
+		<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<script type="text/javascript" src="../../source/cashmusic.js"></script>
+</head>
+<body>
+	<a style="display:none;" href="http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3" class="cashmusic soundplayer inline">DOWNLOAD TRACK</a>
+
+	<div class="cashmusic tween bg"
+		style="position:absolute;top:0;left:-1%;width:0.1%;background-color:#ffffee;background-image:url(assets/images/5.jpg);z-index:200;"
+		data-tween='{"play":[
+			{"name":"width","startAt":"0:22","endAt":100,"startVal":1,"endVal":101,"units":"%","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+		]}'
+	></div>
+	<div class="cashmusic setstyles bg" style="background-image:url(assets/images/0.jpg);z-index:120;"
+		data-styles='{
+			"0:22":[
+				{"name":"backgroundImage","val":"url(assets/images/00.jpg)","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/0.jpg)","delay":"500","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/00.jpg)","delay":"650","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+			],
+			"0:32":[
+				{"name":"backgroundImage","val":"url(assets/images/1.jpg)","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/00.jpg)","delay":"300","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/1.jpg)","delay":"380","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+			],
+			"0:42":[
+				{"name":"backgroundImage","val":"url(assets/images/2.jpg)","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/1.jpg)","delay":"320","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/0.jpg)","delay":"400","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/1.jpg)","delay":"460","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/2.jpg)","delay":"900","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+			],
+			"0:52":[
+				{"name":"backgroundImage","val":"url(assets/images/3.jpg)","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/1.jpg)","delay":"120","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/2.jpg)","delay":"240","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/0.jpg)","delay":"360","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/3.jpg)","delay":"500","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/2.jpg)","delay":"3300","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/3.jpg)","delay":"3800","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+			],
+			"1:02":[
+				{"name":"backgroundImage","val":"url(assets/images/4.jpg)","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/0.jpg)","delay":"2200","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/2.jpg)","delay":"2800","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/0.jpg)","delay":"3100","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/4.jpg)","delay":"3200","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+			],
+			"1:12":[
+				{"name":"backgroundImage","val":"url(assets/images/1.jpg)","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/2.jpg)","delay":"320","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/3.jpg)","delay":"400","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/0.jpg)","delay":"460","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/1.jpg)","delay":"900","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+			],
+			"1:20":[
+				{"name":"backgroundImage","val":"url(assets/images/00.jpg)","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/1.jpg)","delay":"4000","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/2.jpg)","delay":"7000","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/3.jpg)","delay":"10000","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/4.jpg)","delay":"13000","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/00.jpg)","delay":"16000","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/1.jpg)","delay":"22000","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/2.jpg)","delay":"22200","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/3.jpg)","delay":"22400","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/4.jpg)","delay":"22600","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/00.jpg)","delay":"22800","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+			]
+		}'
+	></div>
+
+	<div id="circle" class="cashmusic tween setstyles"
+		data-tween='{"play":[
+			{"name":"marginLeft","startAt":0,"endAt":"0:22","startVal":-154,"endVal":221,"units":"px","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+			{"name":"marginLeft","startAt":"0:32","endAt":"0:42","startVal":221,"endVal":-527,"units":"px","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+		]}'
+		data-styles='{
+			"0:32":[
+				{"name":"boxShadow","val":"none","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"url(assets/images/00.jpg)","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+			],
+			"0:42":[
+				{"name":"backgroundColor","val":"#721619","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"},
+				{"name":"backgroundImage","val":"none","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+			],
+			"1:02":[
+				{"name":"marginLeft","val":"221px","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+			],
+			"1:12":[
+				{"name":"marginLeft","val":"-529px","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+			],
+			"1:20":[
+				{"name":"marginLeft","val":"-154px","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+			]
+		}'
+	>
+		<div id="circlebg" class="cashmusic setstyles"
+			data-styles='{
+				"0:10":[
+					{"name":"backgroundImage","val":"url(assets/images/0.gif)","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+				],
+				"0:11":[
+					{"name":"backgroundImage","val":"none","delay":"300","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+				],
+				"0:12":[
+					{"name":"backgroundImage","val":"url(assets/images/0.gif)","delay":"400","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+				],
+				"0:16":[
+					{"name":"backgroundImage","val":"none","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+				],
+				"0:44":[
+					{"name":"backgroundImage","val":"url(assets/images/0.gif)","delay":"600","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+				],
+				"0:45":[
+					{"name":"backgroundImage","val":"url(assets/images/1.gif)","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+				],
+				"0:52":[
+					{"name":"backgroundImage","val":"none","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+				],
+				"1:12":[
+					{"name":"backgroundImage","val":"url(assets/images/2.gif)","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+				],
+				"1:17":[
+					{"name":"backgroundImage","val":"none","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+				],
+				"1:25":[
+					{"name":"backgroundImage","val":"url(assets/images/0.gif)","delay":"600","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+				],
+				"1:26":[
+					{"name":"backgroundImage","val":"url(assets/images/1.gif)","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+				],
+				"1:29":[
+					{"name":"backgroundImage","val":"url(assets/images/0.gif)","delay":"600","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+				],
+				"1:30":[
+					{"name":"backgroundImage","val":"url(assets/images/2.gif)","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+				],
+				"1:34":[
+					{"name":"backgroundImage","val":"url(assets/images/0.gif)","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+				],
+				"1:45":[
+					{"name":"backgroundImage","val":"none","onSound":"http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"}
+				]
+			}'
+		></div>
+		<a href="#" id="listen" class="cashmusic soundplayer playpause" data-soundid="http://s3.amazonaws.com/cashmusic/permalink/demos/notthe1s/liteyears.mp3"></a>	
+	</div>
+
+	<div class="preload" style="background-image:url(assets/images/00.jpg);"></div>
+	<div class="preload" style="background-image:url(assets/images/1.jpg);"></div>
+	<div class="preload" style="background-image:url(assets/images/2.jpg);"></div>
+	<div class="preload" style="background-image:url(assets/images/3.jpg);"></div>
+	<div class="preload" style="background-image:url(assets/images/4.jpg);"></div>
+	<div class="preload" style="background-image:url(assets/images/0.gif);"></div>
+	<div class="preload" style="background-image:url(assets/images/1.gif);"></div>
+	<div class="preload" style="background-image:url(assets/images/2.gif);"></div>
+</body>
+</html>

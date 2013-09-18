@@ -63,9 +63,12 @@
 				}
 				self.options = String(self.scriptElement.getAttribute('data-options'));
 
+				/*
+				 // commented out the alternative json_parse library
 				if (typeof JSON.parse !== 'function') {
 					self.loadScript(self.path+'lib/json_parse.js');
 				}
+				*/
 
 				// check lightbox options
 				if (this.options.indexOf('lightboxvideo') !== -1) {
@@ -118,7 +121,7 @@
 			},
 
 			/*
-			 * window.cashmusic.embed(string publicURL, string/int elementId, bool lightboxed, bool lightboxTxt)
+			 * window.cashmusic.embed(string endPoint, string/int elementId, bool lightboxed, bool lightboxTxt)
 			 * Generates the embed iFrame code for embedding a given element.
 			 * Optional third and fourth parameters allow the element to be 
 			 * embedded with a lightbox and to customize the text of lightbox
@@ -133,9 +136,20 @@
 			 * a targetNode to serve as the anchor — with the embed chucked immediately after that 
 			 * element in the DOM.
 			 */
-			embed: function(publicURL, elementId, lightboxed, lightboxTxt, position, targetNode) {
+			embed: function(endPoint, elementId, lightboxed, lightboxTxt, position, targetNode, cssOveride) {
+				// Allow for a single object to be passed instead of all arguments
+				// object properties should be lowercase versions of the standard arguments, any order
+				if (typeof endPoint === 'object') {
+					elementId   = endPoint.elementid ? endPoint.elementid : false;
+					lightboxed  = endPoint.lightboxed ? endPoint.lightboxed : false;
+					lightboxTxt = endPoint.lightboxtxt ? endPoint.lightboxtxt : false;
+					position    = endPoint.position ? endPoint.position : false;
+					targetNode  = endPoint.targetnode ? endPoint.targetnode : false;
+					cssOveride  = endPoint.cssoveride ? endPoint.cssoveride : false;
+					endPoint   = endPoint.endpoint;
+				}
 				var cm = window.cashmusic;
-				var embedURL = publicURL.replace(/\/$/, '') + '/request/embed/' + elementId + '/location/' + encodeURIComponent(window.location.href.replace(/\//g,'!slash!'));
+				var embedURL = endPoint.replace(/\/$/, '') + '/request/embed/' + elementId + '/location/' + encodeURIComponent(window.location.href.replace(/\//g,'!slash!'));
 				var iframe = document.createElement('iframe');
 					iframe.src = embedURL;
 					iframe.style.width = '100%';
@@ -222,6 +236,8 @@
 			},
 
 			getJSON: function(txt) {
+				/*
+				 // commented out the alternative json_parse library
 				var obj;
 				if (typeof JSON.parse === 'function') {
 					obj = JSON.parse(txt);
@@ -229,6 +245,8 @@
 					obj = json_parse(txt);
 				}
 				return obj;
+				*/
+				return JSON.parse(txt);
 			},
 
 			getTemplate: function(templateName,successCallback) {
@@ -361,10 +379,11 @@
 					}
 				},
 
-				jsonp: function(url) {
+				jsonp: function(url,variable) {
 					var s = document.createElement('script');
 					s.src = url;
 					document.getElementsByTagName('head')[0].appendChild(s);
+					return variable;
 				},
 
 				/*
