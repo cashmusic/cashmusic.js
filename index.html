@@ -110,7 +110,22 @@
 					<div class="eight columns">
 						<script type="text/javascript" src="source/cashmusic.js" data-options="lightboxvideo"></script><script type="text/javascript">window.cashmusic.embed('http://x.cashmusic.org/public/','2');</script>
 					</div><div class="four columns">
-						<script type="text/javascript">window.cashmusic.embed('http://x.cashmusic.org/public/','2',true,'Or open it in a lightbox.',{'top':'35%','width':'30%','left':'35%','marginLeft':'0'});</script>
+						<script type="text/javascript">
+							window.cashmusic.embed(
+								{
+									endpoint: 'http://x.cashmusic.org/public/',
+									elementid: '2',
+									lightboxed: true,
+									lightboxtxt: 'Or open it in a lightbox.',
+									position: {
+										'top':'35%',
+										'width':'30%',
+										'left':'35%',
+										'marginLeft':'0'
+									}
+								}
+							);
+						</script>
 					</div>
 				</div>
 
