@@ -569,12 +569,28 @@
 
 		self.togglePlaylist = function(id) {
 			self.loadPlaylist(id);
+			/*
+			 * TODO:
+			 * this is where we need to check the ajax callback stuff
+			 * 
+			 * if resolve is true, change the url and call the line below
+			 * in a callback instead of directly.
+			 *
+			 */
 			self.toggle(self.playlist.tracks[self.playlist.current - 1].id);
 		};
 
 		self.playlistPlayTrack = function(id,track) {
 			self.loadPlaylist(id);
 			self.stop();
+			/*
+			 * TODO:
+			 * this is where we need to check the ajax callback stuff
+			 * 
+			 * if resolve is true, change the url and call the line below
+			 * in a callback instead of directly.
+			 *
+			 */
 			self.playlist.current = track;
 			self.toggle(self.playlist.tracks[track - 1].id);
 		};
@@ -771,7 +787,15 @@
 						var dLen = data[type].length;
 						for (var n=0;n<dLen;n++) {
 							if (self._checkIds(self.sound.id,data[type][n])) {
-								el.style[data[type][n].name] = data[type][n].val;
+								// check for delay
+								if (typeof data[type][n].delay === 'undefined') {
+									el.style[data[type][n].name] = data[type][n].val;
+								} else {
+									// n: name, v: value, d: delay
+									(function(el,n,v,d) {
+										setTimeout(function() {el.style[n] = v;}, d);
+									})(el,data[type][n].name,data[type][n].val,data[type][n].delay);
+								}
 							}
 						}
 					}

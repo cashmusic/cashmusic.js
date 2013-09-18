@@ -379,10 +379,11 @@
 					}
 				},
 
-				jsonp: function(url) {
+				jsonp: function(url,variable) {
 					var s = document.createElement('script');
 					s.src = url;
 					document.getElementsByTagName('head')[0].appendChild(s);
+					return variable;
 				},
 
 				/*
