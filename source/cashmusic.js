@@ -32,6 +32,11 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ *
+ *
+ *
+ * VERSION: 1
+ *
  **/
 
 ;window.cashmusic = (function() {
@@ -50,6 +55,7 @@
 			options:'',
 			path:'',
 			templates: {},
+			eventlist: {},
 
 			_init: function() {
 				var self = window.cashmusic;
@@ -255,6 +261,13 @@
 				if (templates[templateName] !== undefined) {
 					successCallback(templates[templateName]);
 				} else {
+					/*
+					 *
+					 * TODO: this raises a same origin issue, so we should get a little clever here. 
+					 *       we should load the html file via iframe. easy enough and we can grab the 
+					 *       source via JS and not need to deal with JSONP, etc.
+					 *
+					 */
 					this.ajax.send(
 						cm.path + 'templates/' + templateName + '.html',
 						false,
@@ -263,6 +276,14 @@
 							successCallback(msg);
 						}
 					);
+					/*
+					 *
+					 * TODO: same as above, we run into same origin issues. but this fix is even 
+					 *       easier. we just need to add an injectCSSByUrl function, create a link
+					 *       element and set the href, rel, type, etc. we never need to see the
+					 *       actual CSS at all...	
+					 *
+					 */
 					this.ajax.send(
 						// look for matching CSS file and add that to the head if found
 						// this *only happens once* on purpose — callback won't happen if
@@ -273,6 +294,45 @@
 							cm.styles.injectCSS(msg);
 						}
 					)
+				}
+			},
+
+			/*
+			 *	Use standard event footprint
+			 */
+			addEventListener: function(eventName, callback) {
+				var cm = window.cashmusic;
+				if(!cm.eventlist.hasOwnProperty(eventName)) {
+					cm.eventlist[eventName] = [];
+				}
+				cm.eventlist[eventName].push(callback);
+			},
+			 
+			/*
+			 *	Use standard event footprint
+			 */
+			removeEventListener: function(eventName, callback) {
+				var cm = window.cashmusic;
+				if(cm.eventlist.hasOwnProperty(eventName)) {
+					var idx = cm.eventlist[eventName].indexOf(callback);
+					if(idx != -1) {
+						cm.eventlist[eventName].splice(idx, 1);
+					}
+				}
+			},
+			
+			/*
+			 *	Use standard event footprint
+			 */
+			dispatchEvent: function(e) {
+				var cm = window.cashmusic;
+				if(cm.eventlist.hasOwnProperty(e.type)) {
+					var i;
+					for(i = 0; i < cm.eventlist[e.type].length; i++) {
+						if (cm.eventlist[e.type][i]) {
+							cm.eventlist[e.type][i](e);
+						}
+					}	
 				}
 			},
 
@@ -448,8 +508,9 @@
 				fire: function (obj,type,data){
 					if (document.dispatchEvent){
 						// standard
-						var e = new CustomEvent(type, true, true, {'detail':data}); // type,bubbling,cancelable,detail
-						obj.dispatchEvent(e);
+						var e = document.createEvent('CustomEvent');
+    					e.initCustomEvent(type, false, false, data);
+    					obj.dispatchEvent(e);
 					} else {
 						// dispatch for IE < 9
 						var e = document.createEventObject();
@@ -545,8 +606,8 @@
 			measure: {
 				viewport: function() {
 					return {
-						x: document.body.offsetWidth || window.innerWidth || 0,
-						y: document.body.offsetHeight || window.innerHeight || 0
+						x: window.innerWidth || document.body.offsetWidth || 0,
+						y: window.innerHeight || document.body.offsetHeight || 0
 					};
 				}
 			},
@@ -626,7 +687,7 @@
 
 				hasClass: function(el,classname) {
 					// borrowed the idea from http://stackoverflow.com/a/5898748/1964808
-    				return (' ' + el.className + ' ').indexOf(' ' + classname + ' ') > -1;
+					return (' ' + el.className + ' ').indexOf(' ' + classname + ' ') > -1;
 				},
 
 				injectCSS: function(css) {
