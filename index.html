@@ -1,248 +1,226 @@
 <!DOCTYPE html>
-<!-- paulirish.com/2008/conditional-stylesheets-vs-css-hacks-answer-neither/ -->
-<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
-<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
-<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
-<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<meta name="viewport" content="width=device-width" />
-	<link rel="icon" type="image/png" href="http://cashmusic.org/images/icons/cash.png" />
+<html lang="en">
+<head> 
+<title>CASH Music / cashmusic.js</title>
+<meta name="description" content="CASH Music is a nonprofit that empowers musicians through free/open technology and learning." />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width" />
 
-	<title>CASH Music</title>
+<link rel="icon" type="image/png" href="http://2ea7029ee5fd6986c0a6-6d885a724441c07ff9b675222419a9d2.r58.cf2.rackcdn.com/ui/01/images/badge.png" />
+<link rel="stylesheet" type="text/css" href="https://b6febe3773eb5c5bc449-6d885a724441c07ff9b675222419a9d2.ssl.cf2.rackcdn.com/foundation.min.css" />
+<link href='https://fonts.googleapis.com/css?family=Amatic+SC:400,700|Roboto+Condensed:400,700italic,400italic,700,300,300italic|Noto+Serif:400,700italic,400italic,700' rel='stylesheet' type='text/css' />
+<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet" />
+<link rel="stylesheet" type="text/css" href="http://2ea7029ee5fd6986c0a6-6d885a724441c07ff9b675222419a9d2.r58.cf2.rackcdn.com/ui/01/css/app.css" />
 
-	<link rel="stylesheet" href="demos/mainpage/assets/css/foundation.min.css">
-	<link href='https://fonts.googleapis.com/css?family=Amatic+SC|Roboto+Condensed:400,700italic,400italic,700,300,300italic|Noto+Serif:400,700italic,400italic,700' rel='stylesheet' type='text/css'>
-	<style type="text/css">
-		html {margin:0;padding:0;height:100%;}
-		body {color:#2c2222;background-color:#e4e4e4;text-align:left;font:13px/20px "Noto Serif",helveticaneue,"helvetica neue",helvetica,"segoe ui","segoe wp",arial,sans-serif;margin:0;padding:0;min-height:300px;text-rendering:optimizelegibility;height:100%;min-height:500px;}
-		h1 {color:#000;font-size:52px;font-family:'Amatic SC';line-height:52px;margin:0 0 12px 0;font-weight:400;}
-		h2 {color:#000;font-size:19px;font-family:'Roboto Condensed';line-height:19px;margin:0 0 6px 0;font-weight:700;}
-		h3 {color:#aaa;font-size:15px;font-family:'Roboto Condensed';line-height:15px;margin:0 0 3px 0;font-weight:700;} 
-		h4 {color:inherit;}
-		h5 {color:#ff0;font-size:11px;margin:6px 0 12px 0;font-weight:bold;}
-		img {border:0;}
-		a {color:#df0854;}
-		a:hover {color:#000 !important;}
-		a:visited {color:#df0854;}
-		p {margin:0 0 1.5em 0;}
-		big,.big {font:16px/16px "Noto Serif",helveticaneue,"helvetica neue",helvetica,"segoe ui","segoe wp",arial,sans-serif;}
-		p.big {margin-bottom:3em;line-height:24px;}
-
-		.altbig {color:#000;font-size:22px;font-family:'Roboto Condensed';line-height:32px;font-weight:700;margin-bottom:42px;}
-
-		h1 img {position:absolute;left:-86px;top:3px;width:76px;height:76px;}
-
-		.issue {font-size:11px;margin-left:6px;}
-		.cash_notation {font-size:10px;color:#aaa;margin-top:4px;}
-		.cash_notation a {color:#aaa !important;}
-
-		#topspc {position:absolute;top:0;left:0;width:100%;height:482px;background-image:url(demos/mainpage/assets/images/mthood.jpg);background-position:center center;z-index:10;}
-		#copyspc {position:relative;z-index:100;background-color:#e4e4e4;margin-top:460px;}
-		#headerspc {position:absolute;top:-140px;width:100%;}
-
-		#headerspc h1 {font-size:80px;line-height:80px;color:#ff0;}
-		#headerspc .big {color:#fff;padding-left:4px;}
-		#headerspc p {margin:0 0 0.75em 0;}
-
-		.logo {width:100%;margin:10px 0 20px 0;}
-		.logo.small {width:45%;margin-top:20px;margin-left:3px;}
-
-		@media only screen and (max-width:480px){
-			#topspc {min-height:220px;background-position:center bottom;}
-			#copyspc {background-color:#e4e4e4;margin-top:220px;}
-			#headerspc {top:-215px;}
-			#headerspc h1 {font-size:40px;line-height:40px;color:#ff0;}
-			h1 img {position:relative;left:0;top:0;width:76px;height:76px;display:block;margin-bottom:20px;}
-			#madepossibleby {margin-top:48px;}
-		}
-	</style>
-	<!-- IE Fix for HTML5 Tags -->
-	<!--[if lt IE 9]>
-		<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-	<![endif]-->
-</head>
+<style type="text/css">
+	a.biglink {color:#df0854;font-family:"Roboto Condensed",Helvetica,Arial,sans-serif;font-size:24px;line-height:36px;font-weight:bold;margin-right:32px;white-space:nowrap;}
+	a.biglink:hover {color:#000;}
+	a.biglink .icon {font-size:22px;}
+	.alt {font-family:"Roboto Condensed",Helvetica,Arial,sans-serif;font-size:15px;line-height:1.4em;color:#333;}
+	.alt a {font-weight:bold;text-decoration:none;color:#df0854;}
+	.alt a:hover {color:#2c2222;}
+</style>
+<script type="text/javascript" src="source/cashmusic.js" data-options="lightboxvideo"></script>
+</head> 
 <body>
+	<div id="topspc"></div>
+	<div id="mainspc" class="row">
+		<a href="http://cashmusic.org/"><img id="homeseal" src="http://2ea7029ee5fd6986c0a6-6d885a724441c07ff9b675222419a9d2.r58.cf2.rackcdn.com/ui/01/images/badge.png" width="76" height="76" alt="home" /></a>
+		<div id="nav">
+			<a href="http://blog.cashmusic.org/"><i class="icon icon-pencil"></i>Blog</a>
+			<a href="#tools"><i class="icon icon-cog"></i>Tools</a>
+			<a href="#learning"><i class="icon icon-book"></i>Learning</a>
+			<a href="http://cashmusic.org/events/"><i class="icon icon-map-marker"></i>Events</a>
+			<a href="http://cashmusic.org/donate/"><i class="icon icon-heart"></i>Donate</a>
+		</div>
 
-	<div id="topspc"></div><br />
+		<div class="twelve columns">
+			<h3>cashmusic.js</h3>
+			<h1>Front-end made easy. Embeds, lightboxes, and audio players. Animate, tween, or customize any page element by timecode or song progress — without a line of JaveScript.</h1>
+			<br />
+				<a href="https://github.com/cashmusic/cashmusic.js/archive/master.zip" class="biglink"><i class="icon icon-cloud-download"></i>Download it</a>
+				<a href="docs/" class="biglink"><i class="icon icon-file-text"></i>Read the docs</a>
+			<br /><br />
+			<p>
+				cashmusic.js is a lightweight JavaScript library that handles CASH Music embeds, video lightboxing, and provides simple audio players. It also provides no-script animation keyed to song progress, enabling advanced audio players with little to no coding.
+			</p>
 
-	<div id="copyspc" data-0="marginTop:460px;" data-320="marginTop:140px;" >
-		<div id="headerspc">
+			<br /><br />
+			<h4>Advanced demos</h4>
 			<div class="row">
-				<div class="twelve columns">
-					<h1 style="position:relative;">
-					<img alt="" src="demos/mainpage/assets/images/littlebo.png" />
-						cashmusic.js
-					</h1>
-					<p class="big" style="margin-bottom:0 !important;">
-						Embed stuff, play stuff, move stuff — now with 90% less JavaScript
-					</p>
+				<div class="six columns">
+					<a href="demos/throwingmuses/"><img src="demos/mainpage/assets/images/throwingmuses.jpg" width="100%" alt="Throwing Muses" /></a><p class="alt">Throwing Muses page player</p>
+				</div><div class="six columns">
+					<a href="demos/notthe1s/"><img src="demos/mainpage/assets/images/notthe1s.jpg" width="100%" alt="notthe1s" /></a><p class="alt">Not The 1s page player</p>
 				</div>
 			</div>
-		</div>
-
-		<div class="row" style="padding-top:16px;">
-			<div class="twelve columns">
-				<p class="big" style="margin-bottom:2em;">
-					cashmusic.js is a lightweight library that handles CASH Music embeds, does some 
-					basic video lightboxing, and provides a simple interface to audio (via SoundManager 2.) 
-					It also introduces animating all elements of a page against audio progress, all 
-					with no scripting at all. Define waypoints in an element's data attributes using 
-					simple JSON and the library handles all tweening.
-				</p>
-				<p class="altbig">
-					<a href="https://github.com/cashmusic/cashmusic.js/archive/master.zip">Download it</a><br />
-					<a href="docs/">Read the docs</a>
-					<br /><br />
-					See it:
-				</p>
-			</div>
-		</div>
-
-		<div class="row" style="padding-top:0;">
-			<div class="twelve columns">
-				<h2>CASH Music platform embeds</h2>
-				<p>
-					These are the standard embed codes offered via the CASH Music platform — HTML5-friendly
-					workflows embedded in your page with a single line of JavaScript. These examples show an 
-					email signup form for the CASH Music mailing list.
-				</p>
-				<div class="row">
-					<div class="eight columns">
-						<script type="text/javascript" src="source/cashmusic.js" data-options="lightboxvideo"></script><script type="text/javascript">window.cashmusic.embed('http://x.cashmusic.org/public/','2');</script>
-					</div><div class="four columns">
-						<script type="text/javascript">
-							window.cashmusic.embed(
-								{
-									endpoint: 'http://x.cashmusic.org/public/',
-									elementid: '2',
-									lightboxed: true,
-									lightboxtxt: 'Or open it in a lightbox.',
-									position: {
-										'top':'35%',
-										'width':'30%',
-										'left':'35%',
-										'marginLeft':'0'
-									}
+			
+	
+			<br /><br />
+			<h4>Feature: CASH Music platform embeds</h4>
+			<p>
+				These are the standard embed codes offered via the CASH Music platform — HTML5-friendly
+				workflows embedded in your page with a single line of JavaScript. These examples show an 
+				email signup form for the CASH Music mailing list.
+			</p>
+			<div class="row">
+				<div class="seven columns">
+					<script type="text/javascript">window.cashmusic.embed('http://x.cashmusic.org/public/','1518');</script>
+				</div><div class="five columns">
+					<script type="text/javascript">
+						window.cashmusic.embed(
+							{
+								endpoint: 'http://x.cashmusic.org/public/',
+								elementid: '1518',
+								lightboxed: true,
+								lightboxtxt: 'Or open it in a lightbox.',
+								position: {
+									'top':'35%',
+									'width':'30%',
+									'left':'35%',
+									'marginLeft':'0'
 								}
-							);
-						</script>
-					</div>
+							}
+						);
+					</script>
 				</div>
+			</div>
 
-				<h2>Video lightboxes</h2>
-				<p>
-					These are built from simple, ordinary links to YouTube or Vimeo pages. No embed 
-					codes, no scripts. Just link to the page and specify the "lightboxvideo" option 
-					by adding 'data-options="lightboxvideo"' to the cashmusic.js script tag.
-				</p>
-				<div class="row">
-					<div class="three columns">
-						<a href="https://www.youtube.com/watch?v=WQPfQvLIseA"><img src="demos/mainpage/assets/images/redfang.jpg" width="100%" alt="Red Fang" /><br />RED FANG - "Wires"</a><br />(YouTube)
-					</div><div class="three columns">
-						<a href="https://vimeo.com/15744536"><img src="demos/mainpage/assets/images/xiuxiu.jpg" width="100%" alt="Xiu Xiu" /><br />XIU XIU - "Boy Soprano"</a><br />(Vimeo)
-					</div><div class="six columns"></div>
-				</div>
+			<br />
+			<h4>Feature: Video lightboxes</h4>
+			<p>
+				These are built from simple, ordinary links to YouTube or Vimeo pages. No embed 
+				codes, no scripts. Just link to the page and specify the "lightboxvideo" option 
+				by adding 'data-options="lightboxvideo"' to the cashmusic.js script tag.
+			</p>
+			<div class="row">
+				<div class="four columns">
+					<p class="alt"><a href="https://www.youtube.com/watch?v=WQPfQvLIseA"><img src="demos/mainpage/assets/images/redfang.jpg" width="100%" alt="Red Fang" /><br />RED FANG - "Wires"</a><br />(YouTube)</p>
+				</div><div class="four columns">
+					<p class="alt"><a href="https://vimeo.com/15744536"><img src="demos/mainpage/assets/images/xiuxiu.jpg" width="100%" alt="Xiu Xiu" /><br />XIU XIU - "Boy Soprano"</a><br />(Vimeo)</p>
+				</div><div class="four columns"></div>
+			</div>
 
-				<h2 style="margin-top:48px;">Tween</h2>
-				Inline player and tween example:<br />
-				<div style="position:relative;top:0;left:20px;">
-					<div 
-						class="cashmusic tween setstyles"
-						style="position:absolute;left:-20px;top:4px;border-radius:50%;width:12px;height:12px;background-color:#ff0;"
-						data-tween='{"play":[
-							{"name":"left","startAt":0,"endAt":25,"startVal":-20,"endVal":600,"units":"px","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"},
-							{"name":"left","startAt":25,"endAt":90,"startVal":600,"endVal":-20,"units":"px","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"},
-							{"name":"width","startAt":10,"endAt":"0:08","startVal":12,"endVal":400,"units":"px","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"},
-							{"name":"height","startAt":10,"endAt":"0:08","startVal":12,"endVal":400,"units":"px","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"},
-							{"name":"width","startAt":50,"endAt":100,"startVal":400,"endVal":12,"units":"px","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"},
-							{"name":"height","startAt":50,"endAt":100,"startVal":400,"endVal":12,"units":"px","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"}
-						]}'
-						data-styles='{
-						"stop":[
-							{"name":"backgroundColor","val":"#ff0","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"},
-							{"name":"left","val":"-20px","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"},
-							{"name":"width","val":"12px","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"},
-							{"name":"height","val":"12px","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"}
-						],
-						"0:05":[
-							{"name":"backgroundColor","val":"#f00","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"}
-						]}'
-					></div>
-					<a href="http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3" class="cashmusic soundplayer inline">Learning Music - "Life-Cycle"</a><br />
-				</div>
-				<br />
-				A play/stop toggle: <a href="#" class="cashmusic soundplayer playstop" data-soundid="http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3">Toggle "Life-Cycle"</a><br />
-				A play/pause toggle: <a href="#" class="cashmusic soundplayer playpause" data-soundid="http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3">Toggle "Life-Cycle"</a>
-
-				<h2 style="margin-top:48px;">Full-interface players</h2>
-				<p>
-					These players are built using the same progress/tween animation featured throughout the 
-					page. An add-on module controls the playlists, pulls in a standard template using basic 
-					html/css, and grabs the playlist either from JSON or by collecting all links to valid 
-					audio in a div classed "cashmusic soundplayer playlist" — flexible and easy to configure
-					or customize.
-				</p><p>
-					Advanced options for data tagging and JSONP-based audio-source resolution coming soon.
-				</p>
-				A playlist play/pause toggle: <a href="#" class="cashmusic soundplayer playpause" data-playerid="testplaylist">Toggle (second) playlist</a>
-
-				<div class="row" style="padding-top:24px;">
-					<div class="six columns">
-						<div class="cashmusic soundplayer playlist" style="display:none;">
-							<a href="http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3">Throwing Muses - Film (demo)</a>
-							<a href="http://s3.amazonaws.com/cash_users/throwingmuses/demos/Milan_128.mp3">Throwing Muses - Milan (demo)</a>
-						</div>
-					</div>
-					<div class="six columns">
-						<div class="cashmusic soundplayer playlist" 
-							data-playlist='{"id":"testplaylist","artist":"artist is set","album":"yeah bro","tracks":[
-								{"id":"uniquestring","title":"Throwing Muses - Film (demo)","ISRC":"whatever","url":"http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3"},
-								{"id":"uniquestring2","title":"Throwing Muses - Milan (demo)","url":"http://s3.amazonaws.com/cash_users/throwingmuses/demos/Milan_128.mp3"}
+			<br />
+			<h4>Feature: Tween</h4>
+			<div class="row">
+				<div class="four columns">
+					<p>Basic tween example:</p>
+					<div style="position:relative;top:0;left:20px;" class="alt">
+						<div 
+							class="cashmusic tween setstyles"
+							style="position:absolute;left:-20px;top:4px;border-radius:50%;width:12px;height:12px;background-color:#ff0;"
+							data-tween='{"play":[
+								{"name":"left","startAt":0,"endAt":25,"startVal":-20,"endVal":600,"units":"px","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"},
+								{"name":"left","startAt":25,"endAt":90,"startVal":600,"endVal":-20,"units":"px","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"},
+								{"name":"width","startAt":10,"endAt":"0:08","startVal":12,"endVal":400,"units":"px","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"},
+								{"name":"height","startAt":10,"endAt":"0:08","startVal":12,"endVal":400,"units":"px","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"},
+								{"name":"width","startAt":50,"endAt":100,"startVal":400,"endVal":12,"units":"px","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"},
+								{"name":"height","startAt":50,"endAt":100,"startVal":400,"endVal":12,"units":"px","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"}
+							]}'
+							data-styles='{
+							"stop":[
+								{"name":"backgroundColor","val":"#ff0","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"},
+								{"name":"left","val":"-20px","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"},
+								{"name":"width","val":"12px","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"},
+								{"name":"height","val":"12px","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"}
+							],
+							"0:05":[
+								{"name":"backgroundColor","val":"#f00","onSound":"http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3"}
 							]}'
 						></div>
+						<a href="http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3" class="cashmusic soundplayer inline">Learning Music - "Life-Cycle"</a><br />
+					</div>
+				</div><div class="four columns">
+					<p>Play/pause/stop toggles</p>
+					<p class="alt">
+						A play/stop toggle: <a href="#" class="cashmusic soundplayer playstop" data-soundid="http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3">Toggle "Life-Cycle"</a><br />
+						A play/pause toggle: <a href="#" class="cashmusic soundplayer playpause" data-soundid="http://s3.amazonaws.com/cash_users/learningmusic/vos007/stream/07Life-Cycle.mp3">Toggle "Life-Cycle"</a>
+					</p>
+				</div><div class="four columns"></div>
+			</div>
+
+			<br />
+			<h4>Feature: Basic-interface players</h4>
+			<p>
+				These players are built using the same progress/tween animation featured throughout the 
+				page. An add-on module controls the playlists, pulls in a standard template using basic 
+				html/css, and grabs the playlist either from JSON or by collecting all links to valid 
+				audio in a div classed "cashmusic soundplayer playlist" — flexible and easy to configure
+				or customize.
+			</p><p>
+				Advanced options for data tagging and JSONP-based audio-source resolution coming soon.
+			</p><p class="alt">
+				A playlist play/pause toggle: <a href="#" class="cashmusic soundplayer playpause" data-playerid="testplaylist">Toggle (second) playlist</a>
+			</p>
+
+			<div class="row" style="padding-top:24px;">
+				<div class="six columns">
+					<div class="cashmusic soundplayer playlist" style="display:none;">
+						<a href="http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3">Throwing Muses - Film (demo)</a>
+						<a href="http://s3.amazonaws.com/cash_users/throwingmuses/demos/Milan_128.mp3">Throwing Muses - Milan (demo)</a>
 					</div>
 				</div>
-
-				<h2 style="margin-top:48px;">More demos</h2>
-				<p>
-					The whole idea is to make truly unique music player expeiences possible for everyone, 
-					mobile-friendly, with little to no actual coding needed. Here are more examples.
-				</p>
-				<div class="row">
-					<div class="six columns">
-						<p>
-							<a href="demos/throwingmuses/"><img src="demos/mainpage/assets/images/throwingmuses.jpg" width="100%" alt="Throwing Muses" /><br />Throwing Muses page player</a>
-						</p>
-					</div><div class="six columns">
-						<p>
-							<a href="demos/notthe1s/"><img src="demos/mainpage/assets/images/notthe1s.jpg" width="100%" alt="notthe1s" /><br />notthe1s page player</a>
-						</p>
-					</div>
+				<div class="six columns">
+					<div class="cashmusic soundplayer playlist" 
+						data-playlist='{"id":"testplaylist","artist":"artist is set","album":"yeah bro","tracks":[
+							{"id":"uniquestring","title":"Throwing Muses - Film (demo)","ISRC":"whatever","url":"http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3"},
+							{"id":"uniquestring2","title":"Throwing Muses - Milan (demo)","url":"http://s3.amazonaws.com/cash_users/throwingmuses/demos/Milan_128.mp3"}
+						]}'
+					></div>
 				</div>
+			</div>
 
+			<br /><br />
+			<h4>License and dependencies</h4>
+			<p class="alt">
+				cashmusic.js is distributed under a <a href="https://github.com/cashmusic/cashmusic.js/blob/master/LICENSE">simplified BSD License</a> 
+				— so pretty much go nuts. Build rad stuff. Give back where you can. There are no external dependencies other than 
+				<a href="http://www.schillmania.com/projects/soundmanager2/">SoundManager 2</a> for audio playback. We've 
+				taken lengths to make sure we don't interfere with jQuery or similar libraries, so cashmusic.js should play well with others.
+			</p>
+		</div>
+	</div>
 
-				<br /><br />
-				<h2 style="margin-top:48px;">License and dependencies</h2>
+	<div class="callout" id="mission" style="background-color:#aacd07;">
+		<div class="row">
+			<div class="twelve columns calloutcontent">
+				<h2>Our <b>Mission</b>.</h2>
 				<p>
-					cashmusic.js is distributed under a <a href="https://github.com/cashmusic/cashmusic.js/blob/master/LICENSE">simplified BSD License</a> 
-					— so pretty much go nuts. Build rad stuff. Give back where you can. There are no external dependencies other than 
-					<a href="http://www.schillmania.com/projects/soundmanager2/">SoundManager 2</a> for audio playback. We've 
-					taken lengths to make sure we don't interfere with jQuery or similar libraries, so cashmusic.js should play well with others.
+					CASH Music is a nonprofit organization focused on educating and empowering artists and their fans to foster a viable and sustainable future for music. We believe the best way to ensure a sustainable future for music is to invest in its creators. <a href="http://cashmusic.org/about/">Learn more.</a>
 				</p>
 			</div>
 		</div>
 	</div>
 
-	<br /><br /><br />
+	<div id="more">
+		<div class="row">
+			<div class="eight columns">
+				<p>
+					Community is vital. We can't do this alone. Please get in touch, join the mailing list, or support our organization by donating or buying a shirt. Together we can ensure a healthy future for musicians everywhere.
+				</p><p class="alt">
+					<b>Join the mailing list:</b>
+				</p>
+				<script type="text/javascript" src="http://x.cashmusic.org/public/cashmusic.js"></script><script type="text/javascript"> window.cashmusic.embed('http://x.cashmusic.org/public/','1518');</script>
+			</div>
+			<div class="four columns">	
+				<p class="alt">
+					<a href="mailto:info@cashmusic.org">info@cashmusic.org</a><br />
+					<a href="http://twitter.com/cashmusic">@cashmusic</a><br />
+					<a href="https://github.com/cashmusic/">github.com/cashmusic</a><br />
+					<br />
+					<big>
+					<a href="http://cashmusic.org/donate/">Buy a shirt</a><br />
+					<a href="http://cashmusic.org/donate/">Make a donation</a>
+					</big>
+				</p>
+			</div>
+		</div>
 
-	<script type="text/javascript" src="demos/mainpage/assets/scripts/skrollr.min.js"></script>
-	<script type="text/javascript">
-		if (document.documentElement.clientWidth > 480) {
-			skrollr.init();
-		}
-	</script>
-	
+		<br /><br /><br />
+	</div>
+
+	<div id="bottomspc"></div>
 	<a href="https://github.com/cashmusic/cashmusic.js"><img style="position: absolute; top: 0; right: 0; border: 0;z-index:2500;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_white_ffffff.png" alt="Fork me on GitHub"></a>
-</body>
+</body> 
 </html>

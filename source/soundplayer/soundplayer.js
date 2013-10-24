@@ -390,26 +390,43 @@
 		self._doFinish = function(detail) {
 			self._updateStyles(self.styleDivs,'finish');
 			self.next();
+			window.cashmusic.events.fire(window.cashmusic, "soundplayerFinish", {
+				soundId: self.sound.id
+			});
 		};
 
 		self._doLoad = function(detail) {
 			self._updateStyles(self.styleDivs,'load');
+			window.cashmusic.events.fire(window.cashmusic, "soundplayerLoad", {
+				soundId: self.sound.id
+			});
 		};
 
 		self._doLoading = function(detail) {
 			self._updateTweens(self.tweenDivs,'load',detail.percentage,detail.duration);
+			window.cashmusic.events.fire(window.cashmusic, "soundplayerLoading", {
+				soundId: self.sound.id,
+				percentage: detail.percentage,
+				duration: detail.duration
+			});
 		};
 
 		self._doPause = function(detail) {
 			// deal with playpause buttons
 			self._switchStylesForCollection(document.querySelectorAll('*.cashmusic.playpause'),'playing','paused');
 			self._updateStyles(self.styleDivs,'pause');
+			window.cashmusic.events.fire(window.cashmusic, "soundplayerPause", {
+				soundId: self.sound.id
+			});
 		};
 
 		self._doPlay = function(detail) {
 			// we're faking stop with a setposition(0) and pause...so this only fires once
 			// routing to doResume instead which fires reliably
 			self._doResume(detail);
+			window.cashmusic.events.fire(window.cashmusic, "soundplayerPlay", {
+				soundId: self.sound.id
+			});
 		};
 
 		self._doPlaying = function(detail) {
@@ -422,6 +439,13 @@
 				self.lastTimeEvent = timecode;
 				self._updateStyles(self.styleDivs,timecode);
 			}
+			window.cashmusic.events.fire(window.cashmusic, "soundplayerPlaying", {
+				soundId: self.sound.id,
+				percentage: detail.percentage,
+				position: detail.position,
+				duration: detail.duration,
+				timecode: timecode
+			});
 		};
 
 		self._doResume = function(detail) {
@@ -444,6 +468,9 @@
 			} else {
 				self._updateStyles(self.styleDivs,'resume');
 			}
+			window.cashmusic.events.fire(window.cashmusic, "soundplayerResume", {
+				soundId: self.sound.id
+			});
 		};
 
 		self._doStop = function(id) {
@@ -455,6 +482,9 @@
 			}
 
 			self._updateStyles(self.styleDivs,'stop');
+			window.cashmusic.events.fire(window.cashmusic, "soundplayerStop", {
+				soundId: self.sound.id
+			});
 		};
 
 
