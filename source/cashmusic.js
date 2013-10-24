@@ -32,6 +32,11 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ *
+ *
+ *
+ * VERSION: 1
+ *
  **/
 
 ;window.cashmusic = (function() {
@@ -256,6 +261,13 @@
 				if (templates[templateName] !== undefined) {
 					successCallback(templates[templateName]);
 				} else {
+					/*
+					 *
+					 * TODO: this raises a same origin issue, so we should get a little clever here. 
+					 *       we should load the html file via iframe. easy enough and we can grab the 
+					 *       source via JS and not need to deal with JSONP, etc.
+					 *
+					 */
 					this.ajax.send(
 						cm.path + 'templates/' + templateName + '.html',
 						false,
@@ -264,6 +276,14 @@
 							successCallback(msg);
 						}
 					);
+					/*
+					 *
+					 * TODO: same as above, we run into same origin issues. but this fix is even 
+					 *       easier. we just need to add an injectCSSByUrl function, create a link
+					 *       element and set the href, rel, type, etc. we never need to see the
+					 *       actual CSS at all...	
+					 *
+					 */
 					this.ajax.send(
 						// look for matching CSS file and add that to the head if found
 						// this *only happens once* on purpose — callback won't happen if

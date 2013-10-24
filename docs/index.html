@@ -1,89 +1,48 @@
 <!DOCTYPE html>
-<!-- paulirish.com/2008/conditional-stylesheets-vs-css-hacks-answer-neither/ -->
-<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
-<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
-<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
-<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<meta name="viewport" content="width=device-width" />
-	<link rel="icon" type="image/png" href="http://cashmusic.org/images/icons/cash.png" />
+<html lang="en">
+<head> 
+<title>CASH Music / cashmusic.js</title>
+<meta name="description" content="CASH Music is a nonprofit that empowers musicians through free/open technology and learning." />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width" />
 
-	<title>CASH Music</title>
+<link rel="icon" type="image/png" href="http://2ea7029ee5fd6986c0a6-6d885a724441c07ff9b675222419a9d2.r58.cf2.rackcdn.com/ui/01/images/badge.png" />
+<link rel="stylesheet" type="text/css" href="https://b6febe3773eb5c5bc449-6d885a724441c07ff9b675222419a9d2.ssl.cf2.rackcdn.com/foundation.min.css" />
+<link href='https://fonts.googleapis.com/css?family=Amatic+SC:400,700|Roboto+Condensed:400,700italic,400italic,700,300,300italic|Noto+Serif:400,700italic,400italic,700' rel='stylesheet' type='text/css' />
+<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet" />
+<link rel="stylesheet" type="text/css" href="http://2ea7029ee5fd6986c0a6-6d885a724441c07ff9b675222419a9d2.r58.cf2.rackcdn.com/ui/01/css/app.css" />
 
-	<link rel="stylesheet" href="../demos/mainpage/assets/css/foundation.min.css">
-	<link href='https://fonts.googleapis.com/css?family=Amatic+SC|Roboto+Condensed:400,700italic,400italic,700,300,300italic|Noto+Serif:400,700italic,400italic,700' rel='stylesheet' type='text/css'>
-	<style type="text/css">
-		html {margin:0;padding:0;height:100%;}
-		body {color:#2c2222;background-color:#e4e4e4;text-align:left;font:13px/20px "Noto Serif",helveticaneue,"helvetica neue",helvetica,"segoe ui","segoe wp",arial,sans-serif;margin:0;padding:0;min-height:300px;text-rendering:optimizelegibility;height:100%;min-height:500px;}
-		h1 {color:#000;font-size:52px;font-family:'Amatic SC';line-height:52px;margin:0 0 12px 0;font-weight:400;}
-		h2 {color:#000;font-size:19px;font-family:'Roboto Condensed';line-height:19px;margin:0 0 6px 0;font-weight:700;}
-		h3, ul li {color:#aaa;font-size:15px;font-family:'Roboto Condensed';line-height:15px;margin:0 0 3px 0;font-weight:700;} 
-		h4 {color:inherit;}
-		h5 {color:#ff0;font-size:11px;margin:6px 0 12px 0;font-weight:bold;}
-		img {border:0;}
-		a {color:#df0854;}
-		a:hover {color:#000 !important;}
-		a:visited {color:#df0854;}
-		p {margin:0 0 1.5em 0;}
-		big,.big {font:16px/16px "Noto Serif",helveticaneue,"helvetica neue",helvetica,"segoe ui","segoe wp",arial,sans-serif;}
-		p.big {margin-bottom:3em;line-height:24px;}
-
-		ul li {list-style-type:none;margin-bottom:0.75em;}
-
-		h1 img {position:absolute;left:-86px;top:3px;width:76px;height:76px;}
-
-		.issue {font-size:11px;margin-left:6px;}
-		.cash_notation {font-size:10px;color:#aaa;margin-top:4px;}
-		.cash_notation a {color:#aaa !important;}
-
-		#topspc {position:absolute;top:0;left:0;width:100%;height:482px;background-image:url(../demos/mainpage/assets/images/mthood.jpg);background-position:center center;z-index:10;}
-		#copyspc {position:relative;z-index:100;background-color:#e4e4e4;margin-top:460px;min-height:400px;}
-		#headerspc {position:absolute;top:-140px;width:100%;}
-
-		#headerspc h1 {font-size:80px;line-height:80px;color:#ff0;}
-		#headerspc .big {color:#fff;padding-left:4px;}
-		#headerspc p {margin:0 0 0.75em 0;}
-
-		.logo {width:100%;margin:10px 0 20px 0;}
-		.logo.small {width:45%;margin-top:20px;margin-left:3px;}
-
-		@media only screen and (max-width:480px){
-			#topspc {min-height:220px;background-position:center bottom;}
-			#copyspc {background-color:#e4e4e4;margin-top:220px;}
-			#headerspc {top:-215px;}
-			#headerspc h1 {font-size:40px;line-height:40px;color:#ff0;}
-			h1 img {position:relative;left:0;top:0;width:76px;height:76px;display:block;margin-bottom:20px;}
-			#madepossibleby {margin-top:48px;}
-		}
-	</style>
-	<!-- IE Fix for HTML5 Tags -->
-	<!--[if lt IE 9]>
-		<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-	<![endif]-->
-</head>
+<style type="text/css">
+	a.biglink {color:#df0854;font-family:"Roboto Condensed",Helvetica,Arial,sans-serif;font-size:24px;line-height:36px;font-weight:bold;margin-right:32px;white-space:nowrap;}
+	a.biglink:hover {color:#000;}
+	a.biglink .icon {font-size:22px;}
+	ul {list-style:none;margin-top:12px;}
+	ul li {margin-bottom:8px;}
+	.alt {font-family:"Roboto Condensed",Helvetica,Arial,sans-serif;font-size:15px;line-height:1.4em;color:#333;}
+	.alt a {font-weight:bold;text-decoration:none;color:#df0854;}
+	.alt a:hover {color:#2c2222;}
+</style>
+<script type="text/javascript" src="source/cashmusic.js" data-options="lightboxvideo"></script>
+</head> 
 <body>
-
-	<div id="topspc"></div><br />
-
-	<div id="copyspc" data-0="marginTop:460px;" data-320="marginTop:140px;" >
-		<div id="headerspc">
-			<div class="row">
-				<div class="twelve columns">
-					<h1 style="position:relative;">
-					<img alt="" src="../demos/mainpage/assets/images/littlebo.png" />
-						cashmusic.js
-					</h1>
-					<p class="big" style="margin-bottom:0 !important;">
-						Embed stuff, play stuff, move stuff — now with 90% less JavaScript
-					</p>
-				</div>
-			</div>
+	<div id="topspc"></div>
+	<div id="mainspc" class="row">
+		<a href="http://cashmusic.org/"><img id="homeseal" src="http://2ea7029ee5fd6986c0a6-6d885a724441c07ff9b675222419a9d2.r58.cf2.rackcdn.com/ui/01/images/badge.png" width="76" height="76" alt="home" /></a>
+		<div id="nav">
+			<a href="http://blog.cashmusic.org/"><i class="icon icon-pencil"></i>Blog</a>
+			<a href="#tools"><i class="icon icon-cog"></i>Tools</a>
+			<a href="#learning"><i class="icon icon-book"></i>Learning</a>
+			<a href="http://cashmusic.org/events/"><i class="icon icon-map-marker"></i>Events</a>
+			<a href="http://cashmusic.org/donate/"><i class="icon icon-heart"></i>Donate</a>
 		</div>
 
-		<div class="row" style="padding-top:16px;">
+		<div class="row">
 			<div class="twelve columns">
-				<p class="big">
+				<h3>cashmusic.js documentation</h3>
+				<a href="../" class="biglink"><i class="icon icon-home"></i>cashmusic.js home</a>
+				<br /><br />
+
+				<p>
 					cashmusic.js is meant to be simple to use, providing its functionality without the 
 					need for much additional scripting. Simply include the main cashmusic.js script (7.2kb)
 					and additional scripts will be loaded as needed. The global namespace is kept 
@@ -95,9 +54,11 @@
 			</div>
 		</div>
 
-		<div class="row" style="padding-top:0;">
+		<br /><br />
+
+		<div class="row">
 			<div class="three columns" style="padding-bottom:48px;">
-				<ul>
+				<ul class="alt">
 					<li><a href="#embeds">CASH Music embeds</a></li>
 					<li><a href="#lightboxes">Video lightboxes</a></li>
 					<li><a href="#inline">Inline players</a></li>
@@ -108,7 +69,7 @@
 			</div>
 			<div class="nine columns">
 				<a name="embeds"></a>
-				<h2>CASH Music platform embeds</h2>
+				<h4>CASH Music platform embeds</h4>
 				<p>
 					These embeds are the only parts of cashmusic.js that require the full CASH Music 
 					platform. They are the standard method of embedding iframe-based elements from
@@ -136,8 +97,9 @@
 				</p>
 				<script src="https://gist.github.com/jessevondoom/5860605.js"></script>
 
+				<br /><br />
 				<a name="lightboxes"></a>
-				<h2 style="margin-top:48px;">Video lightboxes</h2>
+				<h4>Video lightboxes</h4>
 				<p>
 					Lightboxed video is easy. So easy it's dumb I'm even writing documentation for it. 
 					All you need to do is add 'data-options="lightboxvideo"' to the initial cashmusic.js
@@ -154,8 +116,9 @@
 					redeclare the styles in a stylesheet of your own. 
 				</p>
 
+				<br /><br />
 				<a name="inline"></a>
-				<h2 style="margin-top:48px;">Inline audio players</h2>
+				<h4>Inline audio players</h4>
 				<p>
 					The inline audio player option lets you turn a link to an MP3 into a play/pause
 					button. Any link tagged with "cashmusic soundplayer inline" will turn into a toggle
@@ -165,8 +128,9 @@
 				</p>
 				<script src="https://gist.github.com/jessevondoom/5862424.js"></script>
 
+				<br /><br />
 				<a name="toggles"></a>
-				<h2 style="margin-top:48px;">Play/pause/stop toggles</h2>
+				<h4>Play/pause/stop toggles</h4>
 				<p>
 					Toggles make links or other DOM elements into play/pause or play/stop buttons for 
 					specific sounds or playlists. They work like inline players but need to have a 
@@ -181,8 +145,9 @@
 				</p>
 				<script src="https://gist.github.com/jessevondoom/5862453.js"></script>
 
+				<br /><br />
 				<a name="players"></a>
-				<h2 style="margin-top:48px;">Full UI players</h2>
+				<h4>Full UI players</h4>
 				<p>
 					These players are HTML5-compatible highly-styleable audio players created from a 
 					simple collection of links or JSON-based playlist. They use the tweening
@@ -214,8 +179,9 @@
 				</p>
 				<script src="https://gist.github.com/jessevondoom/5862770.js"></script>
 
+				<br /><br />
 				<a name="advanced"></a>
-				<h2 style="margin-top:48px;">Tweening/advanced player styling</h2>
+				<h4>Tweening/advanced player styling</h4>
 				<p>
 					The default players are built using CSS tweens that can be applied to any DOM 
 					element. Altering styles based on audio progress is pretty simple. You need to 
@@ -252,15 +218,45 @@
 		</div>
 	</div>
 
-	<br /><br /><br />
+	<div class="callout" id="mission" style="background-color:#aacd07;">
+		<div class="row">
+			<div class="twelve columns calloutcontent">
+				<h2>Our <b>Mission</b>.</h2>
+				<p>
+					CASH Music is a nonprofit organization focused on educating and empowering artists and their fans to foster a viable and sustainable future for music. We believe the best way to ensure a sustainable future for music is to invest in its creators. <a href="http://cashmusic.org/about/">Learn more.</a>
+				</p>
+			</div>
+		</div>
+	</div>
 
-	<script type="text/javascript" src="../demos/mainpage/assets/scripts/skrollr.min.js"></script>
-	<script type="text/javascript">
-		if (document.documentElement.clientWidth > 480) {
-			skrollr.init();
-		}
-	</script>
-	
+	<div id="more">
+		<div class="row">
+			<div class="eight columns">
+				<p>
+					Community is vital. We can't do this alone. Please get in touch, join the mailing list, or support our organization by donating or buying a shirt. Together we can ensure a healthy future for musicians everywhere.
+				</p><p class="alt">
+					<b>Join the mailing list:</b>
+				</p>
+				<script type="text/javascript" src="http://x.cashmusic.org/public/cashmusic.js"></script><script type="text/javascript"> window.cashmusic.embed('http://x.cashmusic.org/public/','1518');</script>
+			</div>
+			<div class="four columns">	
+				<p class="alt">
+					<a href="mailto:info@cashmusic.org">info@cashmusic.org</a><br />
+					<a href="http://twitter.com/cashmusic">@cashmusic</a><br />
+					<a href="https://github.com/cashmusic/">github.com/cashmusic</a><br />
+					<br />
+					<big>
+					<a href="http://cashmusic.org/donate/">Buy a shirt</a><br />
+					<a href="http://cashmusic.org/donate/">Make a donation</a>
+					</big>
+				</p>
+			</div>
+		</div>
+
+		<br /><br /><br />
+	</div>
+
+	<div id="bottomspc"></div>
 	<a href="https://github.com/cashmusic/cashmusic.js"><img style="position: absolute; top: 0; right: 0; border: 0;z-index:2500;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_white_ffffff.png" alt="Fork me on GitHub"></a>
-</body>
+</body> 
 </html>
