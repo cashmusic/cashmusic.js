@@ -261,39 +261,27 @@
 				if (templates[templateName] !== undefined) {
 					successCallback(templates[templateName]);
 				} else {
-					/*
-					 *
-					 * TODO: this raises a same origin issue, so we should get a little clever here. 
-					 *       we should load the html file via iframe. easy enough and we can grab the 
-					 *       source via JS and not need to deal with JSONP, etc.
-					 *
-					 */
-					this.ajax.send(
-						cm.path + 'templates/' + templateName + '.html',
-						false,
-						function(msg) {
-							templates[templateName] = msg;
-							successCallback(msg);
-						}
+					// get the template
+					this.ajax.jsonp(
+						cm.path + 'templates/' + templateName + '.js',
+						'callback',
+						function(json) {
+							templates[templateName] = json.template;
+							successCallback(json.template);
+						},
+						'cashmusic' + templateName + 'Callback'
 					);
-					/*
-					 *
-					 * TODO: same as above, we run into same origin issues. but this fix is even 
-					 *       easier. we just need to add an injectCSSByUrl function, create a link
-					 *       element and set the href, rel, type, etc. we never need to see the
-					 *       actual CSS at all...	
-					 *
-					 */
-					this.ajax.send(
-						// look for matching CSS file and add that to the head if found
-						// this *only happens once* on purpose — callback won't happen if
-						// we get a 404, so this is an easy test for file existence
-						cm.path + 'templates/' + templateName + '.css',
-						false,
-						function(msg) {
-							cm.styles.injectCSS(msg);
-						}
-					)
+					
+
+					// check for existence of the CSS file and if not found, include it
+					var test = document.querySelectorAll('link[href="' + cm.path + 'templates/' + templateName + '.css' + '"]');
+					if (!test.length ) { // if nothing found
+						var l = document.createElement('link');
+						l.setAttribute('href', cm.path + 'templates/' + templateName + '.css');
+						l.setAttribute('rel', 'stylesheet');
+						l.setAttribute('type', 'text/css');
+						document.getElementsByTagName('head')[0].appendChild(l);
+					}
 				}
 			},
 
@@ -439,11 +427,55 @@
 					}
 				},
 
-				jsonp: function(url,variable) {
+				jsonp: function(url,method,callback,forceCallbackName) {
+					// lifted from Oscar Godson here:
+					// http://oscargodson.com/posts/unmasking-jsonp.html
+
+					// added the forceCallbackName bits, and callback queing/stacking
+
+					url = url || '';
+					method = method || '';
+					callback = callback || function(){};
+					forceCallbackName = forceCallbackName || false;
+
+					if(typeof method == 'function'){
+						callback = method;
+						method = 'callback';
+					}
+
+					if (forceCallbackName) {
+						// this is weird. it looks to see if the callback is already defined
+						// if it is it means we hit a race condition loading the template and 
+						// handling the callback. 
+						var generatedFunction = forceCallbackName;
+						var oldCallback = (function(){});
+						if (typeof window[generatedFunction] == 'function') {
+							// we grab the old callback, create a new closure for it, and call
+							// it in our new callback — nests as deep as it needs to go, calling
+							// every callback in reverse order
+							oldCallback = window[generatedFunction];
+						}
+					} else {
+						var generatedFunction = 'jsonp'+Math.round(Math.random()*1000001);
+					}
+
+					window[generatedFunction] = function(json){
+						callback(json);
+						if (!forceCallbackName) {
+							delete window[generatedFunction];
+						} else {
+							// here we start the weird loop down through all the defined 
+							// callbacks. if no callbacks were defined oldCallback is an 
+							// empty function so it does nothing.
+							oldCallback(json);
+						}
+					};
+
+					if (url.indexOf('?') === -1) {url = url+'?';} else {url = url+'&';}
+
 					var s = document.createElement('script');
-					s.src = url;
+					s.setAttribute('src', url+method+'='+generatedFunction);
 					document.getElementsByTagName('head')[0].appendChild(s);
-					return variable;
 				},
 
 				/*
