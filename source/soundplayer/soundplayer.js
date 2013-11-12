@@ -320,8 +320,12 @@
 		 ***************************************************************************************/
 
 		soundManager.setup({
+			debugMode: false,
+			debugFlash: false,
+			preferFlash: false,
+			allowScriptAccess: 'always',
 			url: cm.path+'lib/soundmanager/swf/',
-			flashVersion: 9,
+			flashVersion: 8,
 			flashLoadTimeout: 7500,
 			flashPollingInterval:30,
 			html5PollingInterval:30,
@@ -353,7 +357,7 @@
 					self._doResume({id: this.id});
 				},
 				stream: true,
-				usePolicyFile: true,
+				usePolicyFile: false,
 				volume: 100,
 				whileloading: function() {
 					self._doLoading({
