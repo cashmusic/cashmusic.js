@@ -109,8 +109,11 @@
 				cm.storage['embedheight'] = cm.measure.scrollheight(); // store current height
 				cm.events.relay('resize',cm.storage.embedheight); // fire resize event immediately
 
-				// use element classes to identify type and id of element
+				// get main div and hide it
 				var el = document.querySelector('div.cashmusic.element');
+				cm.fader.hide(el);
+
+				// use element classes to identify type and id of element
 				var cl = el.className.split(' ');
 				cm.events.relay('identify',[cl[2],cl[3].substr(3)]); // [type, id]
 
@@ -123,7 +126,7 @@
 					}
 				},250);
 
-				cm.fader.hide(el);
+				// fade in the content after resize (do it before the setInterval starts)
 				window.setTimeout(function(){cm.fader.init(el,100);}, 100);
 
 				// add an embedded_element input to all forms to tell the platform they're embeds
