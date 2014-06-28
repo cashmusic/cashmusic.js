@@ -3,13 +3,13 @@
  *
  * COMPRESSION SETTINGS
  * http://closure-compiler.appspot.com/
- * Closure compiler, SIMPLE MODE, then append a semi-colon to the front to be careful
+ * Closure compiler, SIMPLE MODE
  *
  * @package cashmusic.org.cashmusic
  * @author CASH Music
  * @link http://cashmusic.org/
  *
- * Copyright (c) 2013, CASH Music
+ * Copyright (c) 2014, CASH Music
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -35,7 +35,7 @@
  *
  *
  *
- * VERSION: 1
+ * VERSION: 2
  *
  **/
 
@@ -48,7 +48,10 @@
 	} else {
 		// no window.cashmusic, so we build and return an object
 		cashmusic = {
-			embeds: [],
+			embeds: {
+				whitelist: '',
+				all: []
+			},
 			loaded: false,
 			soundplayer: false,
 			lightbox: false,
@@ -56,40 +59,104 @@
 			path:'',
 			templates: {},
 			eventlist: {},
+			storage: {},
+			embedded: false,
 
 			_init: function() {
-				var self = window.cashmusic;
+				var cm = window.cashmusic;
 
 				// determine file location and path
-				self.scriptElement = document.querySelector('script[src$="cashmusic.js"]');
-				if (self.scriptElement) {
+				cm.scriptElement = document.querySelector('script[src$="cashmusic.js"]');
+				if (cm.scriptElement) {
 					// chop off last 12 characters for 'cashmusic.js' -- not just a replace in case
 					// a directory is actually named 'cashmusic.js'
-					self.path = self.scriptElement.src.substr(0,self.scriptElement.src.length-12); 
+					cm.path = cm.scriptElement.src.substr(0,cm.scriptElement.src.length-12); 
 				}
-				self.options = String(self.scriptElement.getAttribute('data-options'));
-
-				/*
-				 // commented out the alternative json_parse library
-				if (typeof JSON.parse !== 'function') {
-					self.loadScript(self.path+'lib/json_parse.js');
-				}
-				*/
+				cm.options = String(cm.scriptElement.getAttribute('data-options'));
 
 				// check lightbox options
 				if (this.options.indexOf('lightboxvideo') !== -1) {
 					// load lightbox.js
-					self.loadScript(self.path+'lightbox/lightbox.js');
+					cm.loadScript(cm.path+'lightbox/lightbox.js');
 				}
 				
 				// look for .cashmusic.soundplayer divs/links
 				var soundTest = document.querySelectorAll('a.cashmusic.soundplayer,div.cashmusic.soundplayer');
 				if (soundTest.length > 0) {
-					self.loadScript(self.path+'soundplayer/soundplayer.js');
+					cm.loadScript(cm.path+'soundplayer/soundplayer.js');
 				}
+
+				// if we're running in an iframe assume it's an embed (won't do any harm if not)
+				if (self !== top) {
+					cm._initEmbed();
+				}
+
+				// using messages passed between the request and this script to resize the iframe
+				cm.events.add(window,'message',function(e) {
+					// make sure the message comes from our embeds (via origin whitelist)
+					if (cm.embeds.whitelist.indexOf(e.origin) !== -1) {
+						cm._handleMessage(e);
+					}
+				});
 
 				// we're loaded
 				this.loaded = true;
+			},
+
+			_initEmbed: function() {
+				var cm = window.cashmusic;
+				cm.embedded = true; // set this as an embed
+				cm.storage['embedheight'] = cm.measure.scrollheight(); // store current height
+				cm.events.relay('resize',cm.storage.embedheight); // fire resize event immediately
+
+				// use element classes to identify type and id of element
+				var el = document.querySelector('div.cashmusic.element');
+				var cl = el.className.split(' ');
+				cm.events.relay('identify',[cl[2],cl[3].substr(3)]); // [type, id]
+
+				// poll for height and fire resize event if it changes
+				window.setInterval(function() {
+					var h  = cm.measure.scrollheight();
+					if (h != cm.storage.embedheight) {
+						cm.storage.embedheight = h;
+						cm.events.relay('resize',h);
+					}
+				},250);
+
+				cm.fader.hide(el);
+				window.setTimeout(function(){cm.fader.init(el,100);}, 100);
+
+				// add an embedded_element input to all forms to tell the platform they're embeds
+				var forms = document.getElementsByTagName("form");
+				for (var i=0; i<forms.length; i++) {
+					var ee=document.createElement("input");
+					ee.setAttribute("type","hidden");
+					ee.setAttribute("name","embedded_element");
+					ee.setAttribute("value","1");
+					forms[i].appendChild(ee);
+				}
+			},
+
+			_handleMessage: function(e) {
+				var cm = window.cashmusic;
+				var msg = JSON.parse(e.data);
+				var source;
+				// find the source of the message in our embeds object
+				for (var i = 0; i < cm.embeds.all.length; i++) {
+					if (cm.embeds.all[i].el.contentWindow === e.source) {
+						source = cm.embeds.all[i];
+						break;
+					}
+				}
+
+				// now figure out what to do with it
+				if (msg.type == 'resize') {
+					source.el.style.height = msg.data + 'px'; // resize to correct height
+				} else if (msg.type == 'identify') {
+					if (source.id == msg.data[1]) { // double-check that id's match
+						source.type = msg.data[0]; // set the type. now we have all the infos
+					}
+				}
 			},
 
 			/*
@@ -158,8 +225,9 @@
 				var embedURL = endPoint.replace(/\/$/, '') + '/request/embed/' + elementId + '/location/' + encodeURIComponent(window.location.href.replace(/\//g,'!slash!'));
 				var iframe = document.createElement('iframe');
 					iframe.src = embedURL;
+					iframe.className = 'cashmusic embed';
 					iframe.style.width = '100%';
-					//iframe.style.height = '1px';
+					iframe.style.height = '0'; // if not explicitly set the scrollheight of the document will be wrong
 					iframe.style.border = '0';
 					iframe.style.overflow = 'hidden'; // important for overlays, which flicker scrollbars on open
 				if (targetNode) {
@@ -175,10 +243,9 @@
 				// be nice neighbors. if we can't find currentNode, don't do the rest or pitch errors. silently fail.
 				if (currentNode) {
 					if (lightboxed) {
-						// create a div to contain the link/iframe
+						// create a div to contain the overlay link
 						var embedNode = document.createElement('span');
-						embedNode.className = 'cashmusic embed';
-						embedNode.style.position = 'relative';
+						embedNode.className = 'cashmusic embed link';
 						cm.contentLoaded(function() {
 							// open in a lightbox with a link in the target div
 							if (!lightboxTxt) {lightboxTxt = 'open element';}
@@ -210,49 +277,17 @@
 							});
 						});
 					} else {
-						// create a div to contain the link/iframe
-						var embedNode = document.createElement('div');
-						embedNode.className = 'cashmusic embed';
-						embedNode.style.position = 'relative';
-						embedNode.appendChild(iframe);
-						currentNode.parentNode.insertBefore(embedNode,currentNode);
+						// put the iframe in place
+						currentNode.parentNode.insertBefore(iframe,currentNode);
 					}
 
-					cm.embeds.push({el:iframe,id:elementId});
-
-					if (cm.embeds.length === 1) {
-					//cm.contentLoaded(function() {
-						// using messages passed between the request and this script to resize the iframe
-						cm.events.add(window,'message',function(e) {
-							// look for cashmusic_embed...if not then we don't care
-							if (e.data.substring(0,15) == 'cashmusic_embed') {
-								var a = e.data.split('_');
-								// run through embeds and match the id
-								for (var i=0;i<cm.embeds.length;i++) {
-									if (cm.embeds[i].id == a[2]) {
-										cm.embeds[i].el.height = a[3];
-										cm.embeds[i].el.style.height = a[3] + 'px';
-									}
-								}
-							}
-						});
-					//});
+					var origin = embedURL.split('/').slice(0,3).join('/');					
+					if (cm.embeds.whitelist.indexOf(origin) === -1) {
+						cm.embeds.whitelist = cm.embeds.whitelist + origin;
 					}
+					
+					cm.embeds.all.push({el:iframe,id:elementId,type:''});
 				}
-			},
-
-			getJSON: function(txt) {
-				/*
-				 // commented out the alternative json_parse library
-				var obj;
-				if (typeof JSON.parse === 'function') {
-					obj = JSON.parse(txt);
-				} else {
-					obj = json_parse(txt);
-				}
-				return obj;
-				*/
-				return JSON.parse(txt);
 			},
 
 			getTemplate: function(templateName,successCallback) {
@@ -537,7 +572,8 @@
 					}
 				},
 
-				fire: function (obj,type,data){
+				fire: function(obj,type,data) {
+					var cm = window.cashmusic;
 					if (document.dispatchEvent){
 						// standard
 						var e = document.createEvent('CustomEvent');
@@ -549,6 +585,16 @@
 						e.detail = data;
 						obj.fireEvent('on'+type,e);
 					}
+					if (cm.embedded) {
+						cm.events.relay(type,data);
+					}
+				},
+
+				relay: function(type,data) {
+					window.parent.postMessage(JSON.stringify({
+						'type': type,
+						'data': data
+					}),"*");
 				}
 			},
 
@@ -637,10 +683,21 @@
 			 ***************************************************************************************/
 			measure: {
 				viewport: function() {
+					/*
+						x: viewport width
+						y: viewport height
+					*/
 					return {
 						x: window.innerWidth || document.body.offsetWidth || 0,
 						y: window.innerHeight || document.body.offsetHeight || 0
 					};
+				},
+
+				scrollheight: function() {
+					// returns scrollable content height
+					var db=document.body;
+					var de=document.documentElement;
+					return Math.max(db.scrollHeight,de.scrollHeight,db.offsetHeight,de.offsetHeight,db.clientHeight,de.clientHeight);
 				}
 			},
 
@@ -724,14 +781,28 @@
 
 				injectCSS: function(css) {
 					var head = document.getElementsByTagName('head')[0] || document.documentElement;
-					var el = document.createElement('style');
+					if (css.substr(0,4) == 'http') {
+						// if css starts with "http" treat it as an external stylesheet
+						var el = document.createElement('link');
+						el.rel = 'stylesheet';
+						el.href = css; 
+					} else {
+						// without the "http" wrap css with a style tag
+						var el = document.createElement('style');
+						el.innerHTML = css;
+					}
 					el.type = 'text/css';
-					el.innerHTML = css;
 
 					// by injecting the css BEFORE any other style elements it means all
 					// styles can be manually overridden with ease — no !important or similar,
 					// no external files, etc...
 					head.insertBefore(el, head.firstChild);
+				},
+
+				removeClass: function(el,classname) {
+					// extra spaces allow for consistent matching. 
+					// the "replace(/^\s+/, '').replace(/\s+$/, '')" stuff is because .trim() isn't supported on ie8
+					el.className = ((' ' + el.className + ' ').replace(' ' + classname + ' ')).replace(/^\s+/, '').replace(/\s+$/, '');
 				},
 
 				swapClasses: function(el,oldclass,newclass) {

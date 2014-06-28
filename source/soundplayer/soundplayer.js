@@ -113,7 +113,7 @@
 			if (len > 0) {
 				for (var i=0;i<len;i++) {
 					var d = playlistdivs[i];
-					var pl = cm.getJSON(d.getAttribute('data-playlist'));
+					var pl = JSON.parse(d.getAttribute('data-playlist'));
 					pl = self._formatPlaylist(pl,d.id,i);
 					d.id = d.id ? d.id : pl.id;
 
@@ -757,7 +757,7 @@
 			for (var i=0;i<eLen;i++) {
 				var el = elements[i];
 				var data = el.getAttribute('data-tween');
-				data = cm.getJSON(data);
+				data = JSON.parse(data);
 				if (data) {
 					if (typeof data[type] !== 'undefined') {
 						var dLen = data[type].length;
@@ -930,7 +930,7 @@
 		 * Formats a track pulled from an anchor to ensure all attributes are set.
 		 */
 		self._formatTrack = function(a,playlist) {
-			var track = cm.getJSON(a.getAttribute('data-track'));
+			var track = JSON.parse(a.getAttribute('data-track'));
 			track = track ? track : {};
 			track.url = track.url ? track.url : a.href;
 			track.title = track.title ? track.title : (a.innerText || a.textContent);
