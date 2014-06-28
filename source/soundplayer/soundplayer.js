@@ -3,13 +3,13 @@
  *
  * COMPRESSION SETTINGS
  * http://closure-compiler.appspot.com/
- * Closure compiler, SIMPLE MODE, then append a semi-colon to the front to be careful
+ * Closure compiler, SIMPLE MODE
  *
  * @package cashmusic.org.cashmusic
  * @author CASH Music
  * @link http://cashmusic.org/
  *
- * Copyright (c) 2013, CASH Music
+ * Copyright (c) 2014, CASH Music
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -392,6 +392,7 @@
 		 ***************************************************************************************/
 
 		self._doFinish = function(detail) {
+			self._switchStylesForCollection(document.querySelectorAll('*.cashmusic.playpause'),'playing','paused');
 			self._updateStyles(self.styleDivs,'finish');
 			self.next();
 			window.cashmusic.events.fire(window.cashmusic, "soundplayerFinish", {
@@ -566,6 +567,9 @@
 		 */
 
 		self.next = function(playlistId,force) {
+			if (!playlistId) {
+				playlistId = self.playlist.id;
+			}
 			self.loadPlaylist(playlistId);
 			var next = false;
 			var play = false;
@@ -581,12 +585,14 @@
 				pl.current = next;
 			}
 			if (play) {
-
 				self.playlistPlayTrack(pl.id,next);
 			}
 		};
 
 		self.previous = function(playlistId) {
+			if (!playlistId) {
+				playlistId = self.playlist.id;
+			}
 			self.loadPlaylist(playlistId);
 			var next = false;
 			var pl = self.playlist;
