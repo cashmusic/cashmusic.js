@@ -782,7 +782,7 @@
 					return (' ' + el.className + ' ').indexOf(' ' + classname + ' ') > -1;
 				},
 
-				injectCSS: function(css) {
+				injectCSS: function(css,important) {
 					var head = document.getElementsByTagName('head')[0] || document.documentElement;
 					if (css.substr(0,4) == 'http') {
 						// if css starts with "http" treat it as an external stylesheet
@@ -795,11 +795,17 @@
 						el.innerHTML = css;
 					}
 					el.type = 'text/css';
-
-					// by injecting the css BEFORE any other style elements it means all
-					// styles can be manually overridden with ease — no !important or similar,
-					// no external files, etc...
-					head.insertBefore(el, head.firstChild);
+					
+					if (important) {
+						// important means we don't need to write !important all over the place
+						// allows for overrides, etc
+						head.appendChild(el);
+					} else {
+						// by injecting the css BEFORE any other style elements it means all
+						// styles can be manually overridden with ease — no !important or similar,
+						// no external files, etc...
+						head.insertBefore(el, head.firstChild);
+					}
 				},
 
 				removeClass: function(el,classname) {
