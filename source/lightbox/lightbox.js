@@ -90,7 +90,7 @@
 	};
 
 	// look for links to video sites
-	var as = document.querySelectorAll('a[href*="youtube.com"],a[href*="vimeo.com"]');
+	var as = document.querySelectorAll('a[href*="youtube.com/watch?v="],a[href*="vimeo.com"]');
 	if (as.length > 0) {
 		cm.overlay.create(function() {
 			for (var i = 0; i < as.length; ++i) {
