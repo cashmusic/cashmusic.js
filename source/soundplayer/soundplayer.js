@@ -3,13 +3,13 @@
  *
  * COMPRESSION SETTINGS
  * http://closure-compiler.appspot.com/
- * Closure compiler, SIMPLE MODE, then append a semi-colon to the front to be careful
+ * Closure compiler, SIMPLE MODE
  *
  * @package cashmusic.org.cashmusic
  * @author CASH Music
  * @link http://cashmusic.org/
  *
- * Copyright (c) 2013, CASH Music
+ * Copyright (c) 2014, CASH Music
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -86,6 +86,7 @@
 	 * window.cashmusic.soundplayer
 	 *
 	 ***************************************************************************************/
+	var sp; // this declaration is down here so we don't forget scope when it's set in _init
 	cm.soundplayer = {
 		playlist: false,
 		playlists: {},
@@ -99,13 +100,12 @@
 		 * A defered call to _init() will set up the object once SM2 is loaded below
 		 */
 		_init: function() {
-			var self = cm.soundplayer;
-
+			sp = cm.soundplayer;
 			// get style/tween divs for caching — we update these on every play event in case new
 			// elements are added to the DOM, but caching allows us to skip the querySelectorAll on
 			// every tween/style refresh
-			self.styleDivs = document.querySelectorAll('*.cashmusic.setstyles');
-			self.tweenDivs = document.querySelectorAll('*.cashmusic.tween');
+			sp.styleDivs = document.querySelectorAll('*.cashmusic.setstyles');
+			sp.tweenDivs = document.querySelectorAll('*.cashmusic.tween');
 
 			// build any actualy players using the soundplayer.html / soundplayer.css
 			var playlistdivs = document.querySelectorAll('div.cashmusic.soundplayer.playlist');
@@ -113,8 +113,8 @@
 			if (len > 0) {
 				for (var i=0;i<len;i++) {
 					var d = playlistdivs[i];
-					var pl = cm.getJSON(d.getAttribute('data-playlist'));
-					pl = self._formatPlaylist(pl,d.id,i);
+					var pl = JSON.parse(d.getAttribute('data-playlist'));
+					pl = sp._formatPlaylist(pl,d.id,i);
 					d.id = d.id ? d.id : pl.id;
 
 					var soundlinks = document.querySelectorAll(
@@ -130,114 +130,12 @@
 					var sllen = soundlinks.length;
 					for (var n=0;n<sllen;n++) {
 						var sl = soundlinks[n];
-						pl.tracks.push(self._formatTrack(sl,pl.id));
+						pl.tracks.push(sp._formatTrack(sl,pl.id));
 						sl.parentNode.removeChild(sl);
 					}
 
-					var tlol = '<ol>';
-					sllen = pl.tracks.length;
-					for (var n=0;n<sllen;n++) {
-						pl._index.push(pl.tracks[n].id);
-						soundManager.createSound({
-							id: pl.tracks[n].id,
-							url: pl.tracks[n].url
-						});
-						tlol += ('<li class="cashmusic soundplayer changetrack" data-track="' + (n+1) + '">' + pl.tracks[n].title + '</li>');
-					}
-					tlol += '</ol>';
-					
-					self.playlists[pl.id] = pl;
-
-					(function(container,playlist,ol) {
-						cm.getTemplate('soundplayer',function(t) {
-							t = t.replace(/data-playerid=\"/g,'data-playerid="' + playlist.id);
-							t = t.replace(/onPlayer\":\"/g,'onPlayer":"' + playlist.id);
-							container.innerHTML = t;
-							container.style.visibility = 'visible';
-							container.style.display = 'block';
-							container.style.position = 'relative';
-
-							// add the genrated <ol> from above
-							var tl = document.querySelectorAll(
-								'#' + container.id + ' div.cashmusic.soundplayer.playlist.tracklist'
-							);
-							if (tl[0] !== 'undefined') {
-								tl[0].innerHTML = ol;
-							}
-
-							// pull desired starter content from template, insert it
-							var docontent = document.querySelectorAll(
-								'#' + container.id + ' div.cashmusic.soundplayer.playlist.nowplaying, ' + 
-								'#' + container.id + ' div.cashmusic.soundplayer.playlist.playtime, ' + 
-								'#' + container.id + ' div.cashmusic.soundplayer.playlist.toggletracklist'
-							);
-							var l = docontent.length;
-							for (var li=0;li<l;li++) {
-								docontent[li].innerHTML = docontent[li].getAttribute('data-content') + '';
-							}
-
-							// add controller events
-							var controls = document.querySelectorAll(
-								'#' + container.id + ' div.cashmusic.soundplayer.playlist.controls *, ' +
-								'#' + container.id + ' div.cashmusic.soundplayer.playlist.toggletracklist, ' +
-								'#' + container.id + ' li.cashmusic.soundplayer.changetrack'
-							);
-							var l = controls.length;
-							for (var li=0;li<l;li++) {
-								var el = controls[li];
-								if (cm.styles.hasClass(el,'playpause')) {
-									cm.styles.addClass(el,'paused');
-									cm.events.add(el,'click',function(e) {
-										self.togglePlaylist(playlist.id);
-									});
-								}
-								if (cm.styles.hasClass(el,'nexttrack')) {
-									cm.events.add(el,'click',function(e) {
-										self.next(playlist.id,true);
-									});
-								}
-								if (cm.styles.hasClass(el,'prevtrack')) {
-									cm.events.add(el,'click',function(e) {
-										self.previous(playlist.id);
-									});
-								}
-								if (cm.styles.hasClass(el,'toggletracklist')) {
-									cm.events.add(el,'click',function(e) {
-										var tracklist = document.querySelectorAll(
-											'#' + container.id + ' div.cashmusic.soundplayer.playlist.tracklist'
-										);
-										var style = tracklist[0].style;
-										if (style !== 'undefined') {
-											if (style.height !== 'auto') {
-												style.height = 'auto';
-											} else {
-												style.height = '1px';
-											}
-										}
-										el.blur();
-									});
-								}
-								if (cm.styles.hasClass(el,'changetrack')) {
-									cm.events.add(el,'click',function(e) {
-										var t = (e.currentTarget) ? e.currentTarget : e.srcElement;
-										var track = t.getAttribute('data-track');
-										self.playlistPlayTrack(playlist.id,track);
-									});
-								}
-							}
-
-							// add seekbar control
-							controls = document.querySelectorAll(
-								'#' + container.id + ' div.cashmusic.soundplayer.playlist.seekbar'
-							);
-							var l = controls.length;
-							for (var li=0;li<l;li++) {
-								cm.events.add(controls[li],'click',function(e) {
-									self.seek(cm.measure.getClickPosition(e).percentage,playlist.id);
-								});
-							}
-						});
-					})(d,pl,tlol); // ha. closures look silly.
+					sp.addPlaylist(pl,true); // add the playlist to the system (the true skips reformatting the pl)
+					sp.drawPlayer(d,pl); // draw player UI and insert it into the target div (d)
 				}
 			}
 
@@ -266,7 +164,7 @@
 							var s = soundManager.getSoundById(a.href);
 						}
 						if (s) {
-							self.toggle(s.id,true);
+							sp.toggle(s.id,true);
 							
 							e.returnValue = false;
 							if(e.preventDefault) e.preventDefault();
@@ -289,7 +187,7 @@
 					if (playerid) {
 						cm.events.add(pp,'click',function(e) {
 							var t = (e.currentTarget) ? e.currentTarget : e.srcElement;
-							self.togglePlaylist(t.getAttribute('data-playerid'));
+							sp.togglePlaylist(t.getAttribute('data-playerid'));
 							e.returnValue = false;
 							if(e.preventDefault) e.preventDefault();
 							return false;
@@ -297,7 +195,7 @@
 					} else {
 						cm.events.add(pp,'click',function(e) {
 							var t = (e.currentTarget) ? e.currentTarget : e.srcElement;
-							self.toggle(t.getAttribute('data-soundid'));
+							sp.toggle(t.getAttribute('data-soundid'));
 							e.returnValue = false;
 							if(e.preventDefault) e.preventDefault();
 							return false;
@@ -305,193 +203,7 @@
 					}
 				}
 			}
-		}
-	};
-
-	window.SM2_DEFER = true; // force SM2 to defer auto-init, allow us to change defaults, etc.
-	cm.loadScript(cm.path+'lib/soundmanager/soundmanager2.js', function() {
-		var self = cm.soundplayer;
-		window.soundManager = new SoundManager();
-
-		/***************************************************************************************
-		 *
-		 * SM2 SETUP AND INITIALIZATION
-		 *
-		 ***************************************************************************************/
-
-		soundManager.setup({
-			debugMode: false,
-			debugFlash: false,
-			preferFlash: false,
-			allowScriptAccess: 'always',
-			url: cm.path+'lib/soundmanager/swf/',
-			flashVersion: 8,
-			flashLoadTimeout: 7500,
-			flashPollingInterval:30,
-			html5PollingInterval:30,
-			useHighPerformance:true,
-			onready: function() {
-				self._init();
-			},
-			// ontimeout: function(status) {
-			// 	console.log('SM2 failed to start. Flash missing, blocked or security error?');
-			// 	console.log('Trying: ' + soundManager.url);
-			// },
-			defaultOptions: {
-				onload: function() {
-				 	self._doLoad({id: this.id});
-				},
-				onstop: function() {
-					self._doStop({id: this.id});
-				},
-				onfinish: function() {
-					self._doFinish({id: this.id});
-				},
-				onpause: function() {
-					self._doPause({id: this.id});
-				},
-				onplay: function() {
-					self._doPlay({id: this.id});
-				},
-				onresume: function() {
-					self._doResume({id: this.id});
-				},
-				stream: true,
-				usePolicyFile: false,
-				volume: 100,
-				whileloading: function() {
-					self._doLoading({
-						id: this.id,
-						loaded: this.bytesLoaded,
-						total: this.bytesTotal,
-						percentage: Math.round((this.bytesLoaded / this.bytesTotal) * 1000) / 10
-					});
-				},
-				whileplaying: function() {
-					var p = Math.round((this.position / this.duration) * 10000) / 100;
-					self._doPlaying({
-						id: this.id,
-						position: this.position,
-						duration: this.duration,
-						percentage: p
-					});
-				}
-			}
-		});
-		// Deals with SM2 initialization. By default, SM2 does all this automatically if not deferred.
-		soundManager.beginDelayedInit();
-
-
-		/***************************************************************************************
-		 *
-		 * PSEUDO-EVENT CALLS
-		 * All of the querySelectorAll calls seem excessive, but we should respect the idea of 
-		 * dynamic DOM injection, AJAX, etc. Also these are mostly user-initiated so not often on
-		 * a hundreds-per-second scale.
-		 *
-		 ***************************************************************************************/
-
-		self._doFinish = function(detail) {
-			self._updateStyles(self.styleDivs,'finish');
-			self.next();
-			window.cashmusic.events.fire(window.cashmusic, "soundplayerFinish", {
-				soundId: self.sound.id
-			});
-		};
-
-		self._doLoad = function(detail) {
-			self._updateStyles(self.styleDivs,'load');
-			window.cashmusic.events.fire(window.cashmusic, "soundplayerLoad", {
-				soundId: self.sound.id
-			});
-		};
-
-		self._doLoading = function(detail) {
-			self._updateTweens(self.tweenDivs,'load',detail.percentage,detail.duration);
-			window.cashmusic.events.fire(window.cashmusic, "soundplayerLoading", {
-				soundId: self.sound.id,
-				percentage: detail.percentage,
-				duration: detail.duration
-			});
-		};
-
-		self._doPause = function(detail) {
-			// deal with playpause buttons
-			self._switchStylesForCollection(document.querySelectorAll('*.cashmusic.playpause'),'playing','paused');
-			self._updateStyles(self.styleDivs,'pause');
-			window.cashmusic.events.fire(window.cashmusic, "soundplayerPause", {
-				soundId: self.sound.id
-			});
-		};
-
-		self._doPlay = function(detail) {
-			// we're faking stop with a setposition(0) and pause...so this only fires once
-			// routing to doResume instead which fires reliably
-			self._doResume(detail);
-			window.cashmusic.events.fire(window.cashmusic, "soundplayerPlay", {
-				soundId: self.sound.id
-			});
-		};
-
-		self._doPlaying = function(detail) {
-			//console.log('playing: ' + detail.percentage + '% / (' + detail.position + '/' + detail.duration + ')');
-			self._updateTweens(self.tweenDivs,'play',detail.percentage,detail.duration);
-			self._updateTimes(detail.position);
-			// get timecode, fire event if different
-			var timecode = self._getTimecode(detail.position);
-			if (timecode != self.lastTimeEvent) {
-				self.lastTimeEvent = timecode;
-				self._updateStyles(self.styleDivs,timecode);
-			}
-			window.cashmusic.events.fire(window.cashmusic, "soundplayerPlaying", {
-				soundId: self.sound.id,
-				percentage: detail.percentage,
-				position: detail.position,
-				duration: detail.duration,
-				timecode: timecode
-			});
-		};
-
-		self._doResume = function(detail) {
-			// update tween/style cache
-			self.styleDivs = document.querySelectorAll('*.cashmusic.setstyles');
-			self.tweenDivs = document.querySelectorAll('*.cashmusic.tween');
-
-			// deal with inline buttons
-			var inlineLinks = document.querySelectorAll('a.cashmusic.soundplayer.inline[href="' + self.sound.id + '"]');
-			var l = inlineLinks.length;
-			for (var i=0;i<l;i++) {
-				cm.styles.swapClasses(inlineLinks[i],'stopped','playing');
-			}
-
-			// deal with playpause buttons
-			self._switchStylesForCollection(document.querySelectorAll('*.cashmusic.playpause'),'paused','playing');
-
-			if (self.sound.position > 0) {
-				self._updateStyles(self.styleDivs,'play');
-			} else {
-				self._updateStyles(self.styleDivs,'resume');
-			}
-			window.cashmusic.events.fire(window.cashmusic, "soundplayerResume", {
-				soundId: self.sound.id
-			});
-		};
-
-		self._doStop = function(id) {
-			// deal with inline buttons
-			var inlineLinks = document.querySelectorAll('a.cashmusic.soundplayer.inline[href="' + id + '"]');
-			var l = inlineLinks.length;
-			for (var i=0;i<l;i++) {
-				cm.styles.swapClasses(inlineLinks[i],'playing','stopped');
-			}
-
-			self._updateStyles(self.styleDivs,'stop');
-			window.cashmusic.events.fire(window.cashmusic, "soundplayerStop", {
-				soundId: self.sound.id
-			});
-		};
-
-
+		},
 
 
 
@@ -506,70 +218,75 @@
 		 *
 		 ***************************************************************************************/
 
-		self.pause = function() {
-			if (self.sound) {
-				self.sound.pause();
+		pause: function() {
+			if (sp.sound) {
+				sp.sound.pause();
 			}
-		};
+		},
 
-		self.play = function() {
-			if (self.sound) {
-				self.sound.play();
+		play: function() {
+			if (sp.sound) {
+				sp.sound.play();
 			}
-		};
+		},
 
-		self.resume = function() {
-			if (self.sound) {
-				if (self.sound.paused) {
-					self.sound.resume();
+		resume: function() {
+			if (sp.sound) {
+				if (sp.sound.paused) {
+					sp.sound.resume();
 				}
 			}
-		};
+		},
 
-		self.seek = function(position,playlistId) {
+		seek: function(position,playlistId) {
 			if (playlistId) {
-				if (!self.playlist) {
+				if (!sp.playlist) {
 					return false;
 				} else {
-					if (playlistId !== self.playlist.id) return false;
+					if (playlistId !== sp.playlist.id) return false;
 				}
-				self.sound.setPosition(Math.floor(position * self.sound.duration));
+				sp.sound.setPosition(Math.floor(position * sp.sound.duration));
 			}
-		};
+		},
 
-		self.stop = function() {
-			if (self.sound) {
-				self.pause();
-				self.sound.setPosition(0);
-				self._doStop(self.sound.id);
+		stop: function() {
+			if (sp.sound) {
+				sp.pause();
+				sp.sound.setPosition(0);
+				sp._doStop(sp.sound.id);
 			}
-		};
+		},
 
 		// id is optional to also enable play...
-		self.toggle = function(id,usestop) {
-			var action = usestop ? self.stop : self.pause;
-			self.sound = self.sound ? self.sound : soundManager.getSoundById(id); // necesito para ie
-			if (self.sound.id !== id) {
+		toggle: function(id,usestop) {
+			var action = usestop ? sp.stop : sp.pause;
+			sp.sound = sp.sound ? sp.sound : soundManager.getSoundById(id); // necesito para ie
+			if (sp.sound.id !== id) {
 				action();
-				self.sound = soundManager.getSoundById(id);				
+				sp.sound = soundManager.getSoundById(id);				
 			}
-			if (usestop && !self.sound.paused && self.sound.playState != 0) {
-				self.stop();
+			if (usestop && !sp.sound.paused && sp.sound.playState != 0) {
+				sp.stop();
 			} else {
-				self.sound.togglePause();
+				sp.sound.togglePause();
 			}
-			self._updateTitle();
-		};
+			sp._updateTitle();
+		},
 
 		/*
 		 * Playlist-specific functions
 		 */
 
-		self.next = function(playlistId,force) {
-			self.loadPlaylist(playlistId);
+		next: function(playlistId,force) {
+			//if (!playlistId) {
+			//	playlistId = sp.playlist.id;
+			//}
+			// see above comment-outy stuff. by removing the playlistId part we actually force next
+			// and wind up looping through playlists, etc. no bueno...
+			sp.loadPlaylist(playlistId);
 			var next = false;
 			var play = false;
-			var pl = self.playlist;
+			var pl = sp.playlist;
 			if (pl) {
 				if (pl.current < pl.tracks.length) {
 					next = parseInt(pl.current) + 1;
@@ -581,15 +298,17 @@
 				pl.current = next;
 			}
 			if (play) {
-
-				self.playlistPlayTrack(pl.id,next);
+				sp.playlistPlayTrack(pl.id,next);
 			}
-		};
+		},
 
-		self.previous = function(playlistId) {
-			self.loadPlaylist(playlistId);
+		previous: function(playlistId) {
+			if (!playlistId) {
+				playlistId = sp.playlist.id;
+			}
+			sp.loadPlaylist(playlistId);
 			var next = false;
-			var pl = self.playlist;
+			var pl = sp.playlist;
 			if (pl) {
 				if (pl.current > 1) {
 					next = parseInt(pl.current) - 1;
@@ -597,12 +316,12 @@
 					next = pl.tracks.length;
 				}
 				pl.current = next;
-				self.playlistPlayTrack(pl.id,next);
+				sp.playlistPlayTrack(pl.id,next);
 			}
-		};
+		},
 
-		self.togglePlaylist = function(id) {
-			self.loadPlaylist(id);
+		togglePlaylist: function(id) {
+			sp.loadPlaylist(id);
 			/*
 			 * TODO:
 			 * this is where we need to check the ajax callback stuff
@@ -611,12 +330,12 @@
 			 * in a callback instead of directly.
 			 *
 			 */
-			self.toggle(self.playlist.tracks[self.playlist.current - 1].id);
-		};
+			sp.toggle(sp.playlist.tracks[sp.playlist.current - 1].id);
+		},
 
-		self.playlistPlayTrack = function(id,track) {
-			self.loadPlaylist(id);
-			self.stop();
+		playlistPlayTrack: function(id,track) {
+			sp.loadPlaylist(id);
+			sp.stop();
 			/*
 			 * TODO:
 			 * this is where we need to check the ajax callback stuff
@@ -625,17 +344,256 @@
 			 * in a callback instead of directly.
 			 *
 			 */
-			self.playlist.current = track;
-			self.toggle(self.playlist.tracks[track - 1].id);
-		};
+			sp.playlist.current = track;
+			sp.toggle(sp.playlist.tracks[track - 1].id);
+		},
 
-		self.loadPlaylist = function(id) {
-			if (self.sound && self.playlist) {
-				if (self.playlist.id != id) self.pause();
+		addPlaylist: function(playlist,skipformat) {
+			if (!skipformat) {
+				playlist = sp._formatPlaylist(playlist);
 			}
-			if (self.sound && !self.playlist) self.stop();
-			self.playlist = self.playlists[id];
-		}
+		 	var pllen = playlist.tracks.length;
+			for (var n=0;n<pllen;n++) {
+				playlist._index.push(playlist.tracks[n].id);
+				soundManager.createSound({
+					id: playlist.tracks[n].id,
+					url: playlist.tracks[n].url
+				});
+			}
+			
+			sp.playlists[playlist.id] = playlist;
+		 },
+
+		loadPlaylist: function(id) {
+			if (sp.sound && sp.playlist) {
+				if (sp.playlist.id != id) sp.pause();
+			}
+			if (sp.sound && !sp.playlist) sp.stop();
+			sp.playlist = sp.playlists[id];
+		},
+
+		drawPlayer: function(container,playlist) {
+			if (typeof playlist != 'object') {
+				playlist = sp.playlists[playlist]; // if we have a string, not an object, assume id look for it in sp.playlists
+			}
+			if (typeof playlist == 'object') {
+				cm.getTemplate('soundplayer',function(t) {
+					t = t.replace(/data-playerid=\"/g,'data-playerid="' + playlist.id);
+					t = t.replace(/onPlayer\":\"/g,'onPlayer":"' + playlist.id);
+					container.innerHTML = t;
+					container.style.visibility = 'visible';
+					container.style.display = 'block';
+					container.style.position = 'relative';
+
+					var ol = '<ol>';
+					var	pllen = playlist.tracks.length;
+					for (var n=0;n<pllen;n++) {
+						ol += ('<li class="cashmusic soundplayer changetrack" data-track="' + (n+1) + '">' + playlist.tracks[n].title + '</li>');
+					}
+					ol += '</ol>';
+
+					// add the genrated <ol> from above
+					var tl = document.querySelectorAll(
+						'#' + container.id + ' div.cashmusic.soundplayer.playlist.tracklist'
+					);
+					if (tl[0] !== 'undefined') {
+						tl[0].innerHTML = ol;
+					}
+
+					// pull desired starter content from template, insert it
+					var docontent = document.querySelectorAll(
+						'#' + container.id + ' div.cashmusic.soundplayer.playlist.nowplaying, ' + 
+						'#' + container.id + ' div.cashmusic.soundplayer.playlist.playtime, ' + 
+						'#' + container.id + ' div.cashmusic.soundplayer.playlist.toggletracklist'
+					);
+					var l = docontent.length;
+					for (var li=0;li<l;li++) {
+						docontent[li].innerHTML = docontent[li].getAttribute('data-content') + '';
+					}
+
+					// add controller events
+					var controls = document.querySelectorAll(
+						'#' + container.id + ' div.cashmusic.soundplayer.playlist.controls *, ' +
+						'#' + container.id + ' div.cashmusic.soundplayer.playlist.toggletracklist, ' +
+						'#' + container.id + ' li.cashmusic.soundplayer.changetrack'
+					);
+					var l = controls.length;
+					for (var li=0;li<l;li++) {
+						var el = controls[li];
+						if (cm.styles.hasClass(el,'playpause')) {
+							cm.styles.addClass(el,'paused');
+							cm.events.add(el,'click',function(e) {
+								sp.togglePlaylist(playlist.id);
+							});
+						}
+						if (cm.styles.hasClass(el,'nexttrack')) {
+							cm.events.add(el,'click',function(e) {
+								sp.next(playlist.id,true);
+							});
+						}
+						if (cm.styles.hasClass(el,'prevtrack')) {
+							cm.events.add(el,'click',function(e) {
+								sp.previous(playlist.id);
+							});
+						}
+						if (cm.styles.hasClass(el,'toggletracklist')) {
+							cm.events.add(el,'click',function(e) {
+								var tracklist = document.querySelectorAll(
+									'#' + container.id + ' div.cashmusic.soundplayer.playlist.tracklist'
+								);
+								var style = tracklist[0].style;
+								if (style !== 'undefined') {
+									if (style.height !== 'auto') {
+										style.height = 'auto';
+									} else {
+										style.height = '1px';
+									}
+								}
+								el.blur();
+							});
+						}
+						if (cm.styles.hasClass(el,'changetrack')) {
+							cm.events.add(el,'click',function(e) {
+								var t = (e.currentTarget) ? e.currentTarget : e.srcElement;
+								var track = t.getAttribute('data-track');
+								sp.playlistPlayTrack(playlist.id,track);
+							});
+						}
+					}
+
+					// add seekbar control
+					controls = document.querySelectorAll(
+						'#' + container.id + ' div.cashmusic.soundplayer.playlist.seekbar'
+					);
+					var l = controls.length;
+					for (var li=0;li<l;li++) {
+						cm.events.add(controls[li],'click',function(e) {
+							sp.seek(cm.measure.getClickPosition(e).percentage,playlist.id);
+						});
+					}
+				});
+			}
+		},
+
+
+
+		/***************************************************************************************
+		 *
+		 * (FAKE) PRIVATE SCOPE FUNCTIONS
+		 *
+		 ***************************************************************************************/
+
+
+
+		/***************************************************************************************
+		 *
+		 * PSEUDO-EVENT CALLS
+		 * All of the querySelectorAll calls seem excessive, but we should respect the idea of 
+		 * dynamic DOM injection, AJAX, etc. Also these are mostly user-initiated so not often on
+		 * a hundreds-per-second scale.
+		 *
+		 ***************************************************************************************/
+
+		_doFinish: function(detail) {
+			sp._switchStylesForCollection(document.querySelectorAll('*.cashmusic.playpause'),'playing','paused');
+			sp._updateStyles(sp.styleDivs,'finish');
+			sp.next(sp.playlist.id);
+			cm.events.fire(cm, "soundplayerFinish", {
+				soundId: sp.sound.id
+			});
+		},
+
+		_doLoad: function(detail) {
+			sp._updateStyles(sp.styleDivs,'load');
+			cm.events.fire(cm, "soundplayerLoad", {
+				soundId: sp.sound.id
+			});
+		},
+
+		_doLoading: function(detail) {
+			sp._updateTweens(sp.tweenDivs,'load',detail.percentage,detail.duration);
+			cm.events.fire(cm, "soundplayerLoading", {
+				soundId: sp.sound.id,
+				percentage: detail.percentage,
+				duration: detail.duration
+			});
+		},
+
+		_doPause: function(detail) {
+			// deal with playpause buttons
+			sp._switchStylesForCollection(document.querySelectorAll('*.cashmusic.playpause'),'playing','paused');
+			sp._updateStyles(sp.styleDivs,'pause');
+			cm.events.fire(cm, "soundplayerPause", {
+				soundId: sp.sound.id
+			});
+		},
+
+		_doPlay: function(detail) {
+			// we're faking stop with a setposition(0) and pause...so this only fires once
+			// routing to doResume instead which fires reliably
+			sp._doResume(detail);
+			cm.events.fire(cm, "soundplayerPlay", {
+				soundId: sp.sound.id
+			});
+		},
+
+		_doPlaying: function(detail) {
+			//console.log('playing: ' + detail.percentage + '% / (' + detail.position + '/' + detail.duration + ')');
+			sp._updateTweens(sp.tweenDivs,'play',detail.percentage,detail.duration);
+			sp._updateTimes(detail.position);
+			// get timecode, fire event if different
+			var timecode = sp._getTimecode(detail.position);
+			if (timecode != sp.lastTimeEvent) {
+				sp.lastTimeEvent = timecode;
+				sp._updateStyles(sp.styleDivs,timecode);
+			}
+			cm.events.fire(cm, "soundplayerPlaying", {
+				soundId: sp.sound.id,
+				percentage: detail.percentage,
+				position: detail.position,
+				duration: detail.duration,
+				timecode: timecode
+			});
+		},
+
+		_doResume: function(detail) {
+			// update tween/style cache
+			sp.styleDivs = document.querySelectorAll('*.cashmusic.setstyles');
+			sp.tweenDivs = document.querySelectorAll('*.cashmusic.tween');
+
+			// deal with inline buttons
+			var inlineLinks = document.querySelectorAll('a.cashmusic.soundplayer.inline[href="' + sp.sound.id + '"]');
+			var l = inlineLinks.length;
+			for (var i=0;i<l;i++) {
+				cm.styles.swapClasses(inlineLinks[i],'stopped','playing');
+			}
+
+			// deal with playpause buttons
+			sp._switchStylesForCollection(document.querySelectorAll('*.cashmusic.playpause'),'paused','playing');
+
+			if (sp.sound.position > 0) {
+				sp._updateStyles(sp.styleDivs,'play');
+			} else {
+				sp._updateStyles(sp.styleDivs,'resume');
+			}
+			cm.events.fire(cm, "soundplayerResume", {
+				soundId: sp.sound.id
+			});
+		},
+
+		_doStop: function(id) {
+			// deal with inline buttons
+			var inlineLinks = document.querySelectorAll('a.cashmusic.soundplayer.inline[href="' + id + '"]');
+			var l = inlineLinks.length;
+			for (var i=0;i<l;i++) {
+				cm.styles.swapClasses(inlineLinks[i],'playing','stopped');
+			}
+
+			sp._updateStyles(sp.styleDivs,'stop');
+			cm.events.fire(cm, "soundplayerStop", {
+				soundId: sp.sound.id
+			});
+		},
 
 
 
@@ -651,7 +609,7 @@
 		 * attributes, and compares to the passed id. If a sound id matches or if the id is part
 		 * of the playlist in a playerId it returns true.
 		 */
-		self._checkIds = function(id,data) {
+		_checkIds: function(id,data) {
 			var soundId = '';
 			var playerId = '';
 			// get any required sound/player ids
@@ -662,17 +620,17 @@
 				if (id.indexOf(soundId) === -1) return false;
 			}
 			if (playerId) {
-				if (!self._inPlaylist(playerId,id)) return false;
+				if (!sp._inPlaylist(playerId,id)) return false;
 			}
 
 			return true;
-		};
+		},
 
 		/*
 		 * window.cashmusic.soundplayer._getMS(timecode)
 		 * Takes an hh:mm:ss (or mm:ss) timecode and returns it as miliseconds
 		 */
-		self._getMS = function(timecode) {
+		_getMS: function(timecode) {
 			var timearray = timecode.split(':');
 			var miliseconds = 0;
 			var l = timearray.length;
@@ -682,13 +640,13 @@
 				miliseconds += parseInt(timearray[n]) * ((n==0) ? 1 : (60 * ((n>1) ? 60 : 1))) * 1000;
 			}
 			return miliseconds;
-		};
+		},
 
 		/*
 		 * window.cashmusic.soundplayer._getTimecode(miliseconds)
 		 * Takes miliseconds and returns hh:mm:ss (or mm:ss or m:ss) timecode
 		 */
-		self._getTimecode = function(miliseconds) {
+		_getTimecode: function(miliseconds) {
 			var total = Math.floor(miliseconds / 1000);
 			var h = Math.floor(total / 3600);
 			if (h > 0) {
@@ -705,18 +663,18 @@
 			} else {
 				return m + ':' + s;
 			}
-		}
+		},
 
 		/*
 		 * window.cashmusic.soundplayer._checkIds(id,el)
 		 * Grabs data attributes and formats them to pass into _checkIds
 		 */
-		self._checkIdsForElement = function(id,el) {
+		_checkIdsForElement: function(id,el) {
 			var data = {};
 			data.onSound = el.getAttribute('data-soundid');
 			data.onPlayer = el.getAttribute('data-playerid');
-			return self._checkIds(id,data);
-		};
+			return sp._checkIds(id,data);
+		},
 
 		/*
 		 * window.cashmusic.soundplayer._updateTweens(elements,type,percentage)
@@ -752,12 +710,12 @@
 		 * }
 		 * 
 		 */
-		self._updateTweens = function(elements,type,percentage,duration) {
+		_updateTweens: function(elements,type,percentage,duration) {
 			var eLen = elements.length;
 			for (var i=0;i<eLen;i++) {
 				var el = elements[i];
 				var data = el.getAttribute('data-tween');
-				data = cm.getJSON(data);
+				data = JSON.parse(data);
 				if (data) {
 					if (typeof data[type] !== 'undefined') {
 						var dLen = data[type].length;
@@ -765,14 +723,14 @@
 						var step = false
 						for (var n=0;n<dLen;n++) {
 							step = data[type][n];
-							if (self._checkIds(self.sound.id,step)) {
+							if (sp._checkIds(sp.sound.id,step)) {
 								// if startAt is timecode get percentage
 								if ((step.startAt + '').indexOf(':') !== -1) {
-									step.startAt = Math.round((self._getMS(step.startAt) / duration) * 10000) / 100;
+									step.startAt = Math.round((sp._getMS(step.startAt) / duration) * 10000) / 100;
 								}
 								// if endAt is timecode get percentage
 								if ((step.endAt + '').indexOf(':') !== -1) {
-									step.endAt = Math.round((self._getMS(step.endAt) / duration) * 10000) / 100;
+									step.endAt = Math.round((sp._getMS(step.endAt) / duration) * 10000) / 100;
 								}
 								if (percentage >= step.startAt && percentage <= step.endAt) {
 									// starting value + ((total value range / total percentage span) * true percentage - startAt percentage)
@@ -789,7 +747,7 @@
 					}
 				}
 			}
-		};
+		},
 
 		/*
 		 * window.cashmusic.soundplayer._updateStyles(elements,type)
@@ -810,7 +768,7 @@
 		 * 	]
 		 * }
 		 */
-		self._updateStyles = function(elements,type) {
+		_updateStyles: function(elements,type) {
 			var eLen = elements.length;
 			for (var i=0;i<eLen;i++) {
 				var el = elements[i];
@@ -820,7 +778,7 @@
 					if (typeof data[type] !== 'undefined') {
 						var dLen = data[type].length;
 						for (var n=0;n<dLen;n++) {
-							if (self._checkIds(self.sound.id,data[type][n])) {
+							if (sp._checkIds(sp.sound.id,data[type][n])) {
 								// check for delay
 								if (typeof data[type][n].delay === 'undefined') {
 									el.style[data[type][n].name] = data[type][n].val;
@@ -835,48 +793,48 @@
 					}
 				}
 			}
-		};
+		},
 
 		/*
 		 * window.cashmusic.soundplayer._switchStylesForCollection(collection,oldclass,newclass)
 		 * Shortcut — swaps out old styles for new in a given collection
 		 */
-		self._switchStylesForCollection = function(collection,oldclass,newclass) {
+		_switchStylesForCollection: function(collection,oldclass,newclass) {
 			var l = collection.length;
 			for (var i=0;i<l;i++) {
-				if (self._checkIdsForElement(self.sound.id,collection[i]) && !cm.styles.hasClass(self.sound.id,collection[i],'inline')) {
+				if (sp._checkIdsForElement(sp.sound.id,collection[i]) && !cm.styles.hasClass(sp.sound.id,collection[i],'inline')) {
 					cm.styles.swapClasses(collection[i],oldclass,newclass);
 				}
 			}
-		}
+		},
 
 		/*
 		 * window.cashmusic.soundplayer._updateTimes(position)
 		 * Updates all times for playtime elements matching the current sound/playlist.
 		 */
-		self._updateTimes = function(position) {
+		_updateTimes: function(position) {
 			var times = document.querySelectorAll('div.cashmusic.soundplayer.playtime');
 			var l = times.length;
 			for (var n=0;n<l;n++) {
-				if (self._checkIdsForElement(self.sound.id,times[n])) {
-					times[n].innerHTML = self._getTimecode(position);
+				if (sp._checkIdsForElement(sp.sound.id,times[n])) {
+					times[n].innerHTML = sp._getTimecode(position);
 				}
 			}
-		}
+		},
 
 		/*
 		 * window.cashmusic.soundplayer._updateTitle()
 		 * Updates all titles for nowplaying elements matching the current sound/playlist.
 		 */
-		self._updateTitle = function() {
+		_updateTitle: function() {
 			var titles = document.querySelectorAll('div.cashmusic.soundplayer.nowplaying');
 			var l = titles.length;
 			for (var n=0;n<l;n++) {
-				if (self._checkIdsForElement(self.sound.id,titles[n])) {
-					titles[n].innerHTML = self.playlist.tracks[self.playlist.current - 1].title;
+				if (sp._checkIdsForElement(sp.sound.id,titles[n])) {
+					titles[n].innerHTML = sp.playlist.tracks[sp.playlist.current - 1].title;
 				}
 			}
-		}
+		},
 			
 
 
@@ -913,7 +871,7 @@
 		 * }
 		 * 
 		 */
-		self._formatPlaylist = function(playlist,useid,uniqueseed) {
+		_formatPlaylist: function(playlist,useid,uniqueseed) {
 			playlist = playlist ? playlist : {};
 			if (!playlist.id) {
 				playlist.id = useid ? useid : 'pl---' + uniqueseed; // the 'pl---' is unusual on purpose
@@ -923,21 +881,21 @@
 			playlist._index = [];
 
 			return playlist;
-		};
+		},
 
 		/*
 		 * window.cashmusic.soundplayer._formatTrack(a,playlist)
 		 * Formats a track pulled from an anchor to ensure all attributes are set.
 		 */
-		self._formatTrack = function(a,playlist) {
-			var track = cm.getJSON(a.getAttribute('data-track'));
+		_formatTrack: function(a,playlist) {
+			var track = JSON.parse(a.getAttribute('data-track'));
 			track = track ? track : {};
 			track.url = track.url ? track.url : a.href;
 			track.title = track.title ? track.title : (a.innerText || a.textContent);
 			track.id = playlist + track.url;
 
 			return track;
-		};
+		},
 
 		/*
 		 * window.cashmusic.soundplayer._inPlaylist(playlistid,soundid)
@@ -945,12 +903,89 @@
 		 * any playlist id appended in front of a known/set id won't break the match. This makes
 		 * it a slightly fuzzy match, but provides more upside than down.
 		 */
-		self._inPlaylist = function(playlistid,soundid) {
+		_inPlaylist: function(playlistid,soundid) {
 			if (playlistid) {
-				return (self.playlists[playlistid]._index.indexOf(soundid) > -1) ? true : false;
+				return (sp.playlists[playlistid]._index.indexOf(soundid) > -1) ? true : false;
 			} else {
 				return false;
 			}
-		};
+		}
+
+	};
+
+
+
+	window.SM2_DEFER = true; // force SM2 to defer auto-init, allow us to change defaults, etc.
+	cm.loadScript(cm.path+'lib/soundmanager/soundmanager2.js', function() {
+		sp = cm.soundplayer;
+		window.soundManager = new SoundManager();
+
+		/***************************************************************************************
+		 *
+		 * SM2 SETUP AND INITIALIZATION
+		 *
+		 ***************************************************************************************/
+
+		soundManager.setup({
+			debugMode: false,
+			debugFlash: false,
+			preferFlash: false,
+			allowScriptAccess: 'always',
+			url: cm.path+'lib/soundmanager/swf/',
+			flashVersion: 8,
+			flashLoadTimeout: 7500,
+			flashPollingInterval:30,
+			html5PollingInterval:30,
+			useHighPerformance:true,
+			onready: function() {
+				sp._init();
+			},
+			// ontimeout: function(status) {
+			// 	console.log('SM2 failed to start. Flash missing, blocked or security error?');
+			// 	console.log('Trying: ' + soundManager.url);
+			// },
+			defaultOptions: {
+				onload: function() {
+				 	sp._doLoad({id: this.id});
+				},
+				onstop: function() {
+					sp._doStop({id: this.id});
+				},
+				onfinish: function() {
+					sp._doFinish({id: this.id});
+				},
+				onpause: function() {
+					sp._doPause({id: this.id});
+				},
+				onplay: function() {
+					sp._doPlay({id: this.id});
+				},
+				onresume: function() {
+					sp._doResume({id: this.id});
+				},
+				stream: true,
+				usePolicyFile: false,
+				volume: 100,
+				whileloading: function() {
+					sp._doLoading({
+						id: this.id,
+						loaded: this.bytesLoaded,
+						total: this.bytesTotal,
+						percentage: Math.round((this.bytesLoaded / this.bytesTotal) * 1000) / 10
+					});
+				},
+				whileplaying: function() {
+					var p = Math.round((this.position / this.duration) * 10000) / 100;
+					sp._doPlaying({
+						id: this.id,
+						position: this.position,
+						duration: this.duration,
+						percentage: p
+					});
+				}
+			}
+		});
+		// Deals with SM2 initialization. By default, SM2 does all this automatically if not deferred.
+		soundManager.beginDelayedInit();
 	});
-}());
+}()); // ha. closures look silly.

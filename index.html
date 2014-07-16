@@ -23,16 +23,6 @@
 <script type="text/javascript" src="source/cashmusic.js" data-options="lightboxvideo"></script>
 </head> 
 <body>
-
-	<!-- KICKSTARTER ADDITION -->
-	<style type="text/css">
-		#ksbanner {display:block;width:100%;height:90px;background:#000 url(https://b6febe3773eb5c5bc449-6d885a724441c07ff9b675222419a9d2.ssl.cf2.rackcdn.com/special/kickstarter/kickstarter_banner.jpg) center top;}
-		@media all and (max-width: 720px) {
-			#ksbanner {height:36px;background-size: 848px 36px;}
-		}
-	</style>
-	<a href="http://www.kickstarter.com/projects/cashmusic/cash-music-summits-music-meets-technology" id="ksbanner" target="_blank" title="Please support our project on Kickstarter"></a>
-	<!-- KICKSTARTER ADDITION -->
 	
 	<div id="topspc"></div>
 	<div id="mainspc" class="row">
@@ -183,6 +173,15 @@
 			</div>
 
 			<br /><br />
+			<h4>New tests</h4>
+			Basic style injection: <a href="#" id="new-whiteout">White out</a><br />
+			External style injection, end of cascade: <a href="#" id="new-externalstyle">Steal an external stylesheet</a><br />
+			Add a new soundplayer: <a href="#" id="new-soundplayer">Thermals demo player</a>
+
+			<div id="thermals-player"></div>
+
+
+			<br /><br />
 			<h4>License and dependencies</h4>
 			<p class="alt">
 				cashmusic.js is distributed under a <a href="https://github.com/cashmusic/cashmusic.js/blob/master/LICENSE">simplified BSD License</a> 
@@ -233,5 +232,59 @@
 
 	<div id="bottomspc"></div>
 	<a href="https://github.com/cashmusic/cashmusic.js"><img style="position: absolute; top: 0; right: 0; border: 0;z-index:2500;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_white_ffffff.png" alt="Fork me on GitHub"></a>
+
+	<script type="text/javascript">
+		if (window.cashmusic) {
+			var cm = window.cashmusic;
+			cm.events.add(document.getElementById('new-whiteout'),'click',function(e) {
+				e.preventDefault();
+				cm.styles.injectCSS(
+					'body, #more, #mainspc, #topspc, #bottomspc, #mission {background:#fff none !important;} #mission, #mission h2 {color:#000 !important;}'
+				);
+			});
+			cm.events.add(document.getElementById('new-externalstyle'),'click',function(e) {
+				e.preventDefault();
+				cm.styles.injectCSS(
+					'https://5ac61e7c565c49aab182-1a20c53f2eb5bc3379ac8dc929bcb803.ssl.cf2.rackcdn.com/zolajesus/main.css',
+					true
+				);
+			});
+			// don't try adding a playlist until window.cashmusic.soundplayer is available. takes a few
+			// miliseconds afer init. the script will be added by default if there are any soundplayer divs. 
+			// if not just call: 
+			// window.cashmusic.loadScript(window.cashmusic.path+'soundplayer/soundplayer.js');
+			cm.events.add(document.getElementById('new-soundplayer'),'click',function(e) {
+				e.preventDefault();
+				// this is the basic format needed to load a playlist. we add shit to the object after it's passed in.
+				// you won't need a reference to the object itself, just make sure you know the playlist id
+				cm.soundplayer.addPlaylist(
+					{
+						id: 'playlist-thethermals',
+						tracks: [
+							{
+						 		id: 'tt-tsbms',
+						 		url: 'http://www.thethermals.com/wp-content/plugins/thermals-audio-player/audio/TheSwordByMySide.mp3',
+						 		title: 'The Thermals: The Sword By My Side'
+							},
+							{
+						 		id: 'tt-apos',
+						 		url: 'http://www.thethermals.com/wp-content/plugins/thermals-audio-player/audio/03.mp3',
+						 		title: 'The Thermals: A Pillar Of Salt'
+							},
+							{
+						 		id: 'tt-hyf',
+						 		url: 'http://www.thethermals.com/wp-content/plugins/thermals-audio-player/audio/08.mp3',
+						 		title: 'The Thermals: Here\'s Your Future'
+							}
+						]
+					}
+				);
+				// the drawPlayer call just takes a target, and a playlist id
+				// you can use it to draw over an existing playlist dynamically. it'll yank the whole thing, but only
+				// the interface. defined playlists will persist with no UI
+				cm.soundplayer.drawPlayer(document.getElementById('thermals-player'),'playlist-thethermals');
+			});
+		}
+	</script>
 </body> 
 </html>
