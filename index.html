@@ -236,6 +236,7 @@
 	<script type="text/javascript">
 		if (window.cashmusic) {
 			var cm = window.cashmusic;
+			/*
 			cm.events.add(document.getElementById('new-whiteout'),'click',function(e) {
 				e.preventDefault();
 				cm.styles.injectCSS(
@@ -283,6 +284,19 @@
 				// you can use it to draw over an existing playlist dynamically. it'll yank the whole thing, but only
 				// the interface. defined playlists will persist with no UI
 				cm.soundplayer.drawPlayer(document.getElementById('thermals-player'),'playlist-thethermals');
+			});
+			*/
+
+			cm.events.add(cm,'soundplayerPlay',function(e) {
+				console.log('playing ' + e.detail.soundId);
+			});
+
+			cm.events.add(cm,'soundplayerFinish',function(e) {
+				console.log('finished ' + e.detail.soundId);
+			});
+
+			cm.events.add(cm,'soundplayerPlaying',function(e) {
+				console.log('play details ' + e.detail.soundId + ' / ' + e.detail.percentage + '% / ' + e.detail.position + 'ms / ' + e.detail.duration + ' total / ' + e.detail.timecode + ' timecode');
 			});
 		}
 	</script>

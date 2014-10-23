@@ -126,6 +126,12 @@
 					}
 				},250);
 
+				// rewrite CSS stuff?
+				var cssOverride = cm.getQueryVariable('cssoverride');
+				if (cssOverride) {
+					cm.styles.injectCSS(cssOverride);
+				}
+
 				// fade in the content after resize (do it before the setInterval starts)
 				window.setTimeout(function(){cm.fader.init(el,100);}, 100);
 
@@ -154,6 +160,7 @@
 
 				// now figure out what to do with it
 				if (msg.type == 'resize') {
+					source.el.height = msg.data;
 					source.el.style.height = msg.data + 'px'; // resize to correct height
 				} else if (msg.type == 'identify') {
 					if (source.id == msg.data[1]) { // double-check that id's match
@@ -212,7 +219,7 @@
 			 * a targetNode to serve as the anchor — with the embed chucked immediately after that 
 			 * element in the DOM.
 			 */
-			embed: function(endPoint, elementId, lightboxed, lightboxTxt, position, targetNode, cssOveride) {
+			embed: function(endPoint, elementId, lightboxed, lightboxTxt, position, targetNode, cssOverride) {
 				// Allow for a single object to be passed instead of all arguments
 				// object properties should be lowercase versions of the standard arguments, any order
 				if (typeof endPoint === 'object') {
@@ -221,11 +228,14 @@
 					lightboxTxt = endPoint.lightboxtxt ? endPoint.lightboxtxt : false;
 					position    = endPoint.position ? endPoint.position : false;
 					targetNode  = endPoint.targetnode ? endPoint.targetnode : false;
-					cssOveride  = endPoint.cssoveride ? endPoint.cssoveride : false;
+					cssOverride = endPoint.cssoverride ? endPoint.cssoverride : false;;
 					endPoint   = endPoint.endpoint;
 				}
 				var cm = window.cashmusic;
 				var embedURL = endPoint.replace(/\/$/, '') + '/request/embed/' + elementId + '/location/' + encodeURIComponent(window.location.href.replace(/\//g,'!slash!'));
+				if (cssOverride) {
+					embedURL = embedURL + '?cssoverride=' + encodeURIComponent(cssOverride);
+				}
 				var iframe = document.createElement('iframe');
 					iframe.src = embedURL;
 					iframe.className = 'cashmusic embed';
@@ -233,6 +243,7 @@
 					iframe.style.height = '0'; // if not explicitly set the scrollheight of the document will be wrong
 					iframe.style.border = '0';
 					iframe.style.overflow = 'hidden'; // important for overlays, which flicker scrollbars on open
+					iframe.scrolling = 'no'; // programming
 				if (targetNode) {
 					// for AJAX, specify target node: '#id', '#id .class', etc. NEEDS to be specific
 					var currentNode = document.querySelector(targetNode);
@@ -392,6 +403,19 @@
 					};
 					head.insertBefore( script, head.firstChild );
 				}
+			},
+
+			// found: http://css-tricks.com/snippets/javascript/get-url-variables/
+			getQueryVariable: function(v) {
+				var query = window.location.search.substring(1);
+				var vars = query.split("&");
+				for (var i=0;i<vars.length;i++) {
+					var pair = vars[i].split("=");
+					if(pair[0] == v){
+						return decodeURIComponent(pair[1]);
+					}
+				}
+				return(false);
 			},
 
 			
