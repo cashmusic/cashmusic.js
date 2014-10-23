@@ -156,6 +156,14 @@
 							id: a.href,
 							url: a.href
 						});
+					} else {
+						var soundid = a.getAttribute('data-soundid');
+						if (!soundManager.getSoundById(soundid)) {
+							soundManager.createSound({
+								id: soundid,
+								url: soundid
+							});
+						}
 					}
 					cm.events.add(a,'click',function(e) {
 						if (cm.styles.hasClass(a,'playstop')) {
@@ -193,6 +201,12 @@
 							return false;
 						});
 					} else {
+						if (!soundManager.getSoundById(soundid)) {
+							soundManager.createSound({
+								id: soundid,
+								url: soundid
+							});
+						}
 						cm.events.add(pp,'click',function(e) {
 							var t = (e.currentTarget) ? e.currentTarget : e.srcElement;
 							sp.toggle(t.getAttribute('data-soundid'));
