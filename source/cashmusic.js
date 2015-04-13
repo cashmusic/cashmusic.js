@@ -99,6 +99,9 @@
 					}
 				});
 
+				// add current domain to whitelist for postmesage calls (regardless of embed or no)
+				cm.embeds.whitelist = cm.embeds.whitelist + window.location.href.split('/').slice(0,3).join('/');
+
 				// we're loaded
 				this.loaded = true;
 			},
@@ -114,18 +117,18 @@
 					cm.fader.hide(el);
 
 					cm.storage['embedheight'] = cm.measure.scrollheight(); // store current height
-					cm.events.fire('resize',cm.storage.embedheight); // fire resize event immediately
+					cm.events.fire(cm,'resize',cm.storage.embedheight); // fire resize event immediately
 
 					// use element classes to identify type and id of element
 					var cl = el.className.split(' ');
-					cm.events.fire('identify',[cl[2],cl[3].substr(3)]); // [type, id]
+					cm.events.fire(cm,'identify',[cl[2],cl[3].substr(3)]); // [type, id]
 
 					// poll for height and fire resize event if it changes
 					window.setInterval(function() {
 						var h  = cm.measure.scrollheight();
 						if (h != cm.storage.embedheight) {
 							cm.storage.embedheight = h;
-							cm.events.fire('resize',h);
+							cm.events.fire(cm,'resize',h);
 						}
 					},250);
 
@@ -170,10 +173,10 @@
 					if (source.id == msg.data[1]) { // double-check that id's match
 						source.type = msg.data[0]; // set the type. now we have all the infos
 					}
-				}  else if (msg.type == 'stripetokenrequested') {
-					cm.stripe.generateToken(msg.data,e.source)
+				} else if (msg.type == 'stripetokenrequested') {
+					cm.stripe.generateToken(msg.data,e.source);
 				} else if (msg.type == 'stripetoken') {
-					cm.events.fire('stripetokengenerated',msg.data);
+					cm.events.fire(cm,'stripetokengenerated',msg.data);
 				}
 			},
 
@@ -876,7 +879,7 @@
 				generateToken: function(params,origin) {
 					var cm = window.cashmusic;
 					if (cm.embedded) {
-						cm.events.fire('stripetokenrequested',params);
+						cm.events.fire(cm,'stripetokenrequested',params);
 					} else {
 						cm.loadScript('https://checkout.stripe.com/checkout.js', function() {
 							var handler = StripeCheckout.configure({
@@ -889,7 +892,7 @@
 											'data': token
 										}),'*');
 									} else {
-										cm.events.fire('stripetokengenerated',token);
+										cm.events.fire(cm,'stripetokengenerated',token);
 									}
 								}
 							});
