@@ -901,7 +901,9 @@
 							handler.open({
 								name: params.name,
 								description: params.description,
-								amount: params.amount
+								amount: params.amount,
+								currency: params.currency,
+								bitcoin: params.bitcoin
 							});
 						});
 					}
