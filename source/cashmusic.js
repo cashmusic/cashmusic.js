@@ -874,6 +874,7 @@
 			 ***************************************************************************************/
 			stripe: {
 				generateToken: function(params,origin) {
+					var cm = window.cashmusic;
 					if (cm.embedded) {
 						cm.events.fire('stripetokenrequested',params);
 					} else {
