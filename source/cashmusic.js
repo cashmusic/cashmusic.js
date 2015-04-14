@@ -9,7 +9,7 @@
  * @author CASH Music
  * @link http://cashmusic.org/
  *
- * Copyright (c) 2014, CASH Music
+ * Copyright (c) 2015, CASH Music
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -35,7 +35,7 @@
  *
  *
  *
- * VERSION: 2
+ * VERSION: 3
  *
  **/
 
@@ -70,7 +70,7 @@
 				if (cm.scriptElement) {
 					// chop off last 12 characters for 'cashmusic.js' -- not just a replace in case
 					// a directory is actually named 'cashmusic.js'
-					cm.path = cm.scriptElement.src.substr(0,cm.scriptElement.src.length-12); 
+					cm.path = cm.scriptElement.src.substr(0,cm.scriptElement.src.length-12);
 				}
 				cm.options = String(cm.scriptElement.getAttribute('data-options'));
 
@@ -79,7 +79,7 @@
 					// load lightbox.js
 					cm.loadScript(cm.path+'lightbox/lightbox.js');
 				}
-				
+
 				// look for .cashmusic.soundplayer divs/links
 				var soundTest = document.querySelectorAll('a.cashmusic.soundplayer,div.cashmusic.soundplayer');
 				if (soundTest.length > 0) {
@@ -99,6 +99,9 @@
 					}
 				});
 
+				// add current domain to whitelist for postmesage calls (regardless of embed or no)
+				cm.embeds.whitelist = cm.embeds.whitelist + window.location.href.split('/').slice(0,3).join('/');
+
 				// we're loaded
 				this.loaded = true;
 			},
@@ -106,34 +109,38 @@
 			_initEmbed: function() {
 				var cm = window.cashmusic;
 				cm.embedded = true; // set this as an embed
-				cm.storage['embedheight'] = cm.measure.scrollheight(); // store current height
-				cm.events.relay('resize',cm.storage.embedheight); // fire resize event immediately
 
-				// get main div and hide it
+				// get main div
 				var el = document.querySelector('div.cashmusic.element');
-				cm.fader.hide(el);
+				if (el) {
+					// hide the main div
+					cm.fader.hide(el);
 
-				// use element classes to identify type and id of element
-				var cl = el.className.split(' ');
-				cm.events.relay('identify',[cl[2],cl[3].substr(3)]); // [type, id]
+					cm.storage['embedheight'] = cm.measure.scrollheight(); // store current height
+					cm.events.fire(cm,'resize',cm.storage.embedheight); // fire resize event immediately
 
-				// poll for height and fire resize event if it changes
-				window.setInterval(function() {
-					var h  = cm.measure.scrollheight();
-					if (h != cm.storage.embedheight) {
-						cm.storage.embedheight = h;
-						cm.events.relay('resize',h);
+					// use element classes to identify type and id of element
+					var cl = el.className.split(' ');
+					cm.events.fire(cm,'identify',[cl[2],cl[3].substr(3)]); // [type, id]
+
+					// poll for height and fire resize event if it changes
+					window.setInterval(function() {
+						var h  = cm.measure.scrollheight();
+						if (h != cm.storage.embedheight) {
+							cm.storage.embedheight = h;
+							cm.events.fire(cm,'resize',h);
+						}
+					},250);
+
+					// rewrite CSS stuff?
+					var cssOverride = cm.getQueryVariable('cssoverride');
+					if (cssOverride) {
+						cm.styles.injectCSS(cssOverride,true);
 					}
-				},250);
 
-				// rewrite CSS stuff?
-				var cssOverride = cm.getQueryVariable('cssoverride');
-				if (cssOverride) {
-					cm.styles.injectCSS(cssOverride);
+					// fade in the content after resize (do it before the setInterval starts)
+					window.setTimeout(function(){cm.fader.init(el,100);}, 100);
 				}
-
-				// fade in the content after resize (do it before the setInterval starts)
-				window.setTimeout(function(){cm.fader.init(el,100);}, 100);
 
 				// add an embedded_element input to all forms to tell the platform they're embeds
 				var forms = document.getElementsByTagName("form");
@@ -149,7 +156,7 @@
 			_handleMessage: function(e) {
 				var cm = window.cashmusic;
 				var msg = JSON.parse(e.data);
-				var source;
+				var source; // source embed (if from an embed)
 				// find the source of the message in our embeds object
 				for (var i = 0; i < cm.embeds.all.length; i++) {
 					if (cm.embeds.all[i].el.contentWindow === e.source) {
@@ -166,6 +173,10 @@
 					if (source.id == msg.data[1]) { // double-check that id's match
 						source.type = msg.data[0]; // set the type. now we have all the infos
 					}
+				} else if (msg.type == 'stripetokenrequested') {
+					cm.stripe.generateToken(msg.data,e.source);
+				} else if (msg.type == 'stripetoken') {
+					cm.events.fire(cm,'stripetokengenerated',msg.data);
 				}
 			},
 
@@ -206,17 +217,17 @@
 			/*
 			 * window.cashmusic.embed(string endPoint, string/int elementId, bool lightboxed, bool lightboxTxt)
 			 * Generates the embed iFrame code for embedding a given element.
-			 * Optional third and fourth parameters allow the element to be 
+			 * Optional third and fourth parameters allow the element to be
 			 * embedded with a lightbox and to customize the text of lightbox
 			 * opener link. (default: 'open element')
 			 *
-			 * The iFrame is embedded at 1px high and sends a postMessage back 
-			 * to this parent window with its proper height. 
+			 * The iFrame is embedded at 1px high and sends a postMessage back
+			 * to this parent window with its proper height.
 			 *
 			 * This is called in a script inline as a piece of blocking script — calling it before
 			 * contentLoaded because the partial load tells us where to embed each chunk — we find the
-			 * last script node and inject the content by it. For dynamic calls you need to specify 
-			 * a targetNode to serve as the anchor — with the embed chucked immediately after that 
+			 * last script node and inject the content by it. For dynamic calls you need to specify
+			 * a targetNode to serve as the anchor — with the embed chucked immediately after that
 			 * element in the DOM.
 			 */
 			embed: function(endPoint, elementId, lightboxed, lightboxTxt, position, targetNode, cssOverride) {
@@ -249,8 +260,8 @@
 					var currentNode = document.querySelector(targetNode);
 				} else {
 					// if used non-AJAX we just grab the current place in the doc
-					// because we're running as the document is loading in a blocking fashion, the 
-					// last script element will be the current script asset. 
+					// because we're running as the document is loading in a blocking fashion, the
+					// last script element will be the current script asset.
 					var allScripts = document.querySelectorAll('script');
 					var currentNode = allScripts[allScripts.length - 1];
 				}
@@ -295,11 +306,11 @@
 						currentNode.parentNode.insertBefore(iframe,currentNode);
 					}
 
-					var origin = embedURL.split('/').slice(0,3).join('/');					
+					var origin = embedURL.split('/').slice(0,3).join('/');
 					if (cm.embeds.whitelist.indexOf(origin) === -1) {
 						cm.embeds.whitelist = cm.embeds.whitelist + origin;
 					}
-					
+
 					cm.embeds.all.push({el:iframe,id:elementId,type:''});
 				}
 			},
@@ -320,7 +331,7 @@
 						},
 						'cashmusic' + templateName + 'Callback'
 					);
-					
+
 
 					// check for existence of the CSS file and if not found, include it
 					var test = document.querySelectorAll('link[href="' + cm.path + 'templates/' + templateName + '.css' + '"]');
@@ -344,7 +355,7 @@
 				}
 				cm.eventlist[eventName].push(callback);
 			},
-			 
+
 			/*
 			 *	Use standard event footprint
 			 */
@@ -357,7 +368,7 @@
 					}
 				}
 			},
-			
+
 			/*
 			 *	Use standard event footprint
 			 */
@@ -369,7 +380,7 @@
 						if (cm.eventlist[e.type][i]) {
 							cm.eventlist[e.type][i](e);
 						}
-					}	
+					}
 				}
 			},
 
@@ -395,7 +406,7 @@
 							if (typeof callback === 'function') {
 								callback();
 							}
-							
+
 							// Handle memory leak in IE
 							script.onload = script.onreadystatechange = null;
 							if (head && script.parentNode) {head.removeChild(script);}
@@ -418,7 +429,7 @@
 				return(false);
 			},
 
-			
+
 
 			/***************************************************************************************
 			 *
@@ -434,7 +445,7 @@
 				/*
 				 * window.cashmusic.ajax.getXHR()
 				 * Tests for the proper XHR object type and returns the appropriate
-				 * object type for the current browser using a try/catch block. If 
+				 * object type for the current browser using a try/catch block. If
 				 * no viable objects are found it returns false. But we should make
 				 * fun of that browser, because it sucks.
 				 */
@@ -456,7 +467,7 @@
 
 				/*
 				 * window.cashmusic.ajax.send(string url, string postString, function successCallback)
-				 * Do a POST or GET request via XHR/AJAX. Passing a postString will 
+				 * Do a POST or GET request via XHR/AJAX. Passing a postString will
 				 * force a POST request, whereas passing false will send a GET.
 				 */
 				send: function(url,postString,successCallback,failureCallback) {
@@ -470,7 +481,7 @@
 						xhr.open(method,url,true);
 						xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 						if (method == 'POST') {
-							xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');		
+							xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
 						}
 						if (typeof successCallback == 'function') {
 							xhr.onreadystatechange = function() {
@@ -507,8 +518,8 @@
 
 					if (forceCallbackName) {
 						// this is weird. it looks to see if the callback is already defined
-						// if it is it means we hit a race condition loading the template and 
-						// handling the callback. 
+						// if it is it means we hit a race condition loading the template and
+						// handling the callback.
 						var generatedFunction = forceCallbackName;
 						var oldCallback = (function(){});
 						if (typeof window[generatedFunction] == 'function') {
@@ -526,8 +537,8 @@
 						if (!forceCallbackName) {
 							delete window[generatedFunction];
 						} else {
-							// here we start the weird loop down through all the defined 
-							// callbacks. if no callbacks were defined oldCallback is an 
+							// here we start the weird loop down through all the defined
+							// callbacks. if no callbacks were defined oldCallback is an
 							// empty function so it does nothing.
 							oldCallback(json);
 						}
@@ -558,7 +569,7 @@
 							}
 							continue;
 						}
-						querystring += (querystring.length ? '&' : '') + form[i].name +'='+ form[i].value; 
+						querystring += (querystring.length ? '&' : '') + form[i].name +'='+ form[i].value;
 					}
 					return encodeURI(querystring);
 				}
@@ -621,7 +632,7 @@
 					window.parent.postMessage(JSON.stringify({
 						'type': type,
 						'data': data
-					}),"*");
+					}),'*');
 				}
 			},
 
@@ -633,7 +644,7 @@
 			 * PUBLIC-ISH FUNCTIONS
 			 * window.cashmusic.fader.init(string or object id, integer target, function callback)
 			 * window.cashmusic.fader.hide(string or object id)
-			 * window.cashmusic.fader.show(string or object id) 
+			 * window.cashmusic.fader.show(string or object id)
 			 *
 			 ***************************************************************************************/
 			fader: {
@@ -762,16 +773,16 @@
 								tmpDiv = null;
 								var divs = self.bg.getElementsByTagName('div');
 								self.content = divs[0];
-								cm.events.add(window,'keyup', function(e) { 
+								cm.events.add(window,'keyup', function(e) {
 									if (e.keyCode == 27) {
 										if (self.bg.style.display = 'block') {
 											// hide all the overlays if they're visible
 											cm.fader.hide(self.bg);
 											self.content.innerHTML = '';
 										}
-									} 
+									}
 								});
-								cm.events.add(self.bg,'click', function(e) { 
+								cm.events.add(self.bg,'click', function(e) {
 									if(e.target === this) {
 										cm.fader.hide(self.bg);
 										self.content.innerHTML = '';
@@ -796,6 +807,19 @@
 				}
 			},
 
+			/***************************************************************************************
+			 *
+			 * window.cashmusic.styles (object)
+			 * Building the actual lightbox bits
+			 *
+			 * PUBLIC-ISH FUNCTIONS
+			 * window.cashmusic.styles.addClass(HTML element el, string classname)
+			 * window.cashmusic.styles.hasClass(HTML element el, string classname)
+			 * window.cashmusic.styles.injectCSS(string css, boolean important)
+			 * window.cashmusic.styles.removeClass(HTML element el, string classname)
+			 * window.cashmusic.styles.swapClasses(HTML element el, string oldclass, string newclass)
+			 *
+			 ***************************************************************************************/
 			styles: {
 				addClass: function(el,classname) {
 					el.className = el.className + ' ' + classname;
@@ -812,14 +836,14 @@
 						// if css starts with "http" treat it as an external stylesheet
 						var el = document.createElement('link');
 						el.rel = 'stylesheet';
-						el.href = css; 
+						el.href = css;
 					} else {
 						// without the "http" wrap css with a style tag
 						var el = document.createElement('style');
 						el.innerHTML = css;
 					}
 					el.type = 'text/css';
-					
+
 					if (important) {
 						// important means we don't need to write !important all over the place
 						// allows for overrides, etc
@@ -833,15 +857,56 @@
 				},
 
 				removeClass: function(el,classname) {
-					// extra spaces allow for consistent matching. 
+					// extra spaces allow for consistent matching.
 					// the "replace(/^\s+/, '').replace(/\s+$/, '')" stuff is because .trim() isn't supported on ie8
 					el.className = ((' ' + el.className + ' ').replace(' ' + classname + ' ')).replace(/^\s+/, '').replace(/\s+$/, '');
 				},
 
 				swapClasses: function(el,oldclass,newclass) {
-					// add spaces to ensure we're not doing a partial find/replace, 
+					// add spaces to ensure we're not doing a partial find/replace,
 					// trim off extra spaces before setting
 					el.className = ((' ' + el.className + ' ').replace(' ' + oldclass + ' ',' ' + newclass + ' ')).replace(/^\s+/, '').replace(/\s+$/, '');
+				}
+			},
+
+			/***************************************************************************************
+			 *
+			 * window.cashmusic.stripe (object)
+			 * Handle Stripe.com payment token generation
+			 *
+			 ***************************************************************************************/
+			stripe: {
+				generateToken: function(params,origin) {
+					var cm = window.cashmusic;
+					if (cm.embedded) {
+						cm.events.fire(cm,'stripetokenrequested',params);
+					} else {
+						cm.loadScript('https://checkout.stripe.com/checkout.js', function() {
+							var handler = StripeCheckout.configure({
+								key: params.key,
+								image: params.image,
+								token: function(token) {
+									if (origin) {
+										origin.postMessage(JSON.stringify({
+											'type': 'stripetoken',
+											'data': token
+										}),'*');
+									} else {
+										cm.events.fire(cm,'stripetokengenerated',token);
+									}
+								}
+							});
+
+							// open checkout
+							handler.open({
+								name: params.name,
+								description: params.description,
+								amount: params.amount,
+								currency: params.currency,
+								bitcoin: params.bitcoin
+							});
+						});
+					}
 				}
 			}
 		};
