@@ -282,19 +282,8 @@
 								embedNode.appendChild(a);
 								currentNode.parentNode.insertBefore(embedNode,currentNode);
 								(function(position) {
-									if (typeof position !== 'object') {
-										position = {
-											'top':'40px',
-											'left':'30%',
-											'width':'40%',
-											'marginLeft':'0'
-										}
-									}
 									cm.events.add(a,'click',function(e) {
-										// top, left, width, marginLeft
-										cm.overlay.resize(position.top,position.left,position.width,position.marginLeft);
-										cm.overlay.content.appendChild(iframe);
-										window.cashmusic.fader.init(cm.overlay.bg, 100);
+										cm.overlay.reveal(iframe);
 										e.preventDefault();
 										return false;
 									});
@@ -336,11 +325,7 @@
 					// check for existence of the CSS file and if not found, include it
 					var test = document.querySelectorAll('link[href="' + cm.path + 'templates/' + templateName + '.css' + '"]');
 					if (!test.length ) { // if nothing found
-						var l = document.createElement('link');
-						l.setAttribute('href', cm.path + 'templates/' + templateName + '.css');
-						l.setAttribute('rel', 'stylesheet');
-						l.setAttribute('type', 'text/css');
-						document.getElementsByTagName('head')[0].appendChild(l);
+						cm.styles.injectCSS(cm.path + 'templates/' + templateName + '.css');
 					}
 				}
 			},
@@ -752,6 +737,7 @@
 			overlay: {
 				bg: false,
 				content: false,
+				close: false,
 				total: 0,
 				callbacks: [],
 
@@ -759,43 +745,126 @@
 					var cm = window.cashmusic;
 					var self = cm.overlay;
 					if (self.bg === false) {
+						cm.styles.injectCSS(cm.path + 'templates/overlay.css');
 						self.total++;
 						if (typeof callback === 'function') {
 							self.callbacks.push(callback);
 						}
 						if (self.total == 1) {
-							cm.getTemplate('overlay',function(t) {
-								var tmpDiv = document.createElement('div');
-								tmpDiv.innerHTML = t;
-								self.bg = tmpDiv.firstChild;
-								self.bg.style.display = 'none';
-								document.body.appendChild(self.bg);
-								tmpDiv = null;
-								var divs = self.bg.getElementsByTagName('div');
-								self.content = divs[0];
-								cm.events.add(window,'keyup', function(e) {
-									if (e.keyCode == 27) {
-										if (self.bg.style.display = 'block') {
-											// hide all the overlays if they're visible
-											cm.fader.hide(self.bg);
-											self.content.innerHTML = '';
-										}
+
+							self.bg = document.createElement('div');
+							self.bg.className = 'cm-wrapper';
+							// get current styles for the body
+							var bs = window.getComputedStyle(document.body);
+							// apply all body styles to the bg
+							self.bg.style.backgroundImage 		= bs.getPropertyValue('background-image');
+							self.bg.style.backgroundPosition 	= bs.getPropertyValue('background-position');
+							self.bg.style.backgroundSize 			= bs.getPropertyValue('background-size');
+							self.bg.style.backgroundRepeat 		= bs.getPropertyValue('background-repeat');
+							self.bg.style.backgroundOrigin 		= bs.getPropertyValue('background-origin');
+							self.bg.style.backgroundClip 			= bs.getPropertyValue('background-clip');
+							self.bg.style.backgroundAttachment 	= bs.getPropertyValue('background-attachment');
+							self.bg.style.backgroundColor 		= bs.getPropertyValue('background-color');
+
+							self.content = document.createElement('div');
+							self.content.className = 'cm-overlay';
+
+							self.close = document.createElement('div');
+							self.close.className = 'cm-close';
+
+							cm.events.add(window,'keyup', function(e) {
+								if (e.keyCode == 27) {
+									if (self.bg.parentNode == document.body) {
+										self.hide();
 									}
-								});
-								cm.events.add(self.bg,'click', function(e) {
-									if(e.target === this) {
-										cm.fader.hide(self.bg);
-										self.content.innerHTML = '';
-									}
-								});
-								for (var i = 0; i < self.callbacks.length; i++) {
-									self.callbacks[i]();
-								};
+								}
 							});
+							cm.events.add(self.close,'click', function(e) {
+								if (self.bg.parentNode == document.body) {
+									self.hide();
+								}
+							});
+							/*
+							cm.events.add(self.bg,'click', function(e) {
+								if(e.target === this) {
+									self.hide();
+								}
+							});
+							*/
+							for (var i = 0; i < self.callbacks.length; i++) {
+								self.callbacks[i]();
+							};
 						}
 					} else {
 						callback();
 					}
+				},
+
+				hide: function() {
+					var cm = window.cashmusic;
+					var self = cm.overlay;
+					self.bg.className = 'cm-wrapper';
+					self.content.innerHTML = '';
+					document.body.removeChild(self.bg);
+					document.body.removeChild(self.close);
+					document.body.removeChild(self.content);
+
+					// move all page nodes back to the body
+					while (self.bg.childNodes.length > 0) {
+						document.body.appendChild(self.bg.childNodes[0]);
+					}
+
+					// reenable body scrolling
+					document.body.style.overflow = 'auto';
+				},
+
+				reveal: function(innerContent) {
+					// add the correct content to the content div
+					var cm = window.cashmusic;
+					var self = cm.overlay;
+					var alert = document.createElement('div');
+					alert.className = 'cm-alert';
+					if (typeof innerContent === 'string') {
+						var tmpDiv = document.createElement('div');
+						tmpDiv.innerHTML = innerContent;
+						innerContent = tmpDiv;
+					}
+					alert.appendChild(innerContent);
+					self.content.appendChild(alert);
+
+					// set the bg height equal to the page height
+					self.bg.style.height = window.cashmusic.measure.scrollheight() + 'px';
+
+					// grab current scroll position
+					var s = document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop;
+
+					// add the new background
+					document.body.appendChild(self.bg);
+
+					// move all page nodes to the new background
+					while (document.body.childNodes.length > 1) {
+						if (document.body.childNodes[0] != self.bg) {
+							self.bg.appendChild(document.body.childNodes[0]);
+						}
+					}
+
+					// put the scroll position back
+					document.documentElement.scrollTop = s;
+					document.body.scrollTop = s;
+
+					// disable body scrolling
+					document.body.style.overflow = 'hidden';
+
+					// go
+					self.bg.className = 'cm-wrapper cm-active';
+					self.content.style.opacity = 0;
+					self.content.style.webkitTransform = 'translateZ(0)';
+					document.body.appendChild(self.content);
+					document.body.appendChild(self.close);
+					// force style refresh/redraw on element
+					window.getComputedStyle(self.content).opacity;
+					// initiate fade-in
+					self.content.style.opacity = 1;
 				},
 
 				resize: function(top,left,width,marginLeft) {
