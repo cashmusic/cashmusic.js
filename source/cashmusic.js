@@ -35,7 +35,7 @@
  *
  *
  *
- * VERSION: 3
+ * VERSION: 4
  *
  **/
 
@@ -113,9 +113,6 @@
 				// get main div
 				var el = document.querySelector('div.cashmusic.element');
 				if (el) {
-					// hide the main div
-					cm.fader.hide(el);
-
 					cm.storage['embedheight'] = cm.measure.scrollheight(); // store current height
 					cm.events.fire(cm,'resize',cm.storage.embedheight); // fire resize event immediately
 
@@ -137,9 +134,6 @@
 					if (cssOverride) {
 						cm.styles.injectCSS(cssOverride,true);
 					}
-
-					// fade in the content after resize (do it before the setInterval starts)
-					window.setTimeout(function(){cm.fader.init(el,100);}, 100);
 				}
 
 				// add an embedded_element input to all forms to tell the platform they're embeds
@@ -623,79 +617,6 @@
 
 			/***************************************************************************************
 			 *
-			 * window.cashmusic.fader (object)
-			 * Object to provide tweened fades for DOM elements.
-			 *
-			 * PUBLIC-ISH FUNCTIONS
-			 * window.cashmusic.fader.init(string or object id, integer target, function callback)
-			 * window.cashmusic.fader.hide(string or object id)
-			 * window.cashmusic.fader.show(string or object id)
-			 *
-			 ***************************************************************************************/
-			fader: {
-				elem: false,
-				flag: false,
-				alpha: false,
-				target: false,
-				init: function(id,target,callback) {
-					var self = window.cashmusic.fader;
-					self.setElement(id);
-					clearInterval(self.si);
-					self.alpha = self.elem.style.opacity ? parseFloat(self.elem.style.opacity) * 100 : 0;
-					if (self.alpha > target) {
-						self.flag = -1; // down to lower opacity
-					} else {
-						self.flag = 1; // up to raise opacity
-					}
-					self.target = target;
-					if (self.alpha == 0 && target > 0) {
-						self.elem.style.opacity = 0;
-						self.elem.style.display = 'block';
-					}
-					self.si = setInterval(function(){self.tween(callback);}, 10);
-				},
-				tween: function(callback) {
-					var self = window.cashmusic.fader;
-					if(self.alpha == self.target) {
-						// all done
-						clearInterval(self.si);
-						if (typeof callback == 'function') {
-							callback();
-						}
-					}else{
-						var value = Math.round(self.alpha + ((self.target - self.alpha) * 0.05)) + (self.flag);
-						self.elem.style.opacity = value / 100;
-						self.elem.style.filter = 'alpha(opacity=' + value + ')';
-						if (value == 0) {
-							self.elem.style.display = 'none';
-						}
-						self.alpha = value;
-					}
-				},
-				hide: function(id) {
-					var self = window.cashmusic.fader;
-					self.setElement(id);
-					self.elem.style.opacity = 0;
-					self.elem.style.display = 'none';
-				},
-				show: function(id) {
-					var self = window.cashmusic.fader;
-					self.setElement(id);
-					self.elem.style.opacity = 100;
-					self.elem.style.display = 'block';
-				},
-				setElement: function(id) {
-					var self = window.cashmusic.fader;
-					if (typeof id === 'string') {
-						self.elem = document.getElementById(id);
-					} else {
-						self.elem = id;
-					}
-				}
-			},
-
-			/***************************************************************************************
-			 *
 			 * window.cashmusic.measure (object)
 			 * Basic window/element measurements
 			 *
@@ -731,7 +652,8 @@
 			 *
 			 * PUBLIC-ISH FUNCTIONS
 			 * window.cashmusic.overlay.create(function callback)
-			 * window.cashmusic.overlay.resize(string top,string left,string width,string marginLeft)
+			 * window.cashmusic.overlay.hide()
+			 * window.cashmusic.overlay.reveal(string/object innerContent, string wrapClass)
 			 *
 			 ***************************************************************************************/
 			overlay: {
@@ -803,76 +725,73 @@
 				hide: function() {
 					var cm = window.cashmusic;
 					var self = cm.overlay;
+					var db = document.body;
 					self.bg.className = 'cm-wrapper';
 					self.content.innerHTML = '';
-					document.body.removeChild(self.bg);
-					document.body.removeChild(self.close);
-					document.body.removeChild(self.content);
+					db.removeChild(self.bg);
+					db.removeChild(self.close);
+					db.removeChild(self.content);
 
 					// move all page nodes back to the body
 					while (self.bg.childNodes.length > 0) {
-						document.body.appendChild(self.bg.childNodes[0]);
+						db.appendChild(self.bg.childNodes[0]);
 					}
 
 					// reenable body scrolling
-					document.body.style.overflow = 'auto';
+					db.style.overflow = 'auto';
 				},
 
-				reveal: function(innerContent) {
+				reveal: function(innerContent,wrapClass) {
 					// add the correct content to the content div
 					var cm = window.cashmusic;
 					var self = cm.overlay;
+					var db = document.body;
 					var alert = document.createElement('div');
-					alert.className = 'cm-alert';
-					if (typeof innerContent === 'string') {
-						var tmpDiv = document.createElement('div');
-						tmpDiv.innerHTML = innerContent;
-						innerContent = tmpDiv;
+					if (wrapClass) {
+						alert.className = wrapClass;
+					} else {
+						alert.className = 'cm-element';
 					}
-					alert.appendChild(innerContent);
+					if (typeof innerContent === 'string') {
+						alert.innerHTML = innerContent;
+					} else {
+						alert.appendChild(innerContent);
+					}
 					self.content.appendChild(alert);
 
 					// set the bg height equal to the page height
 					self.bg.style.height = window.cashmusic.measure.scrollheight() + 'px';
 
 					// grab current scroll position
-					var s = document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop;
+					var s = document.documentElement.scrollTop ? document.documentElement.scrollTop : db.scrollTop;
 
 					// add the new background
-					document.body.appendChild(self.bg);
+					db.appendChild(self.bg);
 
 					// move all page nodes to the new background
-					while (document.body.childNodes.length > 1) {
-						if (document.body.childNodes[0] != self.bg) {
-							self.bg.appendChild(document.body.childNodes[0]);
+					while (db.childNodes.length > 1) {
+						if (db.childNodes[0] != self.bg) {
+							self.bg.appendChild(db.childNodes[0]);
 						}
 					}
 
 					// put the scroll position back
 					document.documentElement.scrollTop = s;
-					document.body.scrollTop = s;
+					db.scrollTop = s;
 
 					// disable body scrolling
-					document.body.style.overflow = 'hidden';
+					db.style.overflow = 'hidden';
 
 					// go
 					self.bg.className = 'cm-wrapper cm-active';
 					self.content.style.opacity = 0;
 					self.content.style.webkitTransform = 'translateZ(0)';
-					document.body.appendChild(self.content);
-					document.body.appendChild(self.close);
+					db.appendChild(self.content);
+					db.appendChild(self.close);
 					// force style refresh/redraw on element
 					window.getComputedStyle(self.content).opacity;
 					// initiate fade-in
 					self.content.style.opacity = 1;
-				},
-
-				resize: function(top,left,width,marginLeft) {
-					var cs = window.cashmusic.overlay.content.style;
-					cs.top = top;
-					cs.left = left;
-					cs.width = width;
-					cs.marginLeft = marginLeft;
 				}
 			},
 
