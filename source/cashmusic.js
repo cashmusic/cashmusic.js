@@ -658,67 +658,69 @@
 			 ***************************************************************************************/
 			overlay: {
 				bg: false,
+				wrapper: false,
 				content: false,
 				close: false,
-				total: 0,
 				callbacks: [],
 
 				create: function(callback) {
 					var cm = window.cashmusic;
 					var self = cm.overlay;
-					if (self.bg === false) {
+					if (self.wrapper === false) {
 						cm.styles.injectCSS(cm.path + 'templates/overlay.css');
-						self.total++;
+
+						self.wrapper = document.createElement('div');
+						self.wrapper.className = 'cm-wrapper';
+
+						self.bg = document.createElement('div');
+						self.bg.className = 'cm-bg';
+
+						// apply all body styles to the bg
+						var bs = window.getComputedStyle(document.body);
+						self.bg.style.backgroundImage 		= bs.getPropertyValue('background-image');
+						self.bg.style.backgroundPosition 	= bs.getPropertyValue('background-position');
+						self.bg.style.backgroundSize 			= bs.getPropertyValue('background-size');
+						self.bg.style.backgroundRepeat 		= bs.getPropertyValue('background-repeat');
+						self.bg.style.backgroundOrigin 		= bs.getPropertyValue('background-origin');
+						self.bg.style.backgroundClip 			= bs.getPropertyValue('background-clip');
+						self.bg.style.backgroundAttachment 	= bs.getPropertyValue('background-attachment');
+						self.bg.style.backgroundColor 		= bs.getPropertyValue('background-color');
+
+						// move all page nodes to the new wrapper
+						while (document.body.childNodes.length) {
+							self.wrapper.appendChild(document.body.childNodes[0]);
+						}
+
+						document.body.appendChild(self.wrapper);
+
+						self.content = document.createElement('div');
+						self.content.className = 'cm-overlay';
+
+						self.close = document.createElement('div');
+						self.close.className = 'cm-close';
+
+						cm.events.add(window,'keyup', function(e) {
+							if (e.keyCode == 27) {
+								if (self.content.parentNode == document.body) {
+									self.hide();
+								}
+							}
+						});
+						cm.events.add(self.close,'click', function(e) {
+							if (self.content.parentNode == document.body) {
+								self.hide();
+							}
+						});
+						/*
+						cm.events.add(self.bg,'click', function(e) {
+							if(e.target === this) {
+								self.hide();
+							}
+						});
+						*/
 						if (typeof callback === 'function') {
-							self.callbacks.push(callback);
+							callback();
 						}
-						if (self.total == 1) {
-
-							self.bg = document.createElement('div');
-							self.bg.className = 'cm-wrapper';
-							// get current styles for the body
-							var bs = window.getComputedStyle(document.body);
-							// apply all body styles to the bg
-							self.bg.style.backgroundImage 		= bs.getPropertyValue('background-image');
-							self.bg.style.backgroundPosition 	= bs.getPropertyValue('background-position');
-							self.bg.style.backgroundSize 			= bs.getPropertyValue('background-size');
-							self.bg.style.backgroundRepeat 		= bs.getPropertyValue('background-repeat');
-							self.bg.style.backgroundOrigin 		= bs.getPropertyValue('background-origin');
-							self.bg.style.backgroundClip 			= bs.getPropertyValue('background-clip');
-							self.bg.style.backgroundAttachment 	= bs.getPropertyValue('background-attachment');
-							self.bg.style.backgroundColor 		= bs.getPropertyValue('background-color');
-
-							self.content = document.createElement('div');
-							self.content.className = 'cm-overlay';
-
-							self.close = document.createElement('div');
-							self.close.className = 'cm-close';
-
-							cm.events.add(window,'keyup', function(e) {
-								if (e.keyCode == 27) {
-									if (self.bg.parentNode == document.body) {
-										self.hide();
-									}
-								}
-							});
-							cm.events.add(self.close,'click', function(e) {
-								if (self.bg.parentNode == document.body) {
-									self.hide();
-								}
-							});
-							/*
-							cm.events.add(self.bg,'click', function(e) {
-								if(e.target === this) {
-									self.hide();
-								}
-							});
-							*/
-							for (var i = 0; i < self.callbacks.length; i++) {
-								self.callbacks[i]();
-							};
-						}
-					} else {
-						callback();
 					}
 				},
 
@@ -726,16 +728,17 @@
 					var cm = window.cashmusic;
 					var self = cm.overlay;
 					var db = document.body;
-					self.bg.className = 'cm-wrapper';
-					self.content.innerHTML = '';
-					db.removeChild(self.bg);
+					self.wrapper.className = 'cm-wrapper';
+					self.bg.className = 'cm-bg';
+					setTimeout(function() {
+						db.removeChild(self.bg);
+					}, 1000);
+					//self.content.innerHTML = '';
+					while (self.content.firstChild) {
+						self.content.removeChild(self.content.firstChild);
+					}
 					db.removeChild(self.close);
 					db.removeChild(self.content);
-
-					// move all page nodes back to the body
-					while (self.bg.childNodes.length > 0) {
-						db.appendChild(self.bg.childNodes[0]);
-					}
 
 					// reenable body scrolling
 					db.style.overflow = 'auto';
@@ -759,33 +762,15 @@
 					}
 					self.content.appendChild(alert);
 
-					// set the bg height equal to the page height
-					self.bg.style.height = window.cashmusic.measure.scrollheight() + 'px';
-
-					// grab current scroll position
-					var s = document.documentElement.scrollTop ? document.documentElement.scrollTop : db.scrollTop;
-
-					// add the new background
-					db.appendChild(self.bg);
-
-					// move all page nodes to the new background
-					while (db.childNodes.length > 1) {
-						if (db.childNodes[0] != self.bg) {
-							self.bg.appendChild(db.childNodes[0]);
-						}
-					}
-
-					// put the scroll position back
-					document.documentElement.scrollTop = s;
-					db.scrollTop = s;
-
 					// disable body scrolling
 					db.style.overflow = 'hidden';
 
 					// go
-					self.bg.className = 'cm-wrapper cm-active';
+					self.wrapper.className = 'cm-wrapper cm-active';
 					self.content.style.opacity = 0;
-					self.content.style.webkitTransform = 'translateZ(0)';
+					self.bg.style.height = cm.measure.scrollheight() + 'px';
+					db.appendChild(self.bg);
+					self.bg.className = 'cm-bg cm-active';
 					db.appendChild(self.content);
 					db.appendChild(self.close);
 					// force style refresh/redraw on element

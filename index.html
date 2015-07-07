@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head> 
+<head>
 <title>CASH Music / cashmusic.js</title>
 <meta name="description" content="CASH Music is a nonprofit that empowers musicians through free/open technology and learning." />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -21,9 +21,9 @@
 	.alt a:hover {color:#2c2222;}
 </style>
 <script type="text/javascript" src="source/cashmusic.js" data-options="lightboxvideo"></script>
-</head> 
+</head>
 <body>
-	
+
 	<div id="topspc"></div>
 	<div id="mainspc" class="row">
 		<a href="http://cashmusic.org/"><img id="homeseal" src="http://2ea7029ee5fd6986c0a6-6d885a724441c07ff9b675222419a9d2.r58.cf2.rackcdn.com/ui/01/images/badge.png" width="76" height="76" alt="home" /></a>
@@ -55,13 +55,13 @@
 					<a href="demos/notthe1s/"><img src="demos/mainpage/assets/images/notthe1s.jpg" width="100%" alt="notthe1s" /></a><p class="alt">Not The 1s page player</p>
 				</div>
 			</div>
-			
-	
+
+
 			<br /><br />
 			<h4>Feature: CASH Music platform embeds</h4>
 			<p>
 				These are the standard embed codes offered via the CASH Music platform — HTML5-friendly
-				workflows embedded in your page with a single line of JavaScript. These examples show an 
+				workflows embedded in your page with a single line of JavaScript. These examples show an
 				email signup form for the CASH Music mailing list.
 			</p>
 			<div class="row">
@@ -90,8 +90,8 @@
 			<br />
 			<h4>Feature: Video lightboxes</h4>
 			<p>
-				These are built from simple, ordinary links to YouTube or Vimeo pages. No embed 
-				codes, no scripts. Just link to the page and specify the "lightboxvideo" option 
+				These are built from simple, ordinary links to YouTube or Vimeo pages. No embed
+				codes, no scripts. Just link to the page and specify the "lightboxvideo" option
 				by adding 'data-options="lightboxvideo"' to the cashmusic.js script tag.
 			</p>
 			<div class="row">
@@ -108,7 +108,7 @@
 				<div class="four columns">
 					<p>Basic tween example:</p>
 					<div style="position:relative;top:0;left:20px;" class="alt">
-						<div 
+						<div
 							class="cashmusic tween setstyles"
 							style="position:absolute;left:-20px;top:4px;border-radius:50%;width:12px;height:12px;background-color:#ff0;"
 							data-tween='{"play":[
@@ -144,9 +144,9 @@
 			<br />
 			<h4>Feature: Basic-interface players</h4>
 			<p>
-				These players are built using the same progress/tween animation featured throughout the 
-				page. An add-on module controls the playlists, pulls in a standard template using basic 
-				html/css, and grabs the playlist either from JSON or by collecting all links to valid 
+				These players are built using the same progress/tween animation featured throughout the
+				page. An add-on module controls the playlists, pulls in a standard template using basic
+				html/css, and grabs the playlist either from JSON or by collecting all links to valid
 				audio in a div classed "cashmusic soundplayer playlist" — flexible and easy to configure
 				or customize.
 			</p><p>
@@ -163,7 +163,7 @@
 					</div>
 				</div>
 				<div class="six columns">
-					<div class="cashmusic soundplayer playlist" 
+					<div class="cashmusic soundplayer playlist"
 						data-playlist='{"id":"testplaylist","artist":"artist is set","album":"yeah bro","tracks":[
 							{"id":"uniquestring","title":"Throwing Muses - Film (demo)","ISRC":"whatever","url":"http://s3.amazonaws.com/cash_users/throwingmuses/demos/Film_128.mp3"},
 							{"id":"uniquestring2","title":"Throwing Muses - Milan (demo)","url":"http://s3.amazonaws.com/cash_users/throwingmuses/demos/Milan_128.mp3"}
@@ -184,9 +184,9 @@
 			<br /><br />
 			<h4>License and dependencies</h4>
 			<p class="alt">
-				cashmusic.js is distributed under a <a href="https://github.com/cashmusic/cashmusic.js/blob/master/LICENSE">simplified BSD License</a> 
-				— so pretty much go nuts. Build rad stuff. Give back where you can. There are no external dependencies other than 
-				<a href="http://www.schillmania.com/projects/soundmanager2/">SoundManager 2</a> for audio playback. We've 
+				cashmusic.js is distributed under a <a href="https://github.com/cashmusic/cashmusic.js/blob/master/LICENSE">simplified BSD License</a>
+				— so pretty much go nuts. Build rad stuff. Give back where you can. There are no external dependencies other than
+				<a href="http://www.schillmania.com/projects/soundmanager2/">SoundManager 2</a> for audio playback. We've
 				taken lengths to make sure we don't interfere with jQuery or similar libraries, so cashmusic.js should play well with others.
 			</p>
 		</div>
@@ -213,7 +213,7 @@
 				</p>
 				<script type="text/javascript" src="http://x.cashmusic.org/public/cashmusic.js"></script><script type="text/javascript"> window.cashmusic.embed('http://x.cashmusic.org/public/','1518');</script>
 			</div>
-			<div class="four columns">	
+			<div class="four columns">
 				<p class="alt">
 					<a href="mailto:info@cashmusic.org">info@cashmusic.org</a><br />
 					<a href="http://twitter.com/cashmusic">@cashmusic</a><br />
@@ -236,7 +236,7 @@
 	<script type="text/javascript">
 		if (window.cashmusic) {
 			var cm = window.cashmusic;
-			
+
 			cm.events.add(document.getElementById('new-whiteout'),'click',function(e) {
 				e.preventDefault();
 				cm.styles.injectCSS(
@@ -251,8 +251,8 @@
 				);
 			});
 			// don't try adding a playlist until window.cashmusic.soundplayer is available. takes a few
-			// miliseconds afer init. the script will be added by default if there are any soundplayer divs. 
-			// if not just call: 
+			// miliseconds afer init. the script will be added by default if there are any soundplayer divs.
+			// if not just call:
 			// window.cashmusic.loadScript(window.cashmusic.path+'soundplayer/soundplayer.js');
 			cm.events.add(document.getElementById('new-soundplayer'),'click',function(e) {
 				e.preventDefault();
@@ -300,5 +300,5 @@
 			});
 		}
 	</script>
-</body> 
+</body>
 </html>
