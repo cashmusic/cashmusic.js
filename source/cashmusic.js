@@ -107,6 +107,8 @@
 					cm.loaded = Date.now(); // ready and loaded
 					cm._drawQueuedEmbeds();
 				} else {
+					// create overlay stuff first
+					cm.overlay.create();
 					// if we don't have a geo response we'll loop and wait a couple
 					// seconds before declaring the script ready.
 					var l = 0;
