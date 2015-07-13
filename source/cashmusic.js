@@ -822,6 +822,8 @@
 					if (cm.embedded) {
 						cm.events.fire(cm,'overlayreveal',{"innerContent":innerContent,"wrapClass":wrapClass});
 					} else {
+						var positioning = document.createElement('div');
+						positioning.className = 'cm-position';
 						var alert = document.createElement('div');
 						if (wrapClass) {
 							alert.className = wrapClass;
@@ -833,7 +835,8 @@
 						} else {
 							alert.appendChild(innerContent);
 						}
-						self.content.appendChild(alert);
+						positioning.appendChild(alert);
+						self.content.appendChild(positioning);
 
 						// disable body scrolling
 						db.style.overflow = 'hidden';
