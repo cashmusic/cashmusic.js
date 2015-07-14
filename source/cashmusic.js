@@ -191,20 +191,42 @@
 				}
 
 				// now figure out what to do with it
-				if (msg.type == 'resize') {
-					source.el.height = msg.data;
-					source.el.style.height = msg.data + 'px'; // resize to correct height
-				} else if (msg.type == 'identify') {
-					if (source.id == msg.data[1]) { // double-check that id's match
-						source.type = msg.data[0]; // set the type. now we have all the infos
-					}
-				} else if (msg.type == 'stripetokenrequested') {
-					cm.stripe.generateToken(msg.data,e.source);
-				} else if (msg.type == 'stripetoken') {
-					cm.events.fire(cm,'stripetokengenerated',msg.data);
-				} else if (msg.type == 'overlayreveal') {
-					cm.overlay.reveal(msg.data.innerContent,msg.data.wrapClass);
-					cm.events.fire(cm,'overlayopened','');
+				var md = msg.data;
+				switch (msg.type) {
+					case 'resize':
+						source.el.height = md;
+						source.el.style.height = md + 'px'; // resize to correct height
+						break;
+					case 'identify':
+						if (source.id == md[1]) { // double-check that id's match
+							source.type = md[0]; // set the type. now we have all the infos
+						}
+						break;
+					case 'stripetokenrequested':
+						cm.stripe.generateToken(md,e.source);
+						break;
+					case 'stripetoken':
+						cm.events.fire(cm,'stripetokengenerated',md);
+						break;
+					case 'overlayreveal':
+						cm.overlay.reveal(md.innerContent,md.wrapClass);
+						cm.events.fire(cm,'overlayopened','');
+						break;
+					case 'addoverlaytrigger':
+						cm.overlay.addOverlayTrigger(md.content,md.classname,md.ref);
+						break;
+					case 'injectcss':
+						cm.styles.injectCSS(md.css,md.important);
+						break;
+					case 'addclass':
+						cm.styles.addClass(md.el,md.classname);
+						break;
+					case 'removeclass':
+						cm.styles.removeClass(md.el,md.classname);
+						break;
+					case 'swapclasses':
+						cm.styles.swapClasses(md.el,md.oldclass,md.newclass);
+						break;
 				}
 			},
 
@@ -854,6 +876,24 @@
 						// initiate fade-in
 						self.content.style.opacity = 1;
 					}
+				},
+
+				addOverlayTrigger(content,classname,ref) {
+					var cm = window.cashmusic;
+					var self = cm.overlay;
+					if (cm.embedded) {
+						cm.events.fire(cm,'addoverlaytrigger',{
+							"content":content,
+							"classname":classname,
+							"ref":ref
+						});
+					} else {
+						var e = document.createElement('div');
+						e.className = classname;
+						self.wrapper.appendChild(e);
+						cm.storage[ref] = e;
+						cm.events.fire(cm,'triggeradded',ref);
+					}
 				}
 			},
 
@@ -871,8 +911,29 @@
 			 *
 			 ***************************************************************************************/
 			styles: {
-				addClass: function(el,classname) {
-					el.className = el.className + ' ' + classname;
+				resolveElement: function(el) {
+					if (typeof el === 'string') {
+						if (el.substr(0,8) == 'storage:') {
+							return window.cashmusic.storage[el.substr(8)];
+						} else {
+							return document.querySelector(el);
+						}
+					} else {
+						return el;
+					}
+				},
+
+				addClass: function(el,classname,top) {
+					var cm = window.cashmusic;
+					if (top && cm.embedded) {
+						cm.events.fire(cm,'addclass',{
+							"el":el,
+							"classname":classname
+						});
+					} else {
+						el = cm.styles.resolveElement(el);
+						el.className = el.className + ' ' + classname;
+					}
 				},
 
 				hasClass: function(el,classname) {
@@ -880,42 +941,71 @@
 					return (' ' + el.className + ' ').indexOf(' ' + classname + ' ') > -1;
 				},
 
-				injectCSS: function(css,important) {
-					var head = document.getElementsByTagName('head')[0] || document.documentElement;
-					if (css.substr(0,4) == 'http') {
-						// if css starts with "http" treat it as an external stylesheet
-						var el = document.createElement('link');
-						el.rel = 'stylesheet';
-						el.href = css;
+				injectCSS: function(css,important,top) {
+					var cm = window.cashmusic;
+					if (top && cm.embedded) {
+						cm.events.fire(cm,'injectcss',{
+							"css":css,
+							"important":important
+						});
 					} else {
-						// without the "http" wrap css with a style tag
-						var el = document.createElement('style');
-						el.innerHTML = css;
-					}
-					el.type = 'text/css';
+						el = cm.styles.resolveElement(el);
+						var head = document.getElementsByTagName('head')[0] || document.documentElement;
+						if (css.substr(0,4) == 'http') {
+							// if css starts with "http" treat it as an external stylesheet
+							var el = document.createElement('link');
+							el.rel = 'stylesheet';
+							el.href = css;
+						} else {
+							// without the "http" wrap css with a style tag
+							var el = document.createElement('style');
+							el.innerHTML = css;
+						}
+						el.type = 'text/css';
 
-					if (important) {
-						// important means we don't need to write !important all over the place
-						// allows for overrides, etc
-						head.appendChild(el);
-					} else {
-						// by injecting the css BEFORE any other style elements it means all
-						// styles can be manually overridden with ease — no !important or similar,
-						// no external files, etc...
-						head.insertBefore(el, head.firstChild);
+						if (important) {
+							// important means we don't need to write !important all over the place
+							// allows for overrides, etc
+							head.appendChild(el);
+						} else {
+							// by injecting the css BEFORE any other style elements it means all
+							// styles can be manually overridden with ease — no !important or similar,
+							// no external files, etc...
+							head.insertBefore(el, head.firstChild);
+						}
 					}
 				},
 
-				removeClass: function(el,classname) {
-					// extra spaces allow for consistent matching.
-					// the "replace(/^\s+/, '').replace(/\s+$/, '')" stuff is because .trim() isn't supported on ie8
-					el.className = ((' ' + el.className + ' ').replace(' ' + classname + ' ')).replace(/^\s+/, '').replace(/\s+$/, '');
+				removeClass: function(el,classname,top) {
+					var cm = window.cashmusic;
+					if (top && cm.embedded) {
+						cm.events.fire(cm,'removeclass',{
+							"el":el,
+							"classname":classname
+						});
+					} else {
+						// extra spaces allow for consistent matching.
+						// the "replace(/^\s+/, '').replace(/\s+$/, '')" stuff is because .trim() isn't supported on ie8
+						el = cm.styles.resolveElement(el);
+						console.log(el.className);
+						el.className = ((' ' + el.className + ' ').replace(' ' + classname + ' ','')).replace(/^\s+/, '').replace(/\s+$/, '');
+					}
 				},
 
-				swapClasses: function(el,oldclass,newclass) {
-					// add spaces to ensure we're not doing a partial find/replace,
-					// trim off extra spaces before setting
-					el.className = ((' ' + el.className + ' ').replace(' ' + oldclass + ' ',' ' + newclass + ' ')).replace(/^\s+/, '').replace(/\s+$/, '');
+				swapClasses: function(el,oldclass,newclass,top) {
+					var cm = window.cashmusic;
+					if (top && cm.embedded) {
+						cm.events.fire(cm,'swapclasses',{
+							"el":el,
+							"oldclass":oldclass,
+							"newclass":newclass
+						});
+					} else {
+						// add spaces to ensure we're not doing a partial find/replace,
+						// trim off extra spaces before setting
+						el = cm.styles.resolveElement(el);
+						el.className = ((' ' + el.className + ' ').replace(' ' + oldclass + ' ',' ' + newclass + ' ')).replace(/^\s+/, '').replace(/\s+$/, '');
+					}
 				}
 			},
 
