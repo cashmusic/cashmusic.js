@@ -323,21 +323,10 @@
 					} else {
 						var currentNode = targetNode;
 					}
-					var embedURL = endPoint.replace(/\/$/, '') + '/request/embed/' + elementId + '?location=' + encodeURIComponent(window.location.href);
-					if (cm.geo) {
-						embedURL += '&geo=' + encodeURIComponent(cm.geo);
-					}
-					if (cssOverride) {
-						embedURL = embedURL + '?cssoverride=' + encodeURIComponent(cssOverride);
-					}
-					var iframe = document.createElement('iframe');
-						 iframe.src = embedURL;
-						 iframe.className = 'cashmusic embed';
-						 iframe.style.width = '100%';
-						 iframe.style.height = '0'; // if not explicitly set the scrollheight of the document will be wrong
-						 iframe.style.border = '0';
-						 iframe.style.overflow = 'hidden'; // important for overlays, which flicker scrollbars on open
-						 iframe.scrolling = 'no'; // programming
+
+					// make the iframe
+					var iframe = cm.buildEmbedIframe(endPoint,elementId,cssOverride);
+
 					// be nice neighbors. if we can't find currentNode, don't do the rest or pitch errors. silently fail.
 					if (currentNode) {
 						if (lightboxed) {
@@ -368,14 +357,38 @@
 							currentNode.parentNode.insertBefore(iframe,currentNode);
 						}
 
-						var origin = embedURL.split('/').slice(0,3).join('/');
-						if (cm.embeds.whitelist.indexOf(origin) === -1) {
-							cm.embeds.whitelist = cm.embeds.whitelist + origin;
-						}
-
 						cm.embeds.all.push({el:iframe,id:elementId,type:''});
 					}
 				}
+			},
+
+			buildEmbedIframe(endpoint,id,cssoverride,querystring) {
+				var cm = window.cashmusic;
+				var embedURL = endpoint.replace(/\/$/, '') + '/request/embed/' + id + '?location=' + encodeURIComponent(window.location.href);
+				if (cm.geo) {
+					embedURL += '&geo=' + encodeURIComponent(cm.geo);
+				}
+				if (cssoverride) {
+					embedURL = embedURL + '&cssoverride=' + encodeURIComponent(cssoverride);
+				}
+				if (querystring) {
+					embedURL = embedURL + '&' + querystring;
+				}
+				var iframe = document.createElement('iframe');
+					iframe.src = embedURL;
+					iframe.className = 'cashmusic embed';
+					iframe.style.width = '100%';
+					iframe.style.height = '0'; // if not explicitly set the scrollheight of the document will be wrong
+					iframe.style.border = '0';
+					iframe.style.overflow = 'hidden'; // important for overlays, which flicker scrollbars on open
+					iframe.scrolling = 'no'; // programming
+
+				var origin = embedURL.split('/').slice(0,3).join('/');
+				if (cm.embeds.whitelist.indexOf(origin) === -1) {
+					cm.embeds.whitelist = cm.embeds.whitelist + origin;
+				}
+				
+				return iframe;
 			},
 
 			getTemplate: function(templateName,successCallback) {
@@ -888,10 +901,15 @@
 							"ref":ref
 						});
 					} else {
-						var e = document.createElement('div');
-						e.className = classname;
-						self.wrapper.appendChild(e);
-						cm.storage[ref] = e;
+						var el = document.createElement('div');
+						el.className = classname;
+						cm.events.add(el,'click',function(e) {
+							cm.overlay.reveal("look i'm a shopping cart!");
+							e.preventDefault();
+							return false;
+						});
+						self.wrapper.appendChild(el);
+						cm.storage[ref] = el;
 						cm.events.fire(cm,'triggeradded',ref);
 					}
 				}
@@ -932,7 +950,9 @@
 						});
 					} else {
 						el = cm.styles.resolveElement(el);
-						el.className = el.className + ' ' + classname;
+						if (el) {
+							el.className = el.className + ' ' + classname;
+						}
 					}
 				},
 
@@ -987,8 +1007,9 @@
 						// extra spaces allow for consistent matching.
 						// the "replace(/^\s+/, '').replace(/\s+$/, '')" stuff is because .trim() isn't supported on ie8
 						el = cm.styles.resolveElement(el);
-						console.log(el.className);
-						el.className = ((' ' + el.className + ' ').replace(' ' + classname + ' ','')).replace(/^\s+/, '').replace(/\s+$/, '');
+						if (el) {
+							el.className = ((' ' + el.className + ' ').replace(' ' + classname + ' ','')).replace(/^\s+/, '').replace(/\s+$/, '');
+						}
 					}
 				},
 
@@ -1004,7 +1025,9 @@
 						// add spaces to ensure we're not doing a partial find/replace,
 						// trim off extra spaces before setting
 						el = cm.styles.resolveElement(el);
-						el.className = ((' ' + el.className + ' ').replace(' ' + oldclass + ' ',' ' + newclass + ' ')).replace(/^\s+/, '').replace(/\s+$/, '');
+						if (el) {
+							el.className = ((' ' + el.className + ' ').replace(' ' + oldclass + ' ',' ' + newclass + ' ')).replace(/^\s+/, '').replace(/\s+$/, '');
+						}
 					}
 				}
 			},
