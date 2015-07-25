@@ -52,6 +52,7 @@
 				whitelist: '',
 				all: []
 			},
+			get: {},
 			loaded: false,
 			soundplayer: false,
 			lightbox: false,
@@ -103,12 +104,38 @@
 				// add current domain to whitelist for postmesage calls (regardless of embed or no)
 				cm.embeds.whitelist = cm.embeds.whitelist + window.location.href.split('/').slice(0,3).join('/');
 
+				// look for GET string, parse that shit if we can
+				if (window.location.search) {
+					cm.get['qs'] =  window.location.search.substring(1);
+					cm.get['params'] = {};
+					var t;
+					var q = cm.get['qs'].split("&");
+					for (var i = 0; i < q.length; i++) {
+						t = q[i].split('=');
+						cm.get['params'][t[0]] = t[1];
+					}
+				}
+
 				if (cm.embedded) {
 					cm.loaded = Date.now(); // ready and loaded
 					cm._drawQueuedEmbeds();
+					// tell em
+					cm.events.fire(cm,'ready',cm.loaded);
 				} else {
-					// create overlay stuff first
-					cm.overlay.create();
+					// look for GET string, parse that shit if we can
+					if (cm.get['qs']) {
+						if (cm.get['qs'].indexOf('element_id') !== -1) {
+							if (!!(window.history && history.pushState)) {
+								// we know this is aimed at us, so we caught it. now remove it.
+								history.pushState(null, null, window.location.href.split('?')[0]);
+							}
+						}
+					}
+
+					// create overlay stuff first, only if nowrap isn't set
+					if (this.options.indexOf('nowrap') === -1) {
+						cm.overlay.create();
+					}
 					// if we don't have a geo response we'll loop and wait a couple
 					// seconds before declaring the script ready.
 					var l = 0;
@@ -120,12 +147,14 @@
 							cm._drawQueuedEmbeds();
 							// and since we're ready kill the loops
 							clearInterval(i);
+							// tell em
+							cm.events.fire(cm,'ready',cm.loaded);
 						}
 					}, 100);
 				}
 			},
 
-			_drawQueuedEmbeds() {
+			_drawQueuedEmbeds: function() {
 				var cm = window.cashmusic;
 				if (typeof cm.storage.elementQueue == 'object') {
 					// this means we've got elements waiting for us...do a
@@ -356,23 +385,26 @@
 							// put the iframe in place
 							currentNode.parentNode.insertBefore(iframe,currentNode);
 						}
-
-						cm.embeds.all.push({el:iframe,id:elementId,type:''});
 					}
 				}
 			},
 
-			buildEmbedIframe(endpoint,id,cssoverride,querystring) {
+			buildEmbedIframe: function(endpoint,id,cssoverride,querystring) {
 				var cm = window.cashmusic;
 				var embedURL = endpoint.replace(/\/$/, '') + '/request/embed/' + id + '?location=' + encodeURIComponent(window.location.href);
 				if (cm.geo) {
 					embedURL += '&geo=' + encodeURIComponent(cm.geo);
 				}
 				if (cssoverride) {
-					embedURL = embedURL + '&cssoverride=' + encodeURIComponent(cssoverride);
+					embedURL += '&cssoverride=' + encodeURIComponent(cssoverride);
 				}
 				if (querystring) {
-					embedURL = embedURL + '&' + querystring;
+					embedURL += '&' + querystring;
+				}
+				if (cm.get['params']) {
+					if (cm.get['params']['element_id'] == id) {
+						embedURL += '&' + cm.get['qs'];
+					}
 				}
 				var iframe = document.createElement('iframe');
 					iframe.src = embedURL;
@@ -387,7 +419,8 @@
 				if (cm.embeds.whitelist.indexOf(origin) === -1) {
 					cm.embeds.whitelist = cm.embeds.whitelist + origin;
 				}
-				
+				cm.embeds.all.push({el:iframe,id:id,type:''});
+
 				return iframe;
 			},
 
@@ -891,7 +924,7 @@
 					}
 				},
 
-				addOverlayTrigger(content,classname,ref) {
+				addOverlayTrigger: function(content,classname,ref) {
 					var cm = window.cashmusic;
 					var self = cm.overlay;
 					if (cm.embedded) {
@@ -904,7 +937,15 @@
 						var el = document.createElement('div');
 						el.className = classname;
 						cm.events.add(el,'click',function(e) {
-							cm.overlay.reveal("look i'm a shopping cart!");
+							if (typeof content === 'string') {
+								cm.overlay.reveal(content);
+							} else {
+								if (content.endpoint) {
+									// make the iframe
+									var iframe = cm.buildEmbedIframe(content.endpoint,content.element,false,'&state='+content.state);
+									cm.overlay.reveal(iframe);
+								}
+							}
 							e.preventDefault();
 							return false;
 						});
@@ -969,7 +1010,6 @@
 							"important":important
 						});
 					} else {
-						el = cm.styles.resolveElement(el);
 						var head = document.getElementsByTagName('head')[0] || document.documentElement;
 						if (css.substr(0,4) == 'http') {
 							// if css starts with "http" treat it as an external stylesheet
