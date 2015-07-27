@@ -878,6 +878,14 @@
 					db.removeChild(self.close);
 					db.removeChild(self.content);
 
+					// reveal any (if) overlay triggers
+					var t = document.querySelectorAll('.cm-overlaytrigger');
+					if (t.length > 0) {
+						for (var i = 0, len = t.length; i < len; i++) {
+							t[i].style.visibility = 'visible';
+						}
+					}
+
 					// reenable body scrolling
 					db.style.overflow = 'auto';
 				},
@@ -901,7 +909,13 @@
 						if (typeof innerContent === 'string') {
 							alert.innerHTML = innerContent;
 						} else {
-							alert.appendChild(innerContent);
+							if (innerContent.endpoint && innerContent.element) {
+								// make the iframe
+								var iframe = cm.buildEmbedIframe(innerContent.endpoint,innerContent.element,false,'&state='+innerContent.state);
+								alert.appendChild(iframe);
+							} else {
+								alert.appendChild(innerContent);
+							}
 						}
 						positioning.appendChild(alert);
 						self.content.appendChild(positioning);
@@ -935,17 +949,10 @@
 						});
 					} else {
 						var el = document.createElement('div');
-						el.className = classname;
+						el.className = classname.toString() + ' cm-overlaytrigger';
 						cm.events.add(el,'click',function(e) {
-							if (typeof content === 'string') {
-								cm.overlay.reveal(content);
-							} else {
-								if (content.endpoint) {
-									// make the iframe
-									var iframe = cm.buildEmbedIframe(content.endpoint,content.element,false,'&state='+content.state);
-									cm.overlay.reveal(iframe);
-								}
-							}
+							cm.overlay.reveal(content);
+							this.style.visibility = 'hidden';
 							e.preventDefault();
 							return false;
 						});
@@ -1048,7 +1055,7 @@
 						// the "replace(/^\s+/, '').replace(/\s+$/, '')" stuff is because .trim() isn't supported on ie8
 						el = cm.styles.resolveElement(el);
 						if (el) {
-							el.className = ((' ' + el.className + ' ').replace(' ' + classname + ' ','')).replace(/^\s+/, '').replace(/\s+$/, '');
+							el.className = ((' ' + el.className + ' ').replace(' ' + classname + ' ',' ')).replace(/^\s+/, '').replace(/\s+$/, '');
 						}
 					}
 				},
