@@ -256,6 +256,9 @@
 					case 'swapclasses':
 						cm.styles.swapClasses(md.el,md.oldclass,md.newclass);
 						break;
+					case 'sessionstarted':
+						cm.session.setid(md);
+						break;
 				}
 			},
 
@@ -406,8 +409,13 @@
 						embedURL += '&' + cm.get['qs'];
 					}
 				}
+				var sid = cm.session.getid(endpoint.split('/').slice(0,3).join('/'));
+				if (sid) {
+					embedURL += '&session_id=' + sid;
+				}
 				var iframe = document.createElement('iframe');
 					iframe.src = embedURL;
+					iframe.id = 'cm-' + new Date().getTime(); // prevent Safari from using old data.
 					iframe.className = 'cashmusic embed';
 					iframe.style.width = '100%';
 					iframe.style.height = '0'; // if not explicitly set the scrollheight of the document will be wrong
@@ -577,9 +585,21 @@
 				 */
 				send: function(url,postString,successCallback,failureCallback) {
 					var method = 'POST';
+					var sid = cm.session.getid(window.location.href.split('/').slice(0,3).join('/'));
 					if (!postString) {
 						method = 'GET';
 						postString = null;
+						if (sid) {
+							if (url.indexOf('?') === -1) {
+								url += '?session_id=' + sid;
+							} else {
+								url += '&session_id=' + sid;
+							}
+						}
+					} else {
+						if (sid) {
+							postString += '&session_id=' + sid;
+						}
 					}
 					var xhr = this.getXHR();
 					if (xhr) {
@@ -731,8 +751,8 @@
 					if (document.dispatchEvent){
 						// standard
 						var e = document.createEvent('CustomEvent');
-    					e.initCustomEvent(type, false, false, data);
-    					obj.dispatchEvent(e);
+   					e.initCustomEvent(type, false, false, data);
+   					obj.dispatchEvent(e);
 					} else {
 						// dispatch for IE < 9
 						var e = document.createEventObject();
@@ -749,6 +769,63 @@
 						'type': type,
 						'data': data
 					}),'*');
+				}
+			},
+
+			/***************************************************************************************
+			 *
+			 * window.cashmusic.session (object)
+			 * Test session things because Safari is garbage
+			 *
+			 ***************************************************************************************/
+			session: {
+				start: function(endpoint) {
+					var cm = window.cashmusic;
+					if (!cm.session.getid(window.location.href.split('/').slice(0,3).join('/'))) {
+						if (!endpoint) {
+							endpoint = window.location.href.split('/embed/')[0]+'/payload';
+							endpoint += '?cash_request_type=system&cash_action=startjssession&ts=' + new Date().getTime();
+						}
+						// fire off the ajax call
+						cm.ajax.send(
+							endpoint,
+							false,
+							function(r) {
+								if (r) {
+									cm.events.fire(cm,'sessionstarted',r);
+									cm.session.setid(r);
+								}
+							}
+						);
+					}
+				},
+
+				setid: function(id) {
+					var session = JSON.parse(id);
+					var sessions = localStorage.getItem('sessions');
+					if (!sessions) {
+						sessions = {};
+					} else {
+						sessions = JSON.parse(sessions);
+					}
+					sessions[session.endpoint] = {
+						"id":session.id,
+						"expiration":session.expiration
+					};
+					localStorage.setItem('sessions', JSON.stringify(sessions));
+				},
+
+				getid: function(key) {
+					var sessions = localStorage.getItem('sessions');
+					if (sessions) {
+						sessions = JSON.parse(sessions);
+						if (sessions[key]) {
+							if ((sessions[key].expiration) > Math.floor(new Date().getTime() /1000)) {
+								return sessions[key].id;
+							}
+						}
+					}
+					return false;
 				}
 			},
 
