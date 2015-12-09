@@ -338,11 +338,11 @@
 					}
 					if (typeof endPoint === 'object') {
 						if (!endPoint.targetnode) {
-							endPoint.targetnode = id;
+							endPoint.targetnode = '#' + id;
 							arguments[0] = endPoint;
 						}
 					} else {
-						arguments[4] = id;
+						arguments[4] = '#' + id;
 					}
 					cm.storage.elementQueue.push(arguments);
 				} else {
