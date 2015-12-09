@@ -144,11 +144,11 @@
 							l++;
 						} else {
 							cm.loaded = Date.now(); // ready and loaded
-							cm._drawQueuedEmbeds();
 							// and since we're ready kill the loops
 							clearInterval(i);
 							// tell em
 							cm.events.fire(cm,'ready',cm.loaded);
+							cm._drawQueuedEmbeds();
 						}
 					}, 100);
 				}
@@ -329,13 +329,20 @@
 						cm.storage.elementQueue = [];
 					}
 					// store the endpoint correctly
+					var id = currentNode.id;
+					if (!id) {
+						// no id? we
+						id = new Date().getTime(); // TODO: randomizethis name to avoid collision
+						id = 'cm-' + (Math.floor(Math.random() * 99999)) + '-' + id;
+						currentNode.setAttribute('id', id);
+					}
 					if (typeof endPoint === 'object') {
 						if (!endPoint.targetnode) {
-							endPoint.targetnode = currentNode;
+							endPoint.targetnode = id;
 							arguments[0] = endPoint;
 						}
 					} else {
-						arguments[4] = currentNode;
+						arguments[4] = id;
 					}
 					cm.storage.elementQueue.push(arguments);
 				} else {
@@ -584,6 +591,7 @@
 				 * force a POST request, whereas passing false will send a GET.
 				 */
 				send: function(url,postString,successCallback,failureCallback) {
+					var cm = window.cashmusic;
 					var method = 'POST';
 					var sid = cm.session.getid(window.location.href.split('/').slice(0,3).join('/'));
 					if (!postString) {
@@ -816,7 +824,12 @@
 				},
 
 				getid: function(key) {
-					var sessions = localStorage.getItem('sessions');
+					var sessions = false;
+					try {
+						sessions = localStorage.getItem('sessions');
+					} catch (e) {
+						sessions = false;
+					}
 					if (sessions) {
 						sessions = JSON.parse(sessions);
 						if (sessions[key]) {
