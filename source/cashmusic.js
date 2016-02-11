@@ -61,6 +61,7 @@
 			templates: {},
 			eventlist: {},
 			storage: {},
+			scripts: [],
 			embedded: false,
 			geo: false,
 
@@ -232,7 +233,13 @@
 						}
 						break;
 					case 'stripetokenrequested':
-						cm.stripe.generateToken(md,e.source);
+						if (!cm.stripe) {
+							cm.loadScript(cm.path+'checkout/checkout.js', function() {
+								cm.stripe.generateToken(md,e.source);
+							});
+						} else {
+							cm.stripe.generateToken(md,e.source);
+						}
 						break;
 					case 'stripetoken':
 						cm.events.fire(cm,'stripetokengenerated',md);
@@ -506,12 +513,13 @@
 
 			// stolen from jQuery
 			loadScript: function(url,callback) {
-				var test = document.querySelectorAll('a[src="' + url + '"]');
-				if (test.length > 0) {
+				var cm = window.cashmusic;
+				if (cm.scripts.indexOf(url) > -1) {
 					if (typeof callback === 'function') {
 						callback();
 					}
 				} else {
+					cm.scripts.push(url);
 					var head = document.getElementsByTagName('head')[0] || document.documentElement;
 					var script = document.createElement('script');
 					script.src = url;
@@ -988,6 +996,10 @@
 					if (cm.embedded) {
 						cm.events.fire(cm,'overlayreveal',{"innerContent":innerContent,"wrapClass":wrapClass});
 					} else {
+						// if the overlay is already visible, kill the contents first
+						if (self.content.style.opacity == 1) {
+							self.content.innerHTML = '';
+						}
 						var positioning = document.createElement('div');
 						positioning.className = 'cm-position';
 						var alert = document.createElement('div');
@@ -1013,18 +1025,21 @@
 						// disable body scrolling
 						db.style.overflow = 'hidden';
 
-						// go
-						self.wrapper.className = 'cm-wrapper cm-active';
-						self.content.style.opacity = 0;
-						self.bg.style.height = cm.measure.scrollheight() + 'px';
-						db.appendChild(self.bg);
-						self.bg.className = 'cm-bg cm-active';
-						db.appendChild(self.content);
-						db.appendChild(self.close);
-						// force style refresh/redraw on element
-						window.getComputedStyle(self.content).opacity;
-						// initiate fade-in
-						self.content.style.opacity = 1;
+						// if not already showing, go!
+						console.log(self.content.style.opacity);
+						if (self.content.style.opacity != 1) {
+							self.wrapper.className = 'cm-wrapper cm-active';
+							self.content.style.opacity = 0;
+							self.bg.style.height = cm.measure.scrollheight() + 'px';
+							db.appendChild(self.bg);
+							self.bg.className = 'cm-bg cm-active';
+							db.appendChild(self.content);
+							db.appendChild(self.close);
+							// force style refresh/redraw on element
+							window.getComputedStyle(self.content).opacity;
+							// initiate fade-in
+							self.content.style.opacity = 1;
+						}
 					}
 				},
 
@@ -1168,47 +1183,6 @@
 					}
 				}
 			},
-
-			/***************************************************************************************
-			 *
-			 * window.cashmusic.stripe (object)
-			 * Handle Stripe.com payment token generation
-			 *
-			 ***************************************************************************************/
-			stripe: {
-				generateToken: function(params,origin) {
-					var cm = window.cashmusic;
-					if (cm.embedded) {
-						cm.events.fire(cm,'stripetokenrequested',params);
-					} else {
-						cm.loadScript('https://checkout.stripe.com/checkout.js', function() {
-							var handler = StripeCheckout.configure({
-								key: params.key,
-								image: params.image,
-								token: function(token) {
-									if (origin) {
-										origin.postMessage(JSON.stringify({
-											'type': 'stripetoken',
-											'data': token
-										}),'*');
-									} else {
-										cm.events.fire(cm,'stripetokengenerated',token);
-									}
-								}
-							});
-
-							// open checkout
-							handler.open({
-								name: params.name,
-								description: params.description,
-								amount: params.amount,
-								currency: params.currency,
-								bitcoin: params.bitcoin
-							});
-						});
-					}
-				}
-			}
 		};
 
 		/*
