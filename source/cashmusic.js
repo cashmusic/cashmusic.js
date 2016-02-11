@@ -963,6 +963,7 @@
 					var cm = window.cashmusic;
 					var self = cm.overlay;
 					var db = document.body;
+					self.content.style.opacity = 0;
 					cm.events.fire(cm,'overlayclosed',''); // tell em
 					self.wrapper.className = 'cm-wrapper';
 					self.bg.className = 'cm-bg';
@@ -1026,7 +1027,6 @@
 						db.style.overflow = 'hidden';
 
 						// if not already showing, go!
-						console.log(self.content.style.opacity);
 						if (self.content.style.opacity != 1) {
 							self.wrapper.className = 'cm-wrapper cm-active';
 							self.content.style.opacity = 0;
