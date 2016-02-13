@@ -232,17 +232,8 @@
 							source.type = md[0]; // set the type. now we have all the infos
 						}
 						break;
-					case 'stripetokenrequested':
-						if (!cm.stripe) {
-							cm.loadScript(cm.path+'checkout/checkout.js', function() {
-								cm.stripe.generateToken(md,e.source);
-							});
-						} else {
-							cm.stripe.generateToken(md,e.source);
-						}
-						break;
-					case 'stripetoken':
-						cm.events.fire(cm,'stripetokengenerated',md);
+					case 'checkoutdata':
+						cm.events.fire(cm,'checkoutdata',md);
 						break;
 					case 'overlayreveal':
 						cm.overlay.reveal(md.innerContent,md.wrapClass);
@@ -265,6 +256,15 @@
 						break;
 					case 'sessionstarted':
 						cm.session.setid(md);
+						break;
+					case 'begincheckout':
+						if (!cm.checkout) {
+							cm.loadScript(cm.path+'checkout/checkout.js', function() {
+								cm.checkout.begin(md,e.source);
+							});
+						} else {
+							cm.checkout.begin(md,e.source);
+						}
 						break;
 				}
 			},
@@ -762,8 +762,17 @@
 					}
 				},
 
-				fire: function(obj,type,data) {
+				// added the fourth "source" parameter
+				fire: function(obj,type,data,source) {
 					var cm = window.cashmusic;
+					if (typeof source !== 'undefined') {
+						// source window found, so push to it via postMessage
+						source.postMessage(JSON.stringify({
+							'type': type,
+							'data': data
+						}),'*');
+					}
+					// fire the event locally no matter what
 					if (document.dispatchEvent){
 						// standard
 						var e = document.createEvent('CustomEvent');
