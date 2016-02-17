@@ -98,6 +98,7 @@
 						var button = document.createElement("button");
 						button.type = "submit";
 						button.id = "cm-userinput-" + type + "-" + element.id;
+						button.name = element.id;
 						button.innerHTML = element.text;
 						form.appendChild(button);
 					}
@@ -443,7 +444,7 @@
 							}
 						});
 					} else {
-						console.log('no valid payment types');
+						cm.checkout.showerror();
 					}
 				} else {
 					cm.checkout.initiatepayment(options,source);
@@ -459,9 +460,42 @@
 				cm.events.fire(cm,'checkoutdata',cm.storage['checkoutdata'],source);
 			} else if (options.stripe && options.paypal) {
 				console.log('bothsies!');
+
+				var container = document.createElement("div");
+				container.class = "cm-checkout-choose";
+
+				var ppspan = document.createElement("span");
+				var stspan = document.createElement("span");
+
+				ppspan.innerHTML = "Pay with PayPal";
+				stspan.innerHTML = "Pay with a credit card";
+
+				cm.events.add(ppspan,'click', function(e) {
+					e.preventDefault();
+					e.stopPropagation();
+					cm.storage['checkoutdata']['paypal'] = true;
+					cm.events.fire(cm,'checkoutdata',cm.storage['checkoutdata'],source);
+					cm.overlay.reveal('redirecting...');
+				});
+
+				cm.events.add(stspan,'click', function(e) {
+					e.preventDefault();
+					e.stopPropagation();
+					cm.stripe.generateToken(options.stripe,source);
+				});
+
+				container.appendChild(ppspan);
+				container.appendChild(stspan);
+
+				cm.overlay.reveal(container);
+
 			} else {
-				console.log('no valid payment types');
+				cm.checkout.showerror();
 			}
+		},
+
+		showerror: function (type) {
+			cm.overlay.reveal('<div class="cm-checkout-error">There are no valid payment types. Please add a payment connection. Check to make sure your site supports SSL (https) if you are using Stripe.</div>');
 		}
 	}
 
