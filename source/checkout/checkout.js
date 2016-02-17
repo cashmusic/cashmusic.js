@@ -40,6 +40,10 @@
 			               if (response.error) {
 			                  // Show the errors on the form
 									document.getElementById('cm-userinput-message').innerHTML = response.error.message;
+									cm.styles.addClass(document.getElementsByClassName('cm-userinput-container')[0],'nope');
+									setTimeout(function(){
+										cm.styles.removeClass(document.getElementsByClassName('cm-userinput-container')[0],'nope');
+									}, 800);
 			               } else {
 			                  // response contains id and card, which contains additional card details
 			                  cm.storage['checkoutdata']['stripe'] = response.id;
@@ -61,8 +65,10 @@
 			type = type || 'unknown';
 			var form = document.createElement('form');
 			var container = document.createElement('div');
+			container.className = 'cm-userinput-container';
 			var message = document.createElement('div');
 			message.id = 'cm-userinput-message';
+			message.innerHTML = '&nbsp;'
 			form.className = 'cm-userinput ' + type;
 
 			elements.push({id:'cm-userinput-type', type:'hidden', value:type});
@@ -387,6 +393,7 @@
 			if (cm.embedded) {
 				cm.events.fire(cm,'begincheckout',options);
 			} else {
+				cm.styles.injectCSS(cm.path + 'templates/checkout.css');
 				cm.storage['checkoutdata'] = {
 					'stripe'   :false,
 					'paypal'   :false,
@@ -429,11 +436,13 @@
 							}
 						}
 						cm.checkout.shippingElements.push({id: "country", type: "select", options: cm.checkout.countries, value: selectedCountry});
-						cm.checkout.shippingElements.push({id: "shipping-region", type: "select", options: {
-							"-":"Please select a shipping region",
-							"r1":options.shipping.r1,
-							"r2":options.shipping.r2
-						}});
+						if (typeof options.shipping === 'object') {
+							cm.checkout.shippingElements.push({id: "shipping-region", type: "select", options: {
+								"":"Please select a shipping region",
+								"r1":options.shipping.r1,
+								"r2":options.shipping.r2
+							}});
+						}
 						cm.checkout.shippingElements.push({id: "shipping-submit", type: "submit", text: "Set shipping info"});
 						cm.userinput.getInput(cm.checkout.shippingElements,'getshippingaddress');
 						cm.checkout.shippingElements.length = 6;
@@ -459,8 +468,6 @@
 				cm.storage['checkoutdata']['paypal'] = true;
 				cm.events.fire(cm,'checkoutdata',cm.storage['checkoutdata'],source);
 			} else if (options.stripe && options.paypal) {
-				console.log('bothsies!');
-
 				var container = document.createElement("div");
 				container.class = "cm-checkout-choose";
 
