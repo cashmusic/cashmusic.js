@@ -103,6 +103,9 @@
 				}
 				input.name = element.id;
 				input.id = "cm-userinput-" + type + "-" + element.id;
+				if (element.required) {
+					input.setAttribute('data-required','1');
+				}
 				form.appendChild(input);
 			}
 
@@ -113,11 +116,27 @@
 				e.preventDefault();
 				e.stopPropagation();
 				var formdata = {};
+				var incomplete = false;
 	         for ( var i = 0; i < form.elements.length; i++ ) {
 	            var e = form.elements[i];
 	            formdata[e.name] = e.value;
+					if (e.getAttribute('data-required') && e.value == '') {
+						incomplete = true;
+						cm.styles.addClass(e,'incomplete');
+					} else {
+						cm.styles.removeClass(e,'incomplete');
+					}
 	         }
-				cm.events.fire(cm,'userinput',formdata);
+				if (incomplete) {
+					// Show the errors on the form
+					document.getElementById('cm-userinput-message').innerHTML = 'Please complete all required fields.';
+					cm.styles.addClass(document.getElementsByClassName('cm-userinput-container')[0],'nope');
+					setTimeout(function(){
+						cm.styles.removeClass(document.getElementsByClassName('cm-userinput-container')[0],'nope');
+					}, 800);
+				} else {
+					cm.events.fire(cm,'userinput',formdata);
+				}
 			});
 
 			cm.overlay.reveal(container);
@@ -381,12 +400,12 @@
 			} else {
 				var shippingElements = [];
 				shippingElements.push(
-					{id: "name", type: "text", placeholder: "Ship to name"},
-		   		{id: "address1", type: "text", placeholder: "Shipping address 1"},
+					{id: "name", type: "text", placeholder: "Ship to name", required: true},
+		   		{id: "address1", type: "text", placeholder: "Shipping address 1", required: true},
 					{id: "address2", type: "text", placeholder: "Shipping address 2"},
-					{id: "city", type: "text", placeholder: "City"},
-					{id: "state", type: "text", placeholder: "State/Province/Region"},
-					{id: "postalcode", type: "text", placeholder: "Postal code"}
+					{id: "city", type: "text", placeholder: "City", required: true},
+					{id: "state", type: "text", placeholder: "State/Province/Region", required: true},
+					{id: "postalcode", type: "text", placeholder: "Postal code", required: true}
 				);
 
 				cm.styles.injectCSS(cm.path + 'templates/checkout.css');
@@ -437,7 +456,7 @@
 								"":"Please select a shipping region",
 								"r1":options.shipping.r1,
 								"r2":options.shipping.r2
-							}});
+							}, required: true});
 						}
 						shippingElements.push({id: "shipping-submit", type: "submit", text: "Set shipping info"});
 						cm.userinput.getInput(shippingElements,'getshippingaddress');
