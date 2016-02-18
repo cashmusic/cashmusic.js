@@ -73,43 +73,38 @@
 
 			elements.push({id:'cm-userinput-type', type:'hidden', value:type});
 
-			elements.forEach(function(element) {
+			for (var i = 0; i < elements.length; i++) {
+				var element = elements[i];
 				if (element.type !== "submit" && element.type !== "select") {
 					var input = document.createElement("input");
 					input.type = element.type;
-					input.name = element.id;
 					input.placeholder = element.placeholder;
-					input.id = "cm-userinput-" + type + "-" + element.id;
 					if (element.value) {
 						input.value = element.value;
 					}
-					form.appendChild(input);
 				} else {
 					if (element.type == "select") {
 						var input = document.createElement("select");
-						input.id = "cm-userinput-" + type + "-" + element.id;
 						var codes = Object.keys(element.options);
-						input.name = element.id;
-						for (var i = 0; i < codes.length; i++) {
+						for (var n = 0; n < codes.length; n++) {
 						   var option = document.createElement("option");
-						   option.value = codes[i];
-						   option.text = element.options[codes[i]];
-							if (element.value == codes[i]) {
+						   option.value = codes[n];
+						   option.text = element.options[codes[n]];
+							if (element.value == codes[n]) {
 								option.selected = 'selected';
 							}
 						   input.appendChild(option);
 						}
-						form.appendChild(input);
 					} else {
-						var button = document.createElement("button");
-						button.type = "submit";
-						button.id = "cm-userinput-" + type + "-" + element.id;
-						button.name = element.id;
-						button.innerHTML = element.text;
-						form.appendChild(button);
+						var input = document.createElement("button");
+						input.type = "submit";
+						input.innerHTML = element.text;
 					}
 				}
-			});
+				input.name = element.id;
+				input.id = "cm-userinput-" + type + "-" + element.id;
+				form.appendChild(input);
+			}
 
 			container.appendChild(form);
 			container.appendChild(message);
@@ -380,19 +375,20 @@
 			"ZW":"Zimbabwe"
 		},
 
-		shippingElements: [
-			{id: "name", type: "text", placeholder: "Ship to name"},
-         {id: "address1", type: "text", placeholder: "Shipping address 1"},
-			{id: "address2", type: "text", placeholder: "Shipping address 2"},
-			{id: "city", type: "text", placeholder: "City"},
-			{id: "state", type: "text", placeholder: "State/Province/Region"},
-			{id: "postalcode", type: "text", placeholder: "Postal code"}
-		],
-
 		begin: function (options,source) {
 			if (cm.embedded) {
 				cm.events.fire(cm,'begincheckout',options);
 			} else {
+				var shippingElements = [];
+				shippingElements.push(
+					{id: "name", type: "text", placeholder: "Ship to name"},
+		   		{id: "address1", type: "text", placeholder: "Shipping address 1"},
+					{id: "address2", type: "text", placeholder: "Shipping address 2"},
+					{id: "city", type: "text", placeholder: "City"},
+					{id: "state", type: "text", placeholder: "State/Province/Region"},
+					{id: "postalcode", type: "text", placeholder: "Postal code"}
+				);
+
 				cm.styles.injectCSS(cm.path + 'templates/checkout.css');
 				cm.storage['checkoutdata'] = {
 					'stripe'   :false,
@@ -435,17 +431,16 @@
 									break;
 							}
 						}
-						cm.checkout.shippingElements.push({id: "country", type: "select", options: cm.checkout.countries, value: selectedCountry});
+						shippingElements.push({id: "country", type: "select", options: cm.checkout.countries, value: selectedCountry});
 						if (typeof options.shipping === 'object') {
-							cm.checkout.shippingElements.push({id: "shipping-region", type: "select", options: {
+							shippingElements.push({id: "shipping-region", type: "select", options: {
 								"":"Please select a shipping region",
 								"r1":options.shipping.r1,
 								"r2":options.shipping.r2
 							}});
 						}
-						cm.checkout.shippingElements.push({id: "shipping-submit", type: "submit", text: "Set shipping info"});
-						cm.userinput.getInput(cm.checkout.shippingElements,'getshippingaddress');
-						cm.checkout.shippingElements.length = 6;
+						shippingElements.push({id: "shipping-submit", type: "submit", text: "Set shipping info"});
+						cm.userinput.getInput(shippingElements,'getshippingaddress');
 						cm.events.add(cm,'userinput', function(e) {
 							if (e.detail['cm-userinput-type'] == 'getshippingaddress') {
 								cm.storage['checkoutdata']['shipping'] = e.detail;
