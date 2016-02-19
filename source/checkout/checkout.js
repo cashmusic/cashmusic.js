@@ -8,8 +8,12 @@
 	 * window.cashmusic.stripe (object)
 	 * Handle Stripe.com payment token generation
 	 *
+	 * PUBLIC-ISH FUNCTIONS
+	 * window.cashmusic.stripe.generateToken(string key, target source)
+	 *
 	 ***************************************************************************************/
 	cm.stripe = {
+		// basic info needed by stripe
 		formElements: [
          {id: "name", type: "text", placeholder: "Cardholder name"},
          {id: "email", type: "email", placeholder: "Email address"},
@@ -58,9 +62,29 @@
 		}
 	};
 
+	/***************************************************************************************
+	 *
+	 * window.cashmusic.userinput (object)
+	 * pass in an array of needed information, it builds forms, you get answers back
+	 *
+	 * EXAMPLES:
+	 * event driven, so first pass in:
+	 *		[
+	 *			{id: "name", type: "text", placeholder: "an input", required: true},
+	 *			{id: "name", type: "hidden", value: "secret"},
+	 *			{id: "submit", type: "submit", text: "submit"}
+	 *		]
+	 *
+	 * then listen for an answer:
+	 * 	cm.events.add(cm,'checkoutdata', function(e) {
+	 *	 		console.log(e.detail);
+	 * 	});
+	 *
+	 * PUBLIC-ISH FUNCTIONS
+	 * window.cashmusic.userinput.getinput(array elements, string type)
+	 *
+	 ***************************************************************************************/
 	cm.userinput = {
-		// temp form injection stuff for stripe, but we can make it for anything
-		// inject = optional div to injec
 		getInput: function (elements,type) {
 			type = type || 'unknown';
 			var form = document.createElement('form');
@@ -143,6 +167,27 @@
 		}
 	};
 
+	/***************************************************************************************
+	 *
+	 * window.cashmusic.checkout (object)
+	 * start the checkout flow for multiple payments in a controlled overlay
+	 *
+	 * PUBLIC FUNCTIONS
+	 * window.cashmusic.checkout.begin(obj options, target source)
+	 *
+	 * EXAMPLE
+	 		cm.checkout.begin({
+		 		"stripe"   : "pk_test_wh4t3ver", // false OR public stripe key
+		 		"paypal"   : true, // boolean for "should we have paypal as an option"
+		 		"currency" : "USD", // USD = default, but this also determines what country is
+								 auto-selected in the drop-down
+		 		"shipping" : {"r1":"US & Canada ($4)","r2":"Rest of world ($7)"}, // or bool.
+								 false = no shipping, true = shipping address but no region selector
+		 		"testing"  : true // allows stripe to work without SSL if true, false or omit
+								 (preferable for production) to enforce
+	 		});
+	 *
+	 ***************************************************************************************/
 	cm.checkout = {
 		countries: {
 			"AF":"Afghanistan",
@@ -398,6 +443,8 @@
 			if (cm.embedded) {
 				cm.events.fire(cm,'begincheckout',options);
 			} else {
+				// this push business feels really dumb but we need a proper length count
+				// and using a single array literal wasn't expanding properly via push
 				var shippingElements = [];
 				shippingElements.push(
 					{id: "name", type: "text", placeholder: "Ship to name", required: true},
@@ -408,17 +455,20 @@
 					{id: "postalcode", type: "text", placeholder: "Postal code", required: true}
 				);
 
+				// add in styles
 				cm.styles.injectCSS(cm.path + 'templates/checkout.css');
+				// set up the empty object we'll populate in the return
 				cm.storage['checkoutdata'] = {
 					'stripe'   :false,
 					'paypal'   :false,
 					'shipping' :false,
 					'currency' :false
 				};
-
+				// detect SSL for stripe
 				if (location.protocol !== 'https:' && options.testing !== true) {
 					options.stripe = false;
 				}
+				// choose defaults by currency
 				if (options.shipping) {
 					if (options.stripe || options.paypal) {
 						var selectedCountry = "US";
@@ -450,7 +500,9 @@
 									break;
 							}
 						}
+						// add in the country selector
 						shippingElements.push({id: "country", type: "select", options: cm.checkout.countries, value: selectedCountry});
+						// and if needed, the shipping region selector
 						if (typeof options.shipping === 'object') {
 							shippingElements.push({id: "shipping-region", type: "select", options: {
 								"":"Please select a shipping region",
@@ -458,8 +510,11 @@
 								"r2":options.shipping.r2
 							}, required: true});
 						}
+						// hey look a button!
 						shippingElements.push({id: "shipping-submit", type: "submit", text: "Set shipping info"});
+						// get the answers
 						cm.userinput.getInput(shippingElements,'getshippingaddress');
+						// wait for them
 						cm.events.add(cm,'userinput', function(e) {
 							if (e.detail['cm-userinput-type'] == 'getshippingaddress') {
 								cm.storage['checkoutdata']['shipping'] = e.detail;
@@ -476,12 +531,21 @@
 		},
 
 		initiatepayment: function (options,source) {
+			// just starts the payment flow and does the steps needed based on
+			// the options passed in...
+
+			// Stripe only
 			if (options.stripe && !options.paypal) {
 				cm.stripe.generateToken(options.stripe,source);
-			} else if (!options.stripe && options.paypal) {
+			}
+			// Paypal only
+			else if (!options.stripe && options.paypal) {
 				cm.storage['checkoutdata']['paypal'] = true;
 				cm.events.fire(cm,'checkoutdata',cm.storage['checkoutdata'],source);
-			} else if (options.stripe && options.paypal) {
+			}
+			// Stripe and Paypal
+			else if (options.stripe && options.paypal) {
+				// Create HTML elements to use as selectors
 				var container = document.createElement("div");
 				container.class = "cm-checkout-choose";
 
@@ -491,6 +555,7 @@
 				ppspan.innerHTML = "Pay with PayPal";
 				stspan.innerHTML = "Pay with a credit card";
 
+				// Create a special event to detect Paypal chosen
 				cm.events.add(ppspan,'click', function(e) {
 					e.preventDefault();
 					e.stopPropagation();
@@ -499,6 +564,7 @@
 					cm.overlay.reveal('redirecting...');
 				});
 
+				// Create a special event to detect Stripe chosen
 				cm.events.add(stspan,'click', function(e) {
 					e.preventDefault();
 					e.stopPropagation();
@@ -510,7 +576,9 @@
 
 				cm.overlay.reveal(container);
 
-			} else {
+			}
+			// No available payment types, by options or SSL limits on Stripe
+			else {
 				cm.checkout.showerror();
 			}
 		},
