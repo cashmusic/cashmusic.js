@@ -905,11 +905,17 @@
 				create: function(callback) {
 					var cm = window.cashmusic;
 					var self = cm.overlay;
+					var move = false;
 					if (self.wrapper === false) {
 						cm.styles.injectCSS(cm.path + 'templates/overlay.css');
 
-						self.wrapper = document.createElement('div');
-						self.wrapper.className = 'cm-wrapper';
+						self.wrapper = document.querySelector('div.cm-wrapper');
+
+						if (!self.wrapper) {
+							move = true;
+							self.wrapper = document.createElement('div');
+							self.wrapper.className = 'cm-wrapper';
+						}
 
 						self.bg = document.createElement('div');
 						self.bg.className = 'cm-bg';
@@ -925,12 +931,13 @@
 						self.bg.style.backgroundAttachment 	= bs.getPropertyValue('background-attachment');
 						self.bg.style.backgroundColor 		= bs.getPropertyValue('background-color');
 
-						// move all page nodes to the new wrapper
-						while (document.body.childNodes.length) {
-							self.wrapper.appendChild(document.body.childNodes[0]);
+						if (move) {
+							// move all page nodes to the new wrapper
+							while (document.body.childNodes.length) {
+								self.wrapper.appendChild(document.body.childNodes[0]);
+							}
+							document.body.appendChild(self.wrapper);
 						}
-
-						document.body.appendChild(self.wrapper);
 
 						self.content = document.createElement('div');
 						self.content.className = 'cm-overlay';
@@ -1205,7 +1212,7 @@
 			// a directory is actually named 'cashmusic.js'
 			cashmusic.path = s.src.substr(0,s.src.length-12);
 		}
-		// get and store options 
+		// get and store options
 		cashmusic.options = String(s.getAttribute('data-options'));
 
 		// start on geo-ip data early
@@ -1213,7 +1220,17 @@
 			cashmusic.geo = h;
 		});
 
-		var init = function(){cashmusic._init(cashmusic);}; // function traps cashmusic in a closure
+		var init = function(){
+			// function traps cashmusic in a closure
+			if (cashmusic.options.indexOf('lazy') !== -1) {
+				// lazy mode...chill for a second
+				setTimeout(function() {
+					cashmusic._init(cashmusic);
+				}, 1000);
+			} else {
+				cashmusic._init(cashmusic);
+			}
+		};
 		cashmusic.contentLoaded(init); // loads only after the page is complete
 	}
 
