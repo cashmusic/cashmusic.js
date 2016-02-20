@@ -68,17 +68,8 @@
 			_init: function() {
 				var cm = window.cashmusic;
 
-				// determine file location and path
-				cm.scriptElement = document.querySelector('script[src$="cashmusic.js"]');
-				if (cm.scriptElement) {
-					// chop off last 12 characters for 'cashmusic.js' -- not just a replace in case
-					// a directory is actually named 'cashmusic.js'
-					cm.path = cm.scriptElement.src.substr(0,cm.scriptElement.src.length-12);
-				}
-				cm.options = String(cm.scriptElement.getAttribute('data-options'));
-
 				// check lightbox options
-				if (this.options.indexOf('lightboxvideo') !== -1) {
+				if (cm.options.indexOf('lightboxvideo') !== -1) {
 					// load lightbox.js
 					cm.loadScript(cm.path+'lightbox/lightbox.js');
 				}
@@ -134,7 +125,7 @@
 					}
 
 					// create overlay stuff first, only if nowrap isn't set
-					if (this.options.indexOf('nowrap') === -1) {
+					if (cm.options.indexOf('nowrap') === -1) {
 						cm.overlay.create();
 					}
 					// if we don't have a geo response we'll loop and wait a couple
@@ -1205,6 +1196,18 @@
 		/*
 		 *	Post-definition (runtime) calls. For the _init() function to "auto" load...
 		 */
+
+		// set path and get all script options
+		// file location and path
+		var s = document.querySelector('script[src$="cashmusic.js"]');
+		if (s) {
+			// chop off last 12 characters for 'cashmusic.js' -- not just a replace in case
+			// a directory is actually named 'cashmusic.js'
+			cashmusic.path = s.src.substr(0,s.src.length-12);
+		}
+		// get and store options 
+		cashmusic.options = String(s.getAttribute('data-options'));
+
 		// start on geo-ip data early
 		cashmusic.ajax.getHeaderForURL('https://javascript-cashmusic.netdna-ssl.com/cashmusic.js','GeoIp-Data',function(h) {
 			cashmusic.geo = h;
