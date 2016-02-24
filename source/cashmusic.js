@@ -9,7 +9,7 @@
  * @author CASH Music
  * @link http://cashmusic.org/
  *
- * Copyright (c) 2015, CASH Music
+ * Copyright (c) 2016, CASH Music
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -35,7 +35,7 @@
  *
  *
  *
- * VERSION: 4
+ * VERSION: 5
  *
  **/
 
@@ -801,22 +801,24 @@
 			session: {
 				start: function(endpoint) {
 					var cm = window.cashmusic;
-					if (!cm.session.getid(window.location.href.split('/').slice(0,3).join('/'))) {
-						if (!endpoint) {
-							endpoint = window.location.href.split('/embed/')[0]+'/payload';
-							endpoint += '?cash_request_type=system&cash_action=startjssession&ts=' + new Date().getTime();
-						}
-						// fire off the ajax call
-						cm.ajax.send(
-							endpoint,
-							false,
-							function(r) {
-								if (r) {
-									cm.events.fire(cm,'sessionstarted',r);
-									cm.session.setid(r);
-								}
+					if (cm.embedded) {
+						if (!cm.session.getid(window.location.href.split('/').slice(0,3).join('/'))) {
+							if (!endpoint) {
+								endpoint = window.location.href.split('/embed/')[0]+'/payload';
+								endpoint += '?cash_request_type=system&cash_action=startjssession&ts=' + new Date().getTime();
 							}
-						);
+							// fire off the ajax call
+							cm.ajax.send(
+								endpoint,
+								false,
+								function(r) {
+									if (r) {
+										cm.events.fire(cm,'sessionstarted',r);
+										cm.session.setid(r);
+									}
+								}
+							);
+						}
 					}
 				},
 
