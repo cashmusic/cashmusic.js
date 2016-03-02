@@ -124,6 +124,7 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
 	-moz-border-radius: 3px;
 	border-radius: 3px;
 	text-indent: 15px;
+	font-size: 11px;
 	font-family: 'Montserrat', sans-serif;
 }
 
@@ -196,6 +197,7 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
   color:#00cf7f;
 	display: block;
 	width: 100%;
+	font-size: 12px;
 	font-family: 'Montserrat', sans-serif;
 }
 
