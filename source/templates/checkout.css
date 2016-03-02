@@ -124,15 +124,17 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
 
 .cm-overlay select{
 	display: inline-block;
-	padding:15px 15px 15px 0;
+	padding:0;
 	line-height: 36px;
 	background:rgba(34,34,34,0.9);
 	border: solid 1px rgba(34,34,34,0.5);
 	color:#fff;
 	width:50%;
 	height:40px;
-	text-indent: 10px;
+	text-indent: 15px;
 	font-family: 'Montserrat', sans-serif;
+	-moz-appearance: none;
+  -webkit-appearance: none;
 }
 
 .cm-overlay select, #cm-userinput-getshippingaddress-city, #cm-userinput-getshippingaddress-state{
@@ -180,6 +182,7 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
 .cm-overlay input[type=submit]:hover, .cm-overlay .button:hover, .cm-overlay button:hover{
 	background:#00cf7f;
 	color:#333;
+	cursor: pointer;
 	-webkit-transition: background 0.3s ease-in-out;
 	transition: background 0.3s ease-in-out;
 }
