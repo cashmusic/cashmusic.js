@@ -13,27 +13,6 @@
 	 *
 	 ***************************************************************************************/
 	cm.stripe = {
-		// basic info needed by stripe
-		formElements: [
-         {id: "name", type: "text", placeholder: "Cardholder name"},
-         {id: "email", type: "email", placeholder: "Email address"},
-         {id: "card-number", type: "text", placeholder: "Credit card number"},
-			{id: "card-expiry-month", type: "select", options: {
-				"01":"01: Jan",
-				"02":"02: Feb",
-				"03":"03: Mar",
-				"04":"04: Apr",
-				"05":"05: May",
-				"06":"06: Jun",
-				"07":"07: Jul",
-				"08":"08: Aug",
-				"09":"09: Sep",
-				"10":"10: Oct",
-				"11":"11: Nov",
-				"12":"12: Dec"
-			}, value:"01"}
-   	],
-
 		getYears: function() {
 			var year =  new Date().getFullYear();
 			var years = {};
@@ -50,10 +29,28 @@
 				cm.events.fire(cm,'stripetokenrequested',params);
 			} else {
 				cm.loadScript('https://js.stripe.com/v2/', function() {
-					cm.stripe.formElements.push({id: "card-expiry-year", type: "select", options: cm.stripe.getYears(), placeholder: new Date().getFullYear()});
-					cm.stripe.formElements.push({id: "card-cvc", type: "text", placeholder: "CVC"});
-		         cm.stripe.formElements.push({id: "stripe-submit", type: "submit", text: "Submit Payment"});
-					cm.userinput.getInput(cm.stripe.formElements,'getstripetoken');
+					var formElements = [];
+					formElements.push({id: "name", type: "text", placeholder: "Cardholder name"});
+		         formElements.push({id: "email", type: "email", placeholder: "Email address"});
+		         formElements.push({id: "card-number", type: "text", placeholder: "Credit card number"});
+					formElements.push({id: "card-expiry-month", type: "select", options: {
+						"01":"01: Jan",
+						"02":"02: Feb",
+						"03":"03: Mar",
+						"04":"04: Apr",
+						"05":"05: May",
+						"06":"06: Jun",
+						"07":"07: Jul",
+						"08":"08: Aug",
+						"09":"09: Sep",
+						"10":"10: Oct",
+						"11":"11: Nov",
+						"12":"12: Dec"
+					}, value:"01"});
+					formElements.push({id: "card-expiry-year", type: "select", options: cm.stripe.getYears(), placeholder: new Date().getFullYear()});
+					formElements.push({id: "card-cvc", type: "text", placeholder: "CVC"});
+		         formElements.push({id: "stripe-submit", type: "submit", text: "Submit Payment"});
+					cm.userinput.getInput(formElements,'getstripetoken');
 					cm.events.add(cm,'userinput', function(e) {
 						if (e.detail['cm-userinput-type'] == 'getstripetoken') {
 							Stripe.setPublishableKey(key);
