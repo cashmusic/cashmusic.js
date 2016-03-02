@@ -74,15 +74,15 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
 /* Incomplete required animation */
 
 @keyframes nope {
-	 0%, 100% { transform: rotateY(0deg);}
-   10%, 30%, 50%, 70%, 90%  { transform: rotateY(-5deg); }
-   20%, 40%, 60%, 80% { transform: rotateY(5deg);}
+	 0%, 100% { transform: translateX(0px) rotateY(0deg); }
+   25%, 75% { transform: translateX(-5px) rotateY(-5deg); }
+   50% { transform: translateX(5px) rotateY(5deg); }
 }
 
 .nope {
 	-webkit-transform-style: preserve-3d;
 	transform-style: preserve-3d;
-	animation-duration: 1200ms;
+	animation-duration: 600ms;
 	animation-timing-function: ease-in-out;
 	animation-name: nope;
 }
