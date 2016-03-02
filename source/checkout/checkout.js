@@ -48,7 +48,7 @@
 						"12":"12: Dec"
 					}, value:"01"});
 					formElements.push({id: "card-expiry-year", type: "select", options: cm.stripe.getYears(), placeholder: new Date().getFullYear()});
-					formElements.push({id: "card-cvc", type: "text", placeholder: "CVC"});
+					formElements.push({id: "card-cvc", type: "text", placeholder: "CVV"});
 		         formElements.push({id: "stripe-submit", type: "submit", text: "Submit Payment"});
 					cm.userinput.getInput(formElements,'getstripetoken');
 					cm.events.add(cm,'userinput', function(e) {
