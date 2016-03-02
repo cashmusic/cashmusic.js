@@ -18,11 +18,31 @@
          {id: "name", type: "text", placeholder: "Cardholder name"},
          {id: "email", type: "email", placeholder: "Email address"},
          {id: "card-number", type: "text", placeholder: "Credit card number"},
-         {id: "card-cvc", type: "text", placeholder: "CVV"},
-         {id: "card-expiry-month", type: "text", placeholder: "12"},
-         {id: "card-expiry-year", type: "text", placeholder: new Date().getFullYear()},
-         {id: "stripe-submit", type: "submit", text: "Submit Payment"}
+			{id: "card-expiry-month", type: "select", options: {
+				"01":"01: Jan",
+				"02":"02: Feb",
+				"03":"03: Mar",
+				"04":"04: Apr",
+				"05":"05: May",
+				"06":"06: Jun",
+				"07":"07: Jul",
+				"08":"08: Aug",
+				"09":"09: Sep",
+				"10":"10: Oct",
+				"11":"11: Nov",
+				"12":"12: Dec"
+			}, value:"01"}
    	],
+
+		getYears: function() {
+			var year =  new Date().getFullYear();
+			var years = {};
+			for (var i = 0; i < 20; i++) {
+				years[year] = year;
+				year++;
+			}
+			return years;
+		},
 
 		generateToken: function(key,source) {
 			var cm = window.cashmusic;
@@ -30,6 +50,9 @@
 				cm.events.fire(cm,'stripetokenrequested',params);
 			} else {
 				cm.loadScript('https://js.stripe.com/v2/', function() {
+					cm.stripe.formElements.push({id: "card-expiry-year", type: "select", options: cm.stripe.getYears(), placeholder: new Date().getFullYear()});
+					cm.stripe.formElements.push({id: "card-cvc", type: "text", placeholder: "CVC"});
+		         cm.stripe.formElements.push({id: "stripe-submit", type: "submit", text: "Submit Payment"});
 					cm.userinput.getInput(cm.stripe.formElements,'getstripetoken');
 					cm.events.add(cm,'userinput', function(e) {
 						if (e.detail['cm-userinput-type'] == 'getstripetoken') {
@@ -136,8 +159,8 @@
 				form.appendChild(input);
 			}
 
-			container.appendChild(form);
 			container.appendChild(message);
+			container.appendChild(form);
 
 			cm.events.add(form,'submit', function(e) {
 				e.preventDefault();
@@ -510,7 +533,7 @@
 						// and if needed, the shipping region selector
 						if (typeof options.shipping === 'object') {
 							shippingElements.push({id: "shipping-region", type: "select", options: {
-								"":"Please select a shipping region",
+								"":"Select shipping region",
 								"r1":options.shipping.r1,
 								"r2":options.shipping.r2
 							}, required: true});
@@ -553,13 +576,15 @@
 			else if (options.stripe && options.paypal) {
 				// Create HTML elements to use as selectors
 				var container = document.createElement("div");
-				container.class = "cm-checkout-choose";
+				container.className = "cm-checkout-choose";
 
 				var ppspan = document.createElement("span");
 				var stspan = document.createElement("span");
 
-				ppspan.innerHTML = "Pay with PayPal";
-				stspan.innerHTML = "Pay with a credit card";
+				ppspan.innerHTML = 'Pay with PayPal';
+				ppspan.className = 'pay-pp';
+				stspan.innerHTML = 'Pay with a credit card';
+				stspan.className = 'pay-cc';
 
 				// Create a special event to detect Paypal chosen
 				cm.events.add(ppspan,'click', function(e) {
