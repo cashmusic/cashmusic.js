@@ -366,7 +366,7 @@
 					}
 
 					// make the iframe
-					var iframe = cm.buildEmbedIframe(endPoint,elementId,cssOverride);
+					var iframe = cm.buildEmbedIframe(endPoint,elementId,cssOverride,(lightboxed) ? '&overlay=1' : false);
 
 					// be nice neighbors. if we can't find currentNode, don't do the rest or pitch errors. silently fail.
 					if (currentNode) {
