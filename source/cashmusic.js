@@ -1031,7 +1031,7 @@
 						} else {
 							if (innerContent.endpoint && innerContent.element) {
 								// make the iframe
-								var iframe = cm.buildEmbedIframe(innerContent.endpoint,innerContent.element,false,'&state='+innerContent.state);
+								var iframe = cm.buildEmbedIframe(innerContent.endpoint,innerContent.element,false,'&overlay=1&state='+innerContent.state);
 								alert.appendChild(iframe);
 							} else {
 								alert.appendChild(innerContent);
