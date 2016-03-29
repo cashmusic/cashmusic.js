@@ -1,4 +1,3 @@
-
 (function() {
 	'use strict';
 	var cm = window.cashmusic;
@@ -489,7 +488,8 @@
 					'shipping' :false,
 					'currency' :false,
 					'name'     :false,
-					'email'    :false
+					'email'    :false,
+					'origin'   :window.location.href
 				};
 				// detect SSL for stripe
 				if (location.protocol !== 'https:' && options.testing !== true) {
