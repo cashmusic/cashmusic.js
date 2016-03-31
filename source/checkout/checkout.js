@@ -112,7 +112,7 @@
 	 *
 	 ***************************************************************************************/
 	cm.userinput = {
-		getInput: function (elements,type) {
+		getInput: function (elements,type,style) {
 			type = type || 'unknown';
 			var form = document.createElement('form');
 			var container = document.createElement('div');
@@ -120,7 +120,7 @@
 			var message = document.createElement('div');
 			message.id = 'cm-userinput-message';
 			message.innerHTML = '&nbsp;'
-			form.className = 'cm-userinput ' + type;
+			form.className = 'cm-userinput ' + type + ' ' + style;
 
 			elements.push({id:'cm-userinput-type', type:'hidden', value:type});
 
@@ -551,7 +551,11 @@
 						// hey look a button!
 						shippingElements.push({id: "shipping-submit", type: "submit", text: "Set shipping info"});
 						// get the answers
-						cm.userinput.getInput(shippingElements,'getshippingaddress');
+						if (typeof options.shipping === 'object') {
+							cm.userinput.getInput(shippingElements,'getshippingaddress','shipping');
+						} else {
+							cm.userinput.getInput(shippingElements,'getshippingaddress','noshipping');
+						}
 						// wait for them
 						cm.events.add(cm,'userinput', function(e) {
 							if (e.detail['cm-userinput-type'] == 'getshippingaddress') {
