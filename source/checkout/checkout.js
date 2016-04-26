@@ -137,6 +137,9 @@
 					if (element.type == "select") {
 						var input = document.createElement("select");
 						var codes = Object.keys(element.options);
+						codes.sort(function(a, b) {
+							return a - b;
+						});
 						for (var n = 0; n < codes.length; n++) {
 						   var option = document.createElement("option");
 						   option.value = codes[n];
