@@ -1044,7 +1044,12 @@
 						} else {
 							if (innerContent.endpoint && innerContent.element) {
 								// make the iframe
-								var iframe = cm.buildEmbedIframe(innerContent.endpoint,innerContent.element,false,'lightbox=1&state='+innerContent.state);
+								var sid = cm.session.getid(window.location.href.split('/').slice(0,3).join('/'));
+								var s = '';
+								if (sid) {
+									s = '&session_id=' + sid;
+								}
+								var iframe = cm.buildEmbedIframe(innerContent.endpoint,innerContent.element,false,'lightbox=1&state='+innerContent.state+s);
 								alert.appendChild(iframe);
 							} else {
 								alert.appendChild(innerContent);
