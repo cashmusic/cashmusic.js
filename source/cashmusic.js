@@ -206,6 +206,7 @@
 			_handleMessage: function(e) {
 				var cm = window.cashmusic;
 				var msg = JSON.parse(e.data);
+				var md = msg.data;
 				var source; // source embed (if from an embed)
 				// find the source of the message in our embeds object
 				for (var i = 0; i < cm.embeds.all.length; i++) {
@@ -215,8 +216,18 @@
 					}
 				}
 
+				// are we asking for a specific element to be targeted?
+				var target = false;
+				if (md.target) {
+					for (var i = 0; i < cm.embeds.all.length; i++) {
+						if (cm.embeds.all[i].id == md.target) {
+							target = cm.embeds.all[i].el.contentWindow;
+							break;
+						}
+					}
+				}
+
 				// now figure out what to do with it
-				var md = msg.data;
 				switch (msg.type) {
 					case 'resize':
 						source.el.height = md;
@@ -257,23 +268,23 @@
 						cm.session.setid(md);
 						break;
 					case 'begincheckout':
-						var target = e.source;
-						if (md.target) {
-							for (var i = 0; i < cm.embeds.all.length; i++) {
-								if (cm.embeds.all[i].id == md.target) {
-									target = cm.embeds.all[i].el.contentWindow;
-									break;
-								}
-							}
+						var el = target;
+						if (!el) {
+							el = e.source;
 						}
 						if (!cm.checkout) {
 							cm.loadScript(cm.path+'checkout/checkout.js', function() {
-								cm.checkout.begin(md,target);
+								cm.checkout.begin(md,el);
 							});
+							target = false;
 						} else {
-							cm.checkout.begin(md,target);
+							cm.checkout.begin(md,el);
+							target = false;
 						}
 						break;
+				}
+				if (target) {
+					cm.events.fire(cm,msg.type,md,target);
 				}
 			},
 
