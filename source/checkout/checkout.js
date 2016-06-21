@@ -474,7 +474,7 @@
 		prep: function () {
 			if (!cm.checkout.prepped) {
 				// add in styles
-				cm.styles.injectCSS(cm.path + 'templates/checkout.css',false,true);
+				cm.styles.injectCSS(cm.path + '/templates/checkout.css',false,true);
 				cm.checkout.prepped = true;
 			}
 		},

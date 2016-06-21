@@ -64,20 +64,37 @@
 			scripts: [],
 			embedded: false,
 			geo: false,
+			sessionid: false,
 
 			_init: function() {
 				var cm = window.cashmusic;
 
+				// look for GET string, parse that shit if we can
+				cm.get['qs'] =  window.location.search.substring(1);
+				cm.get['params'] = false;
+				if (cm.get['qs']) {
+					cm.get['params'] = {};
+					var t;
+					var q = cm.get['qs'].split("&");
+					for (var i = 0; i < q.length; i++) {
+						t = q[i].split('=');
+						cm.get['params'][t[0]] = decodeURIComponent(t[1]);
+					}
+				}
+
+				// start a session
+				cm.session.start(cm.path+'/request/payload');
+
 				// check lightbox options
 				if (cm.options.indexOf('lightboxvideo') !== -1) {
 					// load lightbox.js
-					cm.loadScript(cm.path+'lightbox/lightbox.js');
+					cm.loadScript(cm.path+'/lightbox/lightbox.js');
 				}
 
 				// look for .cashmusic.soundplayer divs/links
 				var soundTest = document.querySelectorAll('a.cashmusic.soundplayer,div.cashmusic.soundplayer');
 				if (soundTest.length > 0) {
-					cm.loadScript(cm.path+'soundplayer/soundplayer.js');
+					cm.loadScript(cm.path+'/soundplayer/soundplayer.js');
 				}
 
 				// if we're running in an iframe assume it's an embed (won't do any harm if not)
@@ -92,19 +109,6 @@
 						cm._handleMessage(e);
 					}
 				});
-
-				// look for GET string, parse that shit if we can
-				cm.get['qs'] =  window.location.search.substring(1);
-				cm.get['params'] = false;
-				if (cm.get['qs']) {
-					cm.get['params'] = {};
-					var t;
-					var q = cm.get['qs'].split("&");
-					for (var i = 0; i < q.length; i++) {
-						t = q[i].split('=');
-						cm.get['params'][t[0]] = decodeURIComponent(t[1]);
-					}
-				}
 
 				// add current domain to whitelist for postmesage calls (regardless of embed or no)
 				cm.embeds.whitelist += window.location.href.split('/').slice(0,3).join('/');
@@ -136,7 +140,7 @@
 					// seconds before declaring the script ready.
 					var l = 0;
 					var i = setInterval(function() {
-						if ((l < 25) && !cm.geo) {
+						if ((l < 25) && (!cm.geo && !cm.sessionid)) {
 							l++;
 						} else {
 							cm.loaded = Date.now(); // ready and loaded
@@ -273,7 +277,7 @@
 							el = e.source;
 						}
 						if (!cm.checkout) {
-							cm.loadScript(cm.path+'checkout/checkout.js', function() {
+							cm.loadScript(cm.path+'/checkout/checkout.js', function() {
 								cm.checkout.begin(md,el);
 							});
 							target = false;
@@ -338,15 +342,21 @@
 			 * a targetNode to serve as the anchor — with the embed chucked immediately after that
 			 * element in the DOM.
 			 */
-			embed: function(endPoint, elementId, lightboxed, lightboxTxt, targetNode, cssOverride) {
+			embed: function(elementId, endPoint, lightboxed, lightboxTxt, targetNode, cssOverride) {
 				var cm = window.cashmusic;
-				if (!targetNode) {
-					// if used non-AJAX we just grab the current place in the doc
-					// because we're running as the document is loading in a blocking fashion, the
-					// last script element will be the current script asset.
-					var allScripts = document.querySelectorAll('script');
-					var currentNode = allScripts[allScripts.length - 1];
+				// BACKWARDS COMPATIBILITY THING:
+				// make endPoint and elementId interchangeable
+				if (typeof elementId === 'string') {
+					if (elementId.substr(0,1) == 'h' || elementId.substr(0,1) == '/') {
+						elementId = [endPoint, endPoint = elementId][0]; // swap values for elementId and endPoint
+					}
 				}
+
+				// if used non-AJAX we just grab the current place in the doc
+				// because we're running as the document is loading in a blocking fashion, the
+				// last script element will be the current script asset.
+				var allScripts = document.querySelectorAll('script');
+				var currentNode = allScripts[allScripts.length - 1];
 				if (!cm.loaded) {
 					// cheap/fast queue waiting on geo. there's a 2.5s timeout on this. the geo
 					// request usually beats page load but this still seems smart and an acceptable
@@ -354,39 +364,37 @@
 					if (typeof cm.storage.elementQueue !== 'object') {
 						cm.storage.elementQueue = [];
 					}
-					// store the endpoint correctly
-					var id = currentNode.id;
-					if (!id) {
-						// no id? we
-						id = new Date().getTime(); // TODO: randomizethis name to avoid collision
-						id = 'cm-' + (Math.floor(Math.random() * 99999)) + '-' + id;
-						currentNode.setAttribute('id', id);
-					}
-					if (typeof endPoint === 'object') {
-						if (!endPoint.targetnode) {
-							endPoint.targetnode = '#' + id;
-							arguments[0] = endPoint;
+					if (typeof elementId === 'object') {
+						if (!elementId.targetnode) {
+							elementId.targetnode = currentNode;
+							arguments[0] = elementId;
 						}
 					} else {
-						arguments[4] = '#' + id;
+						arguments[4] = currentNode;
 					}
 					cm.storage.elementQueue.push(arguments);
 				} else {
 					// Allow for a single object to be passed instead of all arguments
 					// object properties should be lowercase versions of the standard arguments, any order
-					if (typeof endPoint === 'object') {
-						elementId   = endPoint.elementid ? endPoint.elementid : false;
-						lightboxed  = endPoint.lightboxed ? endPoint.lightboxed : false;
-						lightboxTxt = endPoint.lightboxtxt ? endPoint.lightboxtxt : false;
-						targetNode  = endPoint.targetnode ? endPoint.targetnode : false;
-						cssOverride = endPoint.cssoverride ? endPoint.cssoverride : false;;
-						endPoint   = endPoint.endpoint;
+					if (typeof elementId === 'object') {
+						lightboxed  = elementId.lightboxed ? elementId.lightboxed : false;
+						lightboxTxt = elementId.lightboxtxt ? elementId.lightboxtxt : false;
+						targetNode  = elementId.targetnode ? elementId.targetnode : false;
+						cssOverride = elementId.cssoverride ? elementId.cssoverride : false;
+						endPoint    = elementId.endpoint ? elementId.endpoint : false;
+						elementId   = elementId.elementid ? elementId.elementid : false;
 					}
 					if (typeof targetNode === 'string') {
 						// for AJAX, specify target node: '#id', '#id .class', etc. NEEDS to be specific
-						var currentNode = document.querySelector(targetNode);
+						currentNode = document.querySelector(targetNode);
 					} else {
-						var currentNode = targetNode;
+						currentNode = targetNode;
+					}
+
+					// if no endpoint is specified, let's try the default location,
+					// relative to the cashmusic.js location
+					if (!endPoint) {
+						endPoint = cm.path;
 					}
 
 					// make the iframe
@@ -473,7 +481,7 @@
 				} else {
 					// get the template
 					this.ajax.jsonp(
-						cm.path + 'templates/' + templateName + '.js',
+						cm.path + '/templates/' + templateName + '.js',
 						'callback',
 						function(json) {
 							templates[templateName] = json.template;
@@ -484,9 +492,9 @@
 
 
 					// check for existence of the CSS file and if not found, include it
-					var test = document.querySelectorAll('link[href="' + cm.path + 'templates/' + templateName + '.css' + '"]');
+					var test = document.querySelectorAll('link[href="' + cm.path + '/templates/' + templateName + '.css' + '"]');
 					if (!test.length ) { // if nothing found
-						cm.styles.injectCSS(cm.path + 'templates/' + templateName + '.css');
+						cm.styles.injectCSS(cm.path + '/templates/' + templateName + '.css');
 					}
 				}
 			},
@@ -736,7 +744,7 @@
 
 				getHeaderForURL: function(url,header,callback) {
 					var xhr = this.getXHR();
-					xhr.open('HEAD', 'https://javascript-cashmusic.netdna-ssl.com/cashmusic.js');
+					xhr.open('HEAD', url);
 					xhr.onreadystatechange = function() {
 						if (this.readyState == this.DONE) {
 							callback(this.getResponseHeader(header));
@@ -825,56 +833,77 @@
 			session: {
 				start: function(endpoint) {
 					var cm = window.cashmusic;
-					if (cm.embedded) {
-						if (!cm.session.getid(window.location.href.split('/').slice(0,3).join('/'))) {
-							if (!endpoint) {
-								endpoint = window.location.href.split('/embed/')[0]+'/payload';
-								endpoint += '?cash_request_type=system&cash_action=startjssession&ts=' + new Date().getTime();
-							}
-							// fire off the ajax call
-							cm.ajax.send(
-								endpoint,
-								false,
-								function(r) {
-									if (r) {
-										cm.events.fire(cm,'sessionstarted',r);
-										cm.session.setid(r);
-									}
+					if (!cm.sessionid) {
+						if (cm.get['params']['session_id']) {
+							cm.sessionid = cm.get['params']['session_id'];
+						} else {
+							var id = cm.session.getid(window.location.href.split('/').slice(0,3).join('/'));
+							if (!id) {
+								if (!endpoint) {
+									endpoint = window.location.href.split('/embed/')[0]+'/payload';
 								}
-							);
+								endpoint += '?cash_request_type=system&cash_action=startjssession&ts=' + new Date().getTime();
+								// fire off the ajax call
+								cm.ajax.send(
+									endpoint,
+									false,
+									function(r) {
+										if (r) {
+											cm.events.fire(cm,'sessionstarted',r);
+											cm.session.setid(r);
+										}
+									}
+								);
+							} else {
+								cm.sessionid = id;
+							}
 						}
 					}
 				},
 
 				setid: function(id) {
+					var cm = window.cashmusic;
 					var session = JSON.parse(id);
-					var sessions = localStorage.getItem('sessions');
-					if (!sessions) {
-						sessions = {};
-					} else {
-						sessions = JSON.parse(sessions);
-					}
-					sessions[session.endpoint] = {
-						"id":session.id,
-						"expiration":session.expiration
-					};
-					localStorage.setItem('sessions', JSON.stringify(sessions));
+					// first set the local session id
+					cm.sessionid = session.id;
+					// now try making it persistent
+					try {
+						var sessions = localStorage.getItem('sessions');
+						if (!sessions) {
+							sessions = {};
+						} else {
+							sessions = JSON.parse(sessions);
+						}
+						sessions[window.location.href.split('/').slice(0,3).join('/')] = {
+							"id":session.id,
+							"expiration":session.expiration
+						};
+						localStorage.setItem('sessions', JSON.stringify(sessions));
+					} catch (e) {}
 				},
 
 				getid: function(key) {
-					var sessions = false;
-					try {
-						sessions = localStorage.getItem('sessions');
-					} catch (e) {
-						sessions = false;
-					}
-					if (sessions) {
-						sessions = JSON.parse(sessions);
-						if (sessions[key]) {
-							if ((sessions[key].expiration) > Math.floor(new Date().getTime() /1000)) {
-								return sessions[key].id;
+					var cm = window.cashmusic;
+					if (!cm.sessionid) {
+						if (cm.get['params']['session_id']) {
+							return cm.get['params']['session_id'];
+						}
+						var sessions = false;
+						try {
+							sessions = localStorage.getItem('sessions');
+						} catch (e) {
+							sessions = false;
+						}
+						if (sessions) {
+							sessions = JSON.parse(sessions);
+							if (sessions[key]) {
+								if ((sessions[key].expiration) > Math.floor(new Date().getTime() /1000)) {
+									return sessions[key].id;
+								}
 							}
 						}
+					} else {
+						return cm.sessionid;
 					}
 					return false;
 				}
@@ -933,7 +962,7 @@
 					var self = cm.overlay;
 					var move = false;
 					if (self.wrapper === false) {
-						cm.styles.injectCSS(cm.path + 'templates/overlay.css');
+						cm.styles.injectCSS(cm.path + '/templates/overlay.css');
 
 						self.wrapper = document.querySelector('div.cm-wrapper');
 
@@ -1239,9 +1268,9 @@
 		// file location and path
 		var s = document.querySelector('script[src$="cashmusic.js"]');
 		if (s) {
-			// chop off last 12 characters for 'cashmusic.js' -- not just a replace in case
+			// chop off last 13 characters for '/cashmusic.js' -- not just a replace in case
 			// a directory is actually named 'cashmusic.js'
-			cashmusic.path = s.src.substr(0,s.src.length-12);
+			cashmusic.path = s.src.substr(0,s.src.length-13);
 		}
 		// get and store options
 		cashmusic.options = String(s.getAttribute('data-options'));
@@ -1251,15 +1280,31 @@
 			cashmusic.geo = h;
 		});
 
+		var checkEmbeds = function() {
+			// check for element definition in script data-element
+			var scripts = document.querySelectorAll('script[src$="cashmusic.js"]');
+			scripts.forEach(function(s) {
+				var el = s.getAttribute('data-element');
+				if (el) {
+					cashmusic.embed({
+						"elementid": el,
+						"targetnode": s
+					});
+				}
+			});
+		}
+
 		var init = function(){
 			// function traps cashmusic in a closure
 			if (cashmusic.options.indexOf('lazy') !== -1) {
 				// lazy mode...chill for a second
 				setTimeout(function() {
 					cashmusic._init(cashmusic);
+					checkEmbeds();
 				}, 1000);
 			} else {
 				cashmusic._init(cashmusic);
+				checkEmbeds();
 			}
 		};
 		cashmusic.contentLoaded(init); // loads only after the page is complete

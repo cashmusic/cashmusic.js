@@ -54,7 +54,7 @@
 	cm.measure.getPosition = function(element) {
 		var xPosition = 0;
 		var yPosition = 0;
-		  
+
 		while (element) {
 			xPosition += (element.offsetLeft - element.scrollLeft + element.clientLeft);
 			yPosition += (element.offsetTop - element.scrollTop + element.clientTop);
@@ -63,7 +63,7 @@
 		return { x: xPosition, y: yPosition };
 	};
 
-	// we need indexOf for the sake of figuring out if an id is part of a 
+	// we need indexOf for the sake of figuring out if an id is part of a
 	// larger playlist. IE8 is an asshole. so here goes.
 	// http://stackoverflow.com/a/1181586/1964808
 	if(!Array.prototype.indexOf) {
@@ -173,7 +173,7 @@
 						}
 						if (s) {
 							sp.toggle(s.id,true);
-							
+
 							e.returnValue = false;
 							if(e.preventDefault) e.preventDefault();
 							return false;
@@ -226,7 +226,7 @@
 		 * PUBLIC-ISH FUNCTIONS
 		 * Easily accessible wrappers for SM2 interaction. We also mock/replace some functions
 		 * to guarantee state and make playlist management easier. The idea being that we only
-		 * want one sound playing at a given time, so we force that behavior by managing 
+		 * want one sound playing at a given time, so we force that behavior by managing
 		 * window.cashmusic.soundplayer.playlist and window.cashmusic.soundplayer.sound and
 		 * only calling pause/play in central functions.
 		 *
@@ -277,7 +277,7 @@
 			sp.sound = sp.sound ? sp.sound : soundManager.getSoundById(id); // necesito para ie
 			if (sp.sound.id !== id) {
 				action();
-				sp.sound = soundManager.getSoundById(id);				
+				sp.sound = soundManager.getSoundById(id);
 			}
 			if (usestop && !sp.sound.paused && sp.sound.playState != 0) {
 				sp.stop();
@@ -339,7 +339,7 @@
 			/*
 			 * TODO:
 			 * this is where we need to check the ajax callback stuff
-			 * 
+			 *
 			 * if resolve is true, change the url and call the line below
 			 * in a callback instead of directly.
 			 *
@@ -353,7 +353,7 @@
 			/*
 			 * TODO:
 			 * this is where we need to check the ajax callback stuff
-			 * 
+			 *
 			 * if resolve is true, change the url and call the line below
 			 * in a callback instead of directly.
 			 *
@@ -374,7 +374,7 @@
 					url: playlist.tracks[n].url
 				});
 			}
-			
+
 			sp.playlists[playlist.id] = playlist;
 		 },
 
@@ -416,8 +416,8 @@
 
 					// pull desired starter content from template, insert it
 					var docontent = document.querySelectorAll(
-						'#' + container.id + ' div.cashmusic.soundplayer.playlist.nowplaying, ' + 
-						'#' + container.id + ' div.cashmusic.soundplayer.playlist.playtime, ' + 
+						'#' + container.id + ' div.cashmusic.soundplayer.playlist.nowplaying, ' +
+						'#' + container.id + ' div.cashmusic.soundplayer.playlist.playtime, ' +
 						'#' + container.id + ' div.cashmusic.soundplayer.playlist.toggletracklist'
 					);
 					var l = docontent.length;
@@ -502,7 +502,7 @@
 		/***************************************************************************************
 		 *
 		 * PSEUDO-EVENT CALLS
-		 * All of the querySelectorAll calls seem excessive, but we should respect the idea of 
+		 * All of the querySelectorAll calls seem excessive, but we should respect the idea of
 		 * dynamic DOM injection, AJAX, etc. Also these are mostly user-initiated so not often on
 		 * a hundreds-per-second scale.
 		 *
@@ -629,7 +629,7 @@
 			// get any required sound/player ids
 			if (typeof data.onSound !== 'undefined') soundId = data.onSound;
 			if (typeof data.onPlayer !== 'undefined') playerId = data.onPlayer;
-			
+
 			if (soundId) {
 				if (id.indexOf(soundId) === -1) return false;
 			}
@@ -694,10 +694,10 @@
 		 * window.cashmusic.soundplayer._updateTweens(elements,type,percentage)
 		 * Takes a collection of DOM elements and reads the JSON data stored in
 		 * their data-tween attribute, updating the styles based on the passed-in
-		 * percentage. A sample JSON object is below. 
+		 * percentage. A sample JSON object is below.
 		 *
-		 * Fires on progress for: play, load 
-		 * 
+		 * Fires on progress for: play, load
+		 *
 		 * {
 		 * 	"play":[
 		 * 		{
@@ -722,7 +722,7 @@
 		 * 		}
 		 * 	]
 		 * }
-		 * 
+		 *
 		 */
 		_updateTweens: function(elements,type,percentage,duration) {
 			var eLen = elements.length;
@@ -765,12 +765,12 @@
 
 		/*
 		 * window.cashmusic.soundplayer._updateStyles(elements,type)
-		 * Updates styles to fixed values for various audio-related events. This 
-		 * reads the data-styles attribute from a collection of DOM elements, 
-		 * updating them accordingly. A sample JSON object is below. 
+		 * Updates styles to fixed values for various audio-related events. This
+		 * reads the data-styles attribute from a collection of DOM elements,
+		 * updating them accordingly. A sample JSON object is below.
 		 *
 		 * Fires on events for: finish, pause, play, resume, stop, load
-		 * 
+		 *
 		 * {
 		 * 	"stop":[
 		 * 		{
@@ -849,14 +849,14 @@
 				}
 			}
 		},
-			
+
 
 
 
 
 		/*
 		 * window.cashmusic.soundplayer._formatPlaylist(playlist,useid,uniqueseed)
-		 * Takes a playlist and formats it, ensuring all required attributes are 
+		 * Takes a playlist and formats it, ensuring all required attributes are
 		 * set and assigns a unique id if none has been defined.
 		 *
 		 * Example playlist:
@@ -883,7 +883,7 @@
 		 * 		}
 		 * 	]
 		 * }
-		 * 
+		 *
 		 */
 		_formatPlaylist: function(playlist,useid,uniqueseed) {
 			playlist = playlist ? playlist : {};
@@ -913,7 +913,7 @@
 
 		/*
 		 * window.cashmusic.soundplayer._inPlaylist(playlistid,soundid)
-		 * Tests if a current sound id is present in a given playlist. Matches using indexof so 
+		 * Tests if a current sound id is present in a given playlist. Matches using indexof so
 		 * any playlist id appended in front of a known/set id won't break the match. This makes
 		 * it a slightly fuzzy match, but provides more upside than down.
 		 */
@@ -930,7 +930,7 @@
 
 
 	window.SM2_DEFER = true; // force SM2 to defer auto-init, allow us to change defaults, etc.
-	cm.loadScript(cm.path+'lib/soundmanager/soundmanager2.js', function() {
+	cm.loadScript(cm.path+'/lib/soundmanager/soundmanager2.js', function() {
 		sp = cm.soundplayer;
 		window.soundManager = new SoundManager();
 
@@ -945,7 +945,7 @@
 			debugFlash: false,
 			preferFlash: false,
 			allowScriptAccess: 'always',
-			url: cm.path+'lib/soundmanager/swf/',
+			url: cm.path+'/lib/soundmanager/swf/',
 			flashVersion: 8,
 			flashLoadTimeout: 7500,
 			flashPollingInterval:30,
