@@ -12,7 +12,7 @@
  * @author CASH Music
  * @link http://cashmusic.org/
  *
- * Copyright (c) 2013, CASH Music
+ * Copyright (c) 2015, CASH Music
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -43,35 +43,17 @@
 	cm.lightbox = {
 		injectIframe: function(url) {
 			var self = cm.lightbox;
-			
-			var vp = cm.measure.viewport();
 			var parsedUrl = self.parseVideoURL(url);
-
-			if (vp.x > vp.y && (vp.y * (16/9)) < vp.x) {
-				var iframePadding = vp.y / 10;
-				var iFrameWidth = Math.ceil((vp.y - (iframePadding * 2)) * (16/9));
-			} else {
-				var iFrameWidth = Math.ceil((vp.x / 12) * 10);
-				var iframePadding = (vp.y / 2) - ((iFrameWidth * 0.5625) /2);
-			}
-
-			cm.overlay.resize(iframePadding + 'px','50%',iFrameWidth + 'px',(0 - (iFrameWidth) / 2) + 'px');
-
-			var wrapper = document.createElement('div');
-			wrapper.style.position = 'relative';
-			wrapper.style.paddingBottom = '56.25%';
-			wrapper.style.height = 0;
-			wrapper.style.backgroundColor = '#000';
-
-			wrapper.innerHTML = '<iframe src="' + parsedUrl + '" style="position:absolute;top:0;left:0;width:100%;height:100%;" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>';
-
-			cm.overlay.content.appendChild(wrapper);
+			cm.overlay.reveal(
+				'<div class="cm-aspect"><iframe src="' + parsedUrl + '" style="position:absolute;top:0;left:0;width:100%;height:100%;" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe></div>',
+				'cm-media'
+			);
 		},
 
 		parseVideoURL: function(url) {
 			/*
 			Function parseVideoURL(string url)
-			Accepts a URL, checks for validity youtube/vimeo, and returns a direct URL for 
+			Accepts a URL, checks for validity youtube/vimeo, and returns a direct URL for
 			the embeddable URL. Returns false if no known format is found.
 			*/
 			var parsed = false;
@@ -84,13 +66,13 @@
 				parsed = url.replace('www.','');
 				parsed = parsed.replace('vimeo.com/','player.vimeo.com/video/');
 				parsed += '?title=1&byline=1&portrait=1&autoplay=1';
-			} 
+			}
 			return parsed;
 		}
 	};
 
 	// look for links to video sites
-	var as = document.querySelectorAll('a[href*="youtube.com"],a[href*="vimeo.com"]');
+	var as = document.querySelectorAll('a[href*="youtube.com/watch?v="],a[href*="vimeo.com"]');
 	if (as.length > 0) {
 		cm.overlay.create(function() {
 			for (var i = 0; i < as.length; ++i) {
@@ -98,7 +80,7 @@
 					if (cm.measure.viewport().x > 400 && !e.metaKey) {
 						// do the overlay thing
 						var url = e.currentTarget.href;
-						cm.fader.init(cm.overlay.bg, 100, function() {cm.lightbox.injectIframe(url)});
+						cm.lightbox.injectIframe(url);
 
 						e.preventDefault();
 						return false;
