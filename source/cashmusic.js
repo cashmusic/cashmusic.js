@@ -357,6 +357,7 @@
 				// last script element will be the current script asset.
 				var allScripts = document.querySelectorAll('script');
 				var currentNode = allScripts[allScripts.length - 1];
+
 				if (!cm.loaded) {
 					// cheap/fast queue waiting on geo. there's a 2.5s timeout on this. the geo
 					// request usually beats page load but this still seems smart and an acceptable
@@ -1283,15 +1284,18 @@
 		var checkEmbeds = function() {
 			// check for element definition in script data-element
 			var scripts = document.querySelectorAll('script[src$="cashmusic.js"]');
-			scripts.forEach(function(s) {
-				var el = s.getAttribute('data-element');
-				if (el) {
-					cashmusic.embed({
-						"elementid": el,
-						"targetnode": s
-					});
-				}
-			});
+			if (typeof scripts == 'object') {
+				var sA = Array.prototype.slice.call(scripts);
+				sA.forEach(function(s) {
+					var el = s.getAttribute('data-element');
+					if (el) {
+						cashmusic.embed({
+							"elementid": el,
+							"targetnode": s
+						});
+					}
+				});
+			}
 		}
 
 		var init = function(){
