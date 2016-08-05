@@ -35,7 +35,7 @@
  *
  *
  *
- * VERSION: 5
+ * VERSION: 6
  *
  **/
 
@@ -63,8 +63,8 @@
 			storage: {},
 			scripts: [],
 			embedded: false,
-			geo: false,
-			sessionid: false,
+			geo: null,
+			sessionid: null, // will set to FALSE on request. this must be NULL here
 
 			_init: function() {
 				var cm = window.cashmusic;
@@ -82,8 +82,13 @@
 					}
 				}
 
+				// if we're running in an iframe assume it's an embed (won't do any harm if not)
+				if (self !== top) {
+					cm._initEmbed();
+				}
+
 				// start a session
-				cm.session.start(cm.path+'/request/payload');
+				cm.session.start();
 
 				// check lightbox options
 				if (cm.options.indexOf('lightboxvideo') !== -1) {
@@ -95,11 +100,6 @@
 				var soundTest = document.querySelectorAll('a.cashmusic.soundplayer,div.cashmusic.soundplayer');
 				if (soundTest.length > 0) {
 					cm.loadScript(cm.path+'/soundplayer/soundplayer.js');
-				}
-
-				// if we're running in an iframe assume it's an embed (won't do any harm if not)
-				if (self !== top) {
-					cm._initEmbed();
 				}
 
 				// using messages passed between the request and this script to resize the iframe
@@ -140,9 +140,10 @@
 					// seconds before declaring the script ready.
 					var l = 0;
 					var i = setInterval(function() {
-						if ((l < 25) && (!cm.geo && !cm.sessionid)) {
+						if ((l < 50) && (!cm.geo || !cm.sessionid)) {
 							l++;
 						} else {
+							console.log('session id: ' + cm.sessionid + ', total loops: ' + l);
 							cm.loaded = Date.now(); // ready and loaded
 							// and since we're ready kill the loops
 							clearInterval(i);
@@ -267,9 +268,6 @@
 						break;
 					case 'swapclasses':
 						cm.styles.swapClasses(md.el,md.oldclass,md.newclass);
-						break;
-					case 'sessionstarted':
-						cm.session.setid(md);
 						break;
 					case 'begincheckout':
 						var el = target;
@@ -451,9 +449,8 @@
 						embedURL += '&' + cm.get['qs'];
 					}
 				}
-				var sid = cm.session.getid(endpoint.split('/').slice(0,3).join('/'));
-				if (sid) {
-					embedURL += '&session_id=' + sid;
+				if (cm.sessionid) {
+					embedURL += '&session_id=' + cm.sessionid;
 				}
 				var iframe = document.createElement('iframe');
 					iframe.src = embedURL;
@@ -629,20 +626,19 @@
 				send: function(url,postString,successCallback,failureCallback) {
 					var cm = window.cashmusic;
 					var method = 'POST';
-					var sid = cm.session.getid(window.location.href.split('/').slice(0,3).join('/'));
 					if (!postString) {
 						method = 'GET';
 						postString = null;
-						if (sid) {
+						if (cm.sessionid) {
 							if (url.indexOf('?') === -1) {
-								url += '?session_id=' + sid;
+								url += '?session_id=' + cm.sessionid;
 							} else {
-								url += '&session_id=' + sid;
+								url += '&session_id=' + cm.sessionid;
 							}
 						}
 					} else {
-						if (sid) {
-							postString += '&session_id=' + sid;
+						if (cm.sessionid) {
+							postString += '&session_id=' + cm.sessionid;
 						}
 					}
 					var xhr = this.getXHR();
@@ -832,32 +828,13 @@
 			 *
 			 ***************************************************************************************/
 			session: {
-				start: function(endpoint) {
+				start: function() {
 					var cm = window.cashmusic;
 					if (!cm.sessionid) {
 						if (cm.get['params']['session_id']) {
 							cm.sessionid = cm.get['params']['session_id'];
 						} else {
 							var id = cm.session.getid(window.location.href.split('/').slice(0,3).join('/'));
-							if (!id) {
-								if (!endpoint) {
-									endpoint = window.location.href.split('/embed/')[0]+'/payload';
-								}
-								endpoint += '?cash_request_type=system&cash_action=startjssession&ts=' + new Date().getTime();
-								// fire off the ajax call
-								cm.ajax.send(
-									endpoint,
-									false,
-									function(r) {
-										if (r) {
-											cm.events.fire(cm,'sessionstarted',r);
-											cm.session.setid(r);
-										}
-									}
-								);
-							} else {
-								cm.sessionid = id;
-							}
 						}
 					}
 				},
@@ -868,45 +845,74 @@
 					// first set the local session id
 					cm.sessionid = session.id;
 					// now try making it persistent
-					try {
-						var sessions = localStorage.getItem('sessions');
-						if (!sessions) {
-							sessions = {};
-						} else {
-							sessions = JSON.parse(sessions);
-						}
-						sessions[window.location.href.split('/').slice(0,3).join('/')] = {
-							"id":session.id,
-							"expiration":session.expiration
-						};
-						localStorage.setItem('sessions', JSON.stringify(sessions));
-					} catch (e) {}
+					if (!cm.embedded) {
+						try {
+							var sessions = localStorage.getItem('sessions');
+							if (!sessions) {
+								sessions = {};
+							} else {
+								sessions = JSON.parse(sessions);
+							}
+							sessions[window.location.href.split('/').slice(0,3).join('/')] = {
+								"id":session.id,
+								"expiration":session.expiration
+							};
+							localStorage.setItem('sessions', JSON.stringify(sessions));
+						} catch (e) {}
+					}
 				},
 
 				getid: function(key) {
 					var cm = window.cashmusic;
 					if (!cm.sessionid) {
+						// first pass, check for a session_id=x GET param
 						if (cm.get['params']['session_id']) {
-							return cm.get['params']['session_id'];
+							cm.sessionid = cm.get['params']['session_id'];
 						}
+					}
+					if (!cm.sessionid && !cm.embedded) {
+						// okay so no GET param. look in localstorage
+						// skip this for embeds — we key on URL and in embeds they are all the same, so...
+						// ...we'll run into overlap this way. all embeds should have GET params.
 						var sessions = false;
 						try {
-							sessions = localStorage.getItem('sessions');
+							sessions = localStorage.getItem('sessions'); // may not have access, so use a try
 						} catch (e) {
 							sessions = false;
 						}
 						if (sessions) {
 							sessions = JSON.parse(sessions);
 							if (sessions[key]) {
-								if ((sessions[key].expiration) > Math.floor(new Date().getTime() /1000)) {
-									return sessions[key].id;
+								if ((sessions[key].expiration) > Math.floor(new Date().getTime()/1000)) {
+									cm.sessionid = sessions[key].id;
+								} else {
+									delete sessions[key];
+									localStorage.setItem('sessions', JSON.stringify(sessions));
 								}
 							}
 						}
-					} else {
-						return cm.sessionid;
 					}
-					return false;
+					if (cm.sessionid === null && !cm.embedded) {
+						// before anything else: change cm.sessionid to FALSE to signify that we're requesting
+						// a new session id. that will stop this block from executing a second time
+						cm.sessionid = false;
+						// okay so no GET and no localstorage. ask the serversessionstart
+						var endpoint = cm.path.replace('public','api')+'/verbose/system/startjssession';
+						endpoint += '?ts=' + new Date().getTime();
+						// fire off the ajax call
+						cm.ajax.send(
+							endpoint,
+							false,
+							function(r) {
+								if (r) {
+									var rp = JSON.parse(r);
+									cm.session.setid(rp.payload);
+									cm.events.fire(cm,'sessionstarted',rp.payload);
+								}
+							}
+						);
+					}
+					return cm.sessionid;
 				}
 			},
 
@@ -1085,10 +1091,9 @@
 						} else {
 							if (innerContent.endpoint && innerContent.element) {
 								// make the iframe
-								var sid = cm.session.getid(window.location.href.split('/').slice(0,3).join('/'));
 								var s = '';
-								if (sid) {
-									s = '&session_id=' + sid;
+								if (cm.sessionid) {
+									s = '&session_id=' + cm.sessionid;
 								}
 								var iframe = cm.buildEmbedIframe(innerContent.endpoint,innerContent.element,false,'lightbox=1&state='+innerContent.state+s);
 								alert.appendChild(iframe);
@@ -1276,10 +1281,12 @@
 		// get and store options
 		cashmusic.options = String(s.getAttribute('data-options'));
 
-		// start on geo-ip data early
-		cashmusic.ajax.getHeaderForURL('https://javascript-cashmusic.netdna-ssl.com/cashmusic.js','GeoIp-Data',function(h) {
-			cashmusic.geo = h;
-		});
+		if (self === top) {
+			// start on geo-ip data early (only if not embedded)
+			cashmusic.ajax.getHeaderForURL('https://javascript-cashmusic.netdna-ssl.com/cashmusic.js','GeoIp-Data',function(h) {
+				cashmusic.geo = h;
+			});
+		}
 
 		var checkEmbeds = function() {
 			// check for element definition in script data-element
