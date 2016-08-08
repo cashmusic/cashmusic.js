@@ -52,19 +52,20 @@
 				whitelist: '',
 				all: []
 			},
-			get: {},
-			loaded: false,
-			soundplayer: false,
-			lightbox: false,
-			options:'',
-			path:'',
-			templates: {},
-			eventlist: {},
-			storage: {},
-			scripts: [],
-			embedded: false,
-			geo: null,
-			sessionid: null, // will set to FALSE on request. this must be NULL here
+			embedded: 		false,
+			eventlist: 		{},
+			geo: 				null,
+			get: 				{},
+			lightbox: 		false,
+			loaded: 			false,
+			name:				'',
+			options:			'',
+			path:				'',
+			scripts: 		[],
+			sessionid: 		null, // will set to FALSE on request. this must be NULL here
+			soundplayer: 	false,
+			storage: 		{},
+			templates: 		{},
 
 			_init: function() {
 				var cm = window.cashmusic;
@@ -82,9 +83,15 @@
 					}
 				}
 
+				if (cm.get['params']['debug']) {
+					cm.debug.show = true;
+				}
+
 				// if we're running in an iframe assume it's an embed (won't do any harm if not)
 				if (self !== top) {
 					cm._initEmbed();
+				} else {
+					cm.name = 'main window';
 				}
 
 				// start a session
@@ -119,6 +126,10 @@
 				if (cm.embedded) {
 					cm.loaded = Date.now(); // ready and loaded
 					cm._drawQueuedEmbeds();
+					cm.debug.store('session id set: ' + cm.sessionid);
+					if (cm.debug.show) {
+						cm.debug.out('finished initializing',cm);
+					}
 					// tell em
 					cm.events.fire(cm,'ready',cm.loaded);
 				} else {
@@ -143,13 +154,18 @@
 						if ((l < 50) && (!cm.geo || !cm.sessionid)) {
 							l++;
 						} else {
-							console.log('session id: ' + cm.sessionid + ', total loops: ' + l);
+							cm.debug.store('session id set: ' + cm.sessionid);
+							cm.debug.store('geo acquired: ' + cm.geo);
+							cm.debug.store('total delay: ' + l*100 + 'ms');
 							cm.loaded = Date.now(); // ready and loaded
 							// and since we're ready kill the loops
 							clearInterval(i);
+							cm._drawQueuedEmbeds();
+							if (cm.debug.show) {
+								cm.debug.out('finished initializing',cm);
+							}
 							// tell em
 							cm.events.fire(cm,'ready',cm.loaded);
-							cm._drawQueuedEmbeds();
 						}
 					}, 100);
 				}
@@ -180,6 +196,8 @@
 					// use element classes to identify type and id of element
 					var cl = el.className.split(' ');
 					cm.events.fire(cm,'identify',[cl[2],cl[3].substr(3)]); // [type, id]
+
+					cm.name = 'element #' + cl[3].substr(3) + ' / ' + cl[2];
 
 					// poll for height and fire resize event if it changes
 					window.setInterval(function() {
@@ -452,6 +470,9 @@
 				if (cm.sessionid) {
 					embedURL += '&session_id=' + cm.sessionid;
 				}
+				if (cm.debug.show) {
+					embedURL += '&debug=1';
+				}
 				var iframe = document.createElement('iframe');
 					iframe.src = embedURL;
 					iframe.id = 'cm-' + new Date().getTime(); // prevent Safari from using old data.
@@ -467,6 +488,8 @@
 					cm.embeds.whitelist = cm.embeds.whitelist + origin;
 				}
 				cm.embeds.all.push({el:iframe,id:id,type:''});
+
+				cm.debug.store('building iframe for element #' + id);
 
 				return iframe;
 			},
@@ -567,6 +590,14 @@
 					};
 					head.insertBefore( script, head.firstChild );
 				}
+				// log it
+				if (cm.debug.show) {
+					if (!cm.loaded) {
+						cm.debug.store('loaded script: ' + url);
+					} else {
+						cm.debug.out('loaded script: ' + url);
+					}
+				}
 			},
 
 			// found: http://css-tricks.com/snippets/javascript/get-url-variables/
@@ -582,7 +613,56 @@
 				return(false);
 			},
 
+			/***************************************************************************************
+ 			 *
+ 			 * window.cashmusic.debug (object)
+ 			 * Store debug messages for grouping OR dump a message / all stored messages
+ 			 *
+ 			 * PUBLIC-ISH FUNCTIONS
+ 			 * window.cashmusic.debug.store(string msg,optional object o)
+ 			 * window.cashmusic.debug.out(string msg,optional object o)
+ 			 *
+ 			 ***************************************************************************************/
+			debug: {
+				show: false,
 
+				store: function(msg,o) {
+					// making a debug message queue
+					var cm = window.cashmusic;
+					if (!cm.storage.debug) {
+						cm.storage.debug = [];
+					}
+					cm.storage.debug.push({"msg":msg,"o":o});
+				},
+
+				out: function(msg,o) {
+					var cm = window.cashmusic;
+					if (!cm.storage.debug) {
+						// no queue: just spit out the message and (optionally) object
+						if (o) {
+							console.log('%cⓃ ' + cm.name + ': ' + msg + ' %o', 'color: #FF00FF;', o);
+						} else {
+							console.log('%cⓃ ' + cm.name + ': ' + msg, 'color: #FF00FF;');
+						}
+					} else {
+						// queue: run through all of it as part of a collapsed group
+						console.groupCollapsed('%cⓃ ' + cm.name + ': ' + msg, 'color: #FF00FF;');
+						if (o) {
+							console.log('   attachment: %o', o);
+						}
+						cm.storage.debug.forEach(function(d) {
+							if (d.o) {
+								console.log('   ' + d.msg + ' %o', d.o);
+							} else {
+								console.log('   ' + d.msg);
+							}
+						});
+						console.groupEnd();
+						// now clear the debug queue
+						delete cm.storage.debug;
+					}
+				}
+			},
 
 			/***************************************************************************************
 			 *
@@ -810,6 +890,14 @@
 					}
 					if (cm.embedded) {
 						cm.events.relay(type,data);
+					}
+					// log it
+					if (cm.debug.show) {
+						if (!cm.loaded) {
+							cm.debug.store('firing ' + type + ' event.',data);
+						} else {
+							cm.debug.out('firing ' + type + ' event.',data);
+						}
 					}
 				},
 
