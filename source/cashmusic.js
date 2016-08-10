@@ -35,7 +35,7 @@
  *
  *
  *
- * VERSION: 5
+ * VERSION: 6
  *
  **/
 
@@ -52,19 +52,20 @@
 				whitelist: '',
 				all: []
 			},
-			get: {},
-			loaded: false,
-			soundplayer: false,
-			lightbox: false,
-			options:'',
-			path:'',
-			templates: {},
-			eventlist: {},
-			storage: {},
-			scripts: [],
-			embedded: false,
-			geo: false,
-			sessionid: false,
+			embedded: 		false,
+			eventlist: 		{},
+			geo: 				null,
+			get: 				{},
+			lightbox: 		false,
+			loaded: 			false,
+			name:				'',
+			options:			'',
+			path:				'',
+			scripts: 		[],
+			sessionid: 		null, // will set to FALSE on request. this must be NULL here
+			soundplayer: 	false,
+			storage: 		{},
+			templates: 		{},
 
 			_init: function() {
 				var cm = window.cashmusic;
@@ -82,8 +83,19 @@
 					}
 				}
 
+				if (cm.get['params']['debug']) {
+					cm.debug.show = true;
+				}
+
+				// if we're running in an iframe assume it's an embed (won't do any harm if not)
+				if (self !== top) {
+					cm._initEmbed();
+				} else {
+					cm.name = 'main window';
+				}
+
 				// start a session
-				cm.session.start(cm.path+'/request/payload');
+				cm.session.start();
 
 				// check lightbox options
 				if (cm.options.indexOf('lightboxvideo') !== -1) {
@@ -95,11 +107,6 @@
 				var soundTest = document.querySelectorAll('a.cashmusic.soundplayer,div.cashmusic.soundplayer');
 				if (soundTest.length > 0) {
 					cm.loadScript(cm.path+'/soundplayer/soundplayer.js');
-				}
-
-				// if we're running in an iframe assume it's an embed (won't do any harm if not)
-				if (self !== top) {
-					cm._initEmbed();
 				}
 
 				// using messages passed between the request and this script to resize the iframe
@@ -119,6 +126,10 @@
 				if (cm.embedded) {
 					cm.loaded = Date.now(); // ready and loaded
 					cm._drawQueuedEmbeds();
+					cm.debug.store('session id set: ' + cm.sessionid);
+					if (cm.debug.show) {
+						cm.debug.out('finished initializing',cm);
+					}
 					// tell em
 					cm.events.fire(cm,'ready',cm.loaded);
 				} else {
@@ -140,15 +151,21 @@
 					// seconds before declaring the script ready.
 					var l = 0;
 					var i = setInterval(function() {
-						if ((l < 25) && (!cm.geo && !cm.sessionid)) {
+						if ((l < 50) && (!cm.geo || !cm.sessionid)) {
 							l++;
 						} else {
+							cm.debug.store('session id set: ' + cm.sessionid);
+							cm.debug.store('geo acquired: ' + cm.geo);
+							cm.debug.store('total delay: ' + l*100 + 'ms');
 							cm.loaded = Date.now(); // ready and loaded
 							// and since we're ready kill the loops
 							clearInterval(i);
+							cm._drawQueuedEmbeds();
+							if (cm.debug.show) {
+								cm.debug.out('finished initializing',cm);
+							}
 							// tell em
 							cm.events.fire(cm,'ready',cm.loaded);
-							cm._drawQueuedEmbeds();
 						}
 					}, 100);
 				}
@@ -179,6 +196,8 @@
 					// use element classes to identify type and id of element
 					var cl = el.className.split(' ');
 					cm.events.fire(cm,'identify',[cl[2],cl[3].substr(3)]); // [type, id]
+
+					cm.name = 'element #' + cl[3].substr(3) + ' / ' + cl[2];
 
 					// poll for height and fire resize event if it changes
 					window.setInterval(function() {
@@ -268,9 +287,6 @@
 					case 'swapclasses':
 						cm.styles.swapClasses(md.el,md.oldclass,md.newclass);
 						break;
-					case 'sessionstarted':
-						cm.session.setid(md);
-						break;
 					case 'begincheckout':
 						var el = target;
 						if (!el) {
@@ -357,6 +373,7 @@
 				// last script element will be the current script asset.
 				var allScripts = document.querySelectorAll('script');
 				var currentNode = allScripts[allScripts.length - 1];
+
 				if (!cm.loaded) {
 					// cheap/fast queue waiting on geo. there's a 2.5s timeout on this. the geo
 					// request usually beats page load but this still seems smart and an acceptable
@@ -450,9 +467,11 @@
 						embedURL += '&' + cm.get['qs'];
 					}
 				}
-				var sid = cm.session.getid(endpoint.split('/').slice(0,3).join('/'));
-				if (sid) {
-					embedURL += '&session_id=' + sid;
+				if (cm.sessionid) {
+					embedURL += '&session_id=' + cm.sessionid;
+				}
+				if (cm.debug.show) {
+					embedURL += '&debug=1';
 				}
 				var iframe = document.createElement('iframe');
 					iframe.src = embedURL;
@@ -469,6 +488,8 @@
 					cm.embeds.whitelist = cm.embeds.whitelist + origin;
 				}
 				cm.embeds.all.push({el:iframe,id:id,type:''});
+
+				cm.debug.store('building iframe for element #' + id);
 
 				return iframe;
 			},
@@ -569,6 +590,14 @@
 					};
 					head.insertBefore( script, head.firstChild );
 				}
+				// log it
+				if (cm.debug.show) {
+					if (!cm.loaded) {
+						cm.debug.store('loaded script: ' + url);
+					} else {
+						cm.debug.out('loaded script: ' + url);
+					}
+				}
 			},
 
 			// found: http://css-tricks.com/snippets/javascript/get-url-variables/
@@ -584,7 +613,56 @@
 				return(false);
 			},
 
+			/***************************************************************************************
+ 			 *
+ 			 * window.cashmusic.debug (object)
+ 			 * Store debug messages for grouping OR dump a message / all stored messages
+ 			 *
+ 			 * PUBLIC-ISH FUNCTIONS
+ 			 * window.cashmusic.debug.store(string msg,optional object o)
+ 			 * window.cashmusic.debug.out(string msg,optional object o)
+ 			 *
+ 			 ***************************************************************************************/
+			debug: {
+				show: false,
 
+				store: function(msg,o) {
+					// making a debug message queue
+					var cm = window.cashmusic;
+					if (!cm.storage.debug) {
+						cm.storage.debug = [];
+					}
+					cm.storage.debug.push({"msg":msg,"o":o});
+				},
+
+				out: function(msg,o) {
+					var cm = window.cashmusic;
+					if (!cm.storage.debug) {
+						// no queue: just spit out the message and (optionally) object
+						if (o) {
+							console.log('%cⓃ ' + cm.name + ': ' + msg + ' %o', 'color: #FF00FF;', o);
+						} else {
+							console.log('%cⓃ ' + cm.name + ': ' + msg, 'color: #FF00FF;');
+						}
+					} else {
+						// queue: run through all of it as part of a collapsed group
+						console.groupCollapsed('%cⓃ ' + cm.name + ': ' + msg, 'color: #FF00FF;');
+						if (o) {
+							console.log('   attachment: %o', o);
+						}
+						cm.storage.debug.forEach(function(d) {
+							if (d.o) {
+								console.log('   ' + d.msg + ' %o', d.o);
+							} else {
+								console.log('   ' + d.msg);
+							}
+						});
+						console.groupEnd();
+						// now clear the debug queue
+						delete cm.storage.debug;
+					}
+				}
+			},
 
 			/***************************************************************************************
 			 *
@@ -628,20 +706,19 @@
 				send: function(url,postString,successCallback,failureCallback) {
 					var cm = window.cashmusic;
 					var method = 'POST';
-					var sid = cm.session.getid(window.location.href.split('/').slice(0,3).join('/'));
 					if (!postString) {
 						method = 'GET';
 						postString = null;
-						if (sid) {
+						if (cm.sessionid) {
 							if (url.indexOf('?') === -1) {
-								url += '?session_id=' + sid;
+								url += '?session_id=' + cm.sessionid;
 							} else {
-								url += '&session_id=' + sid;
+								url += '&session_id=' + cm.sessionid;
 							}
 						}
 					} else {
-						if (sid) {
-							postString += '&session_id=' + sid;
+						if (cm.sessionid) {
+							postString += '&session_id=' + cm.sessionid;
 						}
 					}
 					var xhr = this.getXHR();
@@ -814,6 +891,14 @@
 					if (cm.embedded) {
 						cm.events.relay(type,data);
 					}
+					// log it
+					if (cm.debug.show) {
+						if (!cm.loaded) {
+							cm.debug.store('firing ' + type + ' event.',data);
+						} else {
+							cm.debug.out('firing ' + type + ' event.',data);
+						}
+					}
 				},
 
 				relay: function(type,data) {
@@ -831,32 +916,13 @@
 			 *
 			 ***************************************************************************************/
 			session: {
-				start: function(endpoint) {
+				start: function() {
 					var cm = window.cashmusic;
 					if (!cm.sessionid) {
 						if (cm.get['params']['session_id']) {
 							cm.sessionid = cm.get['params']['session_id'];
 						} else {
 							var id = cm.session.getid(window.location.href.split('/').slice(0,3).join('/'));
-							if (!id) {
-								if (!endpoint) {
-									endpoint = window.location.href.split('/embed/')[0]+'/payload';
-								}
-								endpoint += '?cash_request_type=system&cash_action=startjssession&ts=' + new Date().getTime();
-								// fire off the ajax call
-								cm.ajax.send(
-									endpoint,
-									false,
-									function(r) {
-										if (r) {
-											cm.events.fire(cm,'sessionstarted',r);
-											cm.session.setid(r);
-										}
-									}
-								);
-							} else {
-								cm.sessionid = id;
-							}
 						}
 					}
 				},
@@ -867,45 +933,74 @@
 					// first set the local session id
 					cm.sessionid = session.id;
 					// now try making it persistent
-					try {
-						var sessions = localStorage.getItem('sessions');
-						if (!sessions) {
-							sessions = {};
-						} else {
-							sessions = JSON.parse(sessions);
-						}
-						sessions[window.location.href.split('/').slice(0,3).join('/')] = {
-							"id":session.id,
-							"expiration":session.expiration
-						};
-						localStorage.setItem('sessions', JSON.stringify(sessions));
-					} catch (e) {}
+					if (!cm.embedded) {
+						try {
+							var sessions = localStorage.getItem('sessions');
+							if (!sessions) {
+								sessions = {};
+							} else {
+								sessions = JSON.parse(sessions);
+							}
+							sessions[window.location.href.split('/').slice(0,3).join('/')] = {
+								"id":session.id,
+								"expiration":session.expiration
+							};
+							localStorage.setItem('sessions', JSON.stringify(sessions));
+						} catch (e) {}
+					}
 				},
 
 				getid: function(key) {
 					var cm = window.cashmusic;
 					if (!cm.sessionid) {
+						// first pass, check for a session_id=x GET param
 						if (cm.get['params']['session_id']) {
-							return cm.get['params']['session_id'];
+							cm.sessionid = cm.get['params']['session_id'];
 						}
+					}
+					if (!cm.sessionid && !cm.embedded) {
+						// okay so no GET param. look in localstorage
+						// skip this for embeds — we key on URL and in embeds they are all the same, so...
+						// ...we'll run into overlap this way. all embeds should have GET params.
 						var sessions = false;
 						try {
-							sessions = localStorage.getItem('sessions');
+							sessions = localStorage.getItem('sessions'); // may not have access, so use a try
 						} catch (e) {
 							sessions = false;
 						}
 						if (sessions) {
 							sessions = JSON.parse(sessions);
 							if (sessions[key]) {
-								if ((sessions[key].expiration) > Math.floor(new Date().getTime() /1000)) {
-									return sessions[key].id;
+								if ((sessions[key].expiration) > Math.floor(new Date().getTime()/1000)) {
+									cm.sessionid = sessions[key].id;
+								} else {
+									delete sessions[key];
+									localStorage.setItem('sessions', JSON.stringify(sessions));
 								}
 							}
 						}
-					} else {
-						return cm.sessionid;
 					}
-					return false;
+					if (cm.sessionid === null && !cm.embedded) {
+						// before anything else: change cm.sessionid to FALSE to signify that we're requesting
+						// a new session id. that will stop this block from executing a second time
+						cm.sessionid = false;
+						// okay so no GET and no localstorage. ask the serversessionstart
+						var endpoint = cm.path.replace('public','api')+'/verbose/system/startjssession';
+						endpoint += '?ts=' + new Date().getTime();
+						// fire off the ajax call
+						cm.ajax.send(
+							endpoint,
+							false,
+							function(r) {
+								if (r) {
+									var rp = JSON.parse(r);
+									cm.session.setid(rp.payload);
+									cm.events.fire(cm,'sessionstarted',rp.payload);
+								}
+							}
+						);
+					}
+					return cm.sessionid;
 				}
 			},
 
@@ -1084,10 +1179,9 @@
 						} else {
 							if (innerContent.endpoint && innerContent.element) {
 								// make the iframe
-								var sid = cm.session.getid(window.location.href.split('/').slice(0,3).join('/'));
 								var s = '';
-								if (sid) {
-									s = '&session_id=' + sid;
+								if (cm.sessionid) {
+									s = '&session_id=' + cm.sessionid;
 								}
 								var iframe = cm.buildEmbedIframe(innerContent.endpoint,innerContent.element,false,'lightbox=1&state='+innerContent.state+s);
 								alert.appendChild(iframe);
@@ -1275,23 +1369,28 @@
 		// get and store options
 		cashmusic.options = String(s.getAttribute('data-options'));
 
-		// start on geo-ip data early
-		cashmusic.ajax.getHeaderForURL('https://javascript-cashmusic.netdna-ssl.com/cashmusic.js','GeoIp-Data',function(h) {
-			cashmusic.geo = h;
-		});
+		if (self === top) {
+			// start on geo-ip data early (only if not embedded)
+			cashmusic.ajax.getHeaderForURL('https://javascript-cashmusic.netdna-ssl.com/cashmusic.js','GeoIp-Data',function(h) {
+				cashmusic.geo = h;
+			});
+		}
 
 		var checkEmbeds = function() {
 			// check for element definition in script data-element
 			var scripts = document.querySelectorAll('script[src$="cashmusic.js"]');
-			scripts.forEach(function(s) {
-				var el = s.getAttribute('data-element');
-				if (el) {
-					cashmusic.embed({
-						"elementid": el,
-						"targetnode": s
-					});
-				}
-			});
+			if (typeof scripts == 'object') {
+				var sA = Array.prototype.slice.call(scripts);
+				sA.forEach(function(s) {
+					var el = s.getAttribute('data-element');
+					if (el) {
+						cashmusic.embed({
+							"elementid": el,
+							"targetnode": s
+						});
+					}
+				});
+			}
 		}
 
 		var init = function(){
