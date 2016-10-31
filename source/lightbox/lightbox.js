@@ -68,6 +68,58 @@
 				parsed += '?title=1&byline=1&portrait=1&autoplay=1';
 			}
 			return parsed;
+		},
+
+		showGallery: function(img,caption,gallery) {
+			var markup =  '<div class="cm-gallery-img" style="background-image:url(' + img + ');"></div>';
+			if (caption) {
+				 markup += '<div class="cm-gallery-caption">' + caption + '</div>';
+			}
+			cm.overlay.reveal(markup,'cm-gallery');
+			if (gallery) {
+				var prev = document.createElement('div');
+				prev.className = 'cm-gallery-prev';
+				var next = document.createElement('div');
+				next.className = 'cm-gallery-next';
+
+				cm.events.add(prev,'click', function(e) {
+					var prev = cm.lightbox.objLoop(gallery,img,'prev');
+					var newimg = prev.i;
+					var newcap = prev.c;
+					cm.lightbox.showGallery(newimg,newcap,gallery);
+				});
+				cm.events.add(next,'click', function(e) {
+					var next = cm.lightbox.objLoop(gallery,img,'next');
+					var newimg = next.i;
+					var newcap = next.c;
+					cm.lightbox.showGallery(newimg,newcap,gallery);
+				});
+
+				var g = document.querySelector('.cm-gallery');
+				g.appendChild(prev);
+				g.appendChild(next);
+			}
+		},
+
+		objLoop: function(obj,key,w) {
+			var keys = Object.keys(obj);
+			var g = keys[keys.length - 1];
+			var r = obj[keys[0]];
+			var m = 1;
+			if (w == 'prev') {
+				g = keys[0];
+				r = obj[keys[keys.length - 1]];
+				m = -1;
+			}
+			if (g == key) {
+				return r;
+			} else {
+				for (var i = 0; i < keys.length; i++) {
+					if (keys[i] == key) {
+						return obj[keys[i+m]];
+					}
+				}
+			}
 		}
 	};
 
@@ -78,14 +130,52 @@
 			for (var i = 0; i < as.length; ++i) {
 				cm.events.add(as[i],'click', function(e) {
 					if (cm.measure.viewport().x > 400 && !e.metaKey) {
+						e.preventDefault();
 						// do the overlay thing
 						var url = e.currentTarget.href;
 						cm.lightbox.injectIframe(url);
-
-						e.preventDefault();
-						return false;
 					}
 				});
+			}
+		});
+	}
+
+	// look for gallery links
+	var ags = document.querySelectorAll('a.cashmusic.gallery,div.cashmusic.gallery');
+	if (ags.length > 0) {
+		cm.overlay.create(function() {
+			for (var i = 0; i < ags.length; ++i) {
+				if (ags[i].tagName.toLowerCase() == 'a') {
+					cm.events.add(ags[i],'click', function(e) {
+						e.preventDefault();
+						var caption = false;
+						var img = this.href;
+						if (this.hasAttribute('title')) {
+							caption = this.title;
+						}
+						cm.lightbox.showGallery(img,caption);
+					});
+				} else {
+					var imgs = ags[i].getElementsByTagName('img');
+					var gallery = {};
+					for (var i = 0; i < imgs.length; i++) {
+						var img = imgs[i].src;
+						var caption = false;
+						if (imgs[i].hasAttribute('title')) {
+							caption = imgs[i].title;
+						}
+						if (!caption && imgs[i].hasAttribute('alt')) {
+							caption = imgs[i].alt;
+						}
+						gallery[imgs[i].src] = {"i":img,"c":caption};
+					}
+					for (var n = 0; n < imgs.length; n++) {
+						cm.events.add(imgs[n],'click', function(e) {
+							e.preventDefault();
+							cm.lightbox.showGallery(gallery[this.src].i,gallery[this.src].c,gallery);
+						});
+					}
+				}
 			}
 		});
 	}

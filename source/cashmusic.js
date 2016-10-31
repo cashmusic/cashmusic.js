@@ -35,7 +35,7 @@
  *
  *
  *
- * VERSION: 6
+ * VERSION: 7
  *
  **/
 
@@ -98,7 +98,8 @@
 				cm.session.start();
 
 				// check lightbox options
-				if (cm.options.indexOf('lightboxvideo') !== -1) {
+				var imgTest = document.querySelectorAll('a.cashmusic.gallery,div.cashmusic.gallery');
+				if (cm.options.indexOf('lightboxvideo') !== -1 || imgTest.length > 0) {
 					// load lightbox.js
 					cm.loadScript(cm.path+'/lightbox/lightbox.js');
 				}
@@ -135,7 +136,7 @@
 				} else {
 					// look for GET string, parse that shit if we can
 					if (cm.get['qs']) {
-						if (cm.get['qs'].indexOf('element_id') !== -1) {
+						if (cm.get['qs'].indexOf('element_id') !== -1 || cm.get['qs'].indexOf('handlequery') !== -1) {
 							if (!!(window.history && history.pushState)) {
 								// we know this is aimed at us, so we caught it. now remove it.
 								history.pushState(null, null, window.location.href.split('?')[0]);
@@ -143,18 +144,20 @@
 						}
 					}
 
-					// create overlay stuff first, only if nowrap isn't set
-					if (cm.options.indexOf('nowrap') === -1) {
-						cm.overlay.create();
-					}
+					// create overlay stuff first
+					cm.overlay.create();
 					// if we don't have a geo response we'll loop and wait a couple
 					// seconds before declaring the script ready.
 					var l = 0;
 					var i = setInterval(function() {
-						if ((l < 50) && (!cm.geo || !cm.sessionid)) {
+						if ((l < 50) && (!cm.geo || (!cm.sessionid && cm.options.indexOf('standalone') === -1))) {
 							l++;
 						} else {
-							cm.debug.store('session id set: ' + cm.sessionid);
+							if (cm.sessionid) {
+								cm.debug.store('session id set: ' + cm.sessionid);
+							} else {
+								cm.debug.store('no session. standalone mode.');
+							}
 							cm.debug.store('geo acquired: ' + cm.geo);
 							cm.debug.store('total delay: ' + l*100 + 'ms');
 							cm.loaded = Date.now(); // ready and loaded
@@ -463,7 +466,7 @@
 					embedURL += '&' + querystring;
 				}
 				if (cm.get['params'] && (''+querystring).indexOf('lightbox=1') === -1) {
-					if (cm.get['params']['element_id'] == id) {
+					if (cm.get['params']['element_id'] == id || cm.get['params']['handlequery']) {
 						embedURL += '&' + cm.get['qs'];
 					}
 				}
@@ -473,6 +476,7 @@
 				if (cm.debug.show) {
 					embedURL += '&debug=1';
 				}
+
 				var iframe = document.createElement('iframe');
 					iframe.src = embedURL;
 					iframe.id = 'cm-' + new Date().getTime(); // prevent Safari from using old data.
@@ -918,7 +922,7 @@
 			session: {
 				start: function() {
 					var cm = window.cashmusic;
-					if (!cm.sessionid) {
+					if (!cm.sessionid && cm.options.indexOf('standalone') === -1) {
 						if (cm.get['params']['session_id']) {
 							cm.sessionid = cm.get['params']['session_id'];
 						} else {
@@ -980,7 +984,7 @@
 							}
 						}
 					}
-					if (cm.sessionid === null && !cm.embedded) {
+					if (cm.sessionid === null && !cm.embedded && cm.options.indexOf('standalone') === -1) {
 						// before anything else: change cm.sessionid to FALSE to signify that we're requesting
 						// a new session id. that will stop this block from executing a second time
 						cm.sessionid = false;
@@ -997,6 +1001,9 @@
 									cm.session.setid(rp.payload);
 									cm.events.fire(cm,'sessionstarted',rp.payload);
 								}
+							},
+							function(r) {
+								cm.options += ' standalone';
 							}
 						);
 					}
@@ -1046,8 +1053,6 @@
 			 *
 			 ***************************************************************************************/
 			overlay: {
-				bg: false,
-				wrapper: false,
 				content: false,
 				close: false,
 				callbacks: [],
@@ -1056,65 +1061,34 @@
 					var cm = window.cashmusic;
 					var self = cm.overlay;
 					var move = false;
-					if (self.wrapper === false) {
-						cm.styles.injectCSS(cm.path + '/templates/overlay.css');
 
-						self.wrapper = document.querySelector('div.cm-wrapper');
+					cm.styles.injectCSS(cm.path + '/templates/overlay.css');
 
-						if (!self.wrapper) {
-							move = true;
-							self.wrapper = document.createElement('div');
-							self.wrapper.className = 'cm-wrapper';
-						}
+					self.content = document.createElement('div');
+					self.content.className = 'cm-overlay';
 
-						self.bg = document.createElement('div');
-						self.bg.className = 'cm-bg';
+					self.close = document.createElement('div');
+					self.close.className = 'cm-close';
 
-						// apply all body styles to the bg
-						var bs = window.getComputedStyle(document.body);
-						self.bg.style.backgroundImage 		= bs.getPropertyValue('background-image');
-						self.bg.style.backgroundPosition 	= bs.getPropertyValue('background-position');
-						self.bg.style.backgroundSize 			= bs.getPropertyValue('background-size');
-						self.bg.style.backgroundRepeat 		= bs.getPropertyValue('background-repeat');
-						self.bg.style.backgroundOrigin 		= bs.getPropertyValue('background-origin');
-						self.bg.style.backgroundClip 			= bs.getPropertyValue('background-clip');
-						self.bg.style.backgroundAttachment 	= bs.getPropertyValue('background-attachment');
-						self.bg.style.backgroundColor 		= bs.getPropertyValue('background-color');
-
-						if (move) {
-							// move all page nodes to the new wrapper
-							while (document.body.childNodes.length) {
-								self.wrapper.appendChild(document.body.childNodes[0]);
-							}
-							document.body.appendChild(self.wrapper);
-						}
-
-						self.content = document.createElement('div');
-						self.content.className = 'cm-overlay';
-
-						self.close = document.createElement('div');
-						self.close.className = 'cm-close';
-
-						cm.events.add(window,'keyup', function(e) {
-							if (e.keyCode == 27) {
-								if (self.content.parentNode == document.body) {
-									self.hide();
-								}
-							}
-						});
-						cm.events.add(self.close,'click', function(e) {
+					cm.events.add(window,'keyup', function(e) {
+						if (e.keyCode == 27) {
 							if (self.content.parentNode == document.body) {
 								self.hide();
 							}
-						});
-						/*
-						cm.events.add(self.bg,'click', function(e) {
-							if(e.target === this) {
-								self.hide();
-							}
-						});
-						*/
-					}
+						}
+					});
+					cm.events.add(self.close,'click', function(e) {
+						if (self.content.parentNode == document.body) {
+							self.hide();
+						}
+					});
+					/*
+					cm.events.add(self.bg,'click', function(e) {
+						if(e.target === this) {
+							self.hide();
+						}
+					});
+					*/
 					if (typeof callback === 'function') {
 						callback();
 					}
@@ -1129,11 +1103,7 @@
 					} else {
 						self.content.style.opacity = 0;
 						cm.events.fire(cm,'overlayclosed',''); // tell em
-						self.wrapper.className = 'cm-wrapper';
-						self.bg.className = 'cm-bg';
-						setTimeout(function() {
-							db.removeChild(self.bg);
-						}, 1000);
+
 						//self.content.innerHTML = '';
 						while (self.content.firstChild) {
 							self.content.removeChild(self.content.firstChild);
@@ -1150,7 +1120,8 @@
 						}
 
 						// reenable body scrolling
-						db.style.overflow = 'auto';
+						cm.styles.removeClass(db,'cm-noscroll');
+						cm.styles.removeClass(document.documentElement,'cm-noscroll');
 					}
 				},
 
@@ -1193,15 +1164,12 @@
 						self.content.appendChild(positioning);
 
 						// disable body scrolling
-						db.style.overflow = 'hidden';
+						cm.styles.addClass(db,'cm-noscroll');
+						cm.styles.addClass(document.documentElement,'cm-noscroll');
 
 						// if not already showing, go!
 						if (self.content.style.opacity != 1) {
-							self.wrapper.className = 'cm-wrapper cm-active';
 							self.content.style.opacity = 0;
-							self.bg.style.height = cm.measure.scrollheight() + 'px';
-							db.appendChild(self.bg);
-							self.bg.className = 'cm-bg cm-active';
 							db.appendChild(self.content);
 							db.appendChild(self.close);
 							// force style refresh/redraw on element
@@ -1215,6 +1183,7 @@
 				addOverlayTrigger: function(content,classname,ref) {
 					var cm = window.cashmusic;
 					var self = cm.overlay;
+					var db = document.body;
 					if (cm.embedded) {
 						cm.events.fire(cm,'addoverlaytrigger',{
 							"content":content,
@@ -1230,7 +1199,7 @@
 							e.preventDefault();
 							return false;
 						});
-						self.wrapper.appendChild(el);
+						db.appendChild(el);
 						cm.storage[ref] = el;
 						cm.events.fire(cm,'triggeradded',ref);
 					}
