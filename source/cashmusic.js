@@ -1164,8 +1164,8 @@
 						self.content.appendChild(positioning);
 
 						// disable body scrolling
-						cm.styles.addClass(db,'cm-noscroll');
-						cm.styles.addClass(document.documentElement,'cm-noscroll');
+						if(!cm.styles.hasClass(db,'cm-noscroll')){cm.styles.addClass(db,'cm-noscroll');}
+						if(!cm.styles.hasClass(document.documentElement,'cm-noscroll')){cm.styles.addClass(document.documentElement,'cm-noscroll');}
 
 						// if not already showing, go!
 						if (self.content.style.opacity != 1) {
