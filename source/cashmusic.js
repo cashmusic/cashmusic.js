@@ -1120,7 +1120,6 @@
 						}
 
 						// reenable body scrolling
-						cm.styles.removeClass(db,'cm-noscroll');
 						cm.styles.removeClass(document.documentElement,'cm-noscroll');
 					}
 				},
@@ -1164,7 +1163,6 @@
 						self.content.appendChild(positioning);
 
 						// disable body scrolling
-						if(!cm.styles.hasClass(db,'cm-noscroll')){cm.styles.addClass(db,'cm-noscroll');}
 						if(!cm.styles.hasClass(document.documentElement,'cm-noscroll')){cm.styles.addClass(document.documentElement,'cm-noscroll');}
 
 						// if not already showing, go!
@@ -1252,9 +1250,12 @@
 					return (' ' + el.className + ' ').indexOf(' ' + classname + ' ') > -1;
 				},
 
-				injectCSS: function(css,important,top) {
+				injectCSS: function(css,important,mainwindow) {
+					if (mainwindow === undefined) {
+						mainwindow = false;
+					}
 					var cm = window.cashmusic;
-					if (top && cm.embedded) {
+					if (mainwindow && cm.embedded) {
 						cm.events.fire(cm,'injectcss',{
 							"css":css,
 							"important":important
