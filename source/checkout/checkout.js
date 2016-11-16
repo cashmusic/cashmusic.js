@@ -51,7 +51,7 @@
 					formElements.push({id: "card-expiry-year", type: "select", options: cm.stripe.getYears(), placeholder: new Date().getFullYear()});
 					formElements.push({id: "card-cvc", type: "text", placeholder: "CVV"});
 		         formElements.push({id: "stripe-submit", type: "submit", text: "Submit Payment"});
-					cm.userinput.getInput(formElements,'getstripetoken');
+					cm.userinput.getInput(formElements,'getstripetoken', null, ""); //TODO: total price for checkout
 					if (!cm.stripe.eventAttached) {
 						cm.events.add(cm,'userinput', function(e) {
 							if (e.detail['cm-userinput-type'] == 'getstripetoken') {
@@ -112,14 +112,18 @@
 	 *
 	 ***************************************************************************************/
 	cm.userinput = {
-		getInput: function (elements,type,style) {
+		getInput: function (elements,type,style,msg) {
 			type = type || 'unknown';
 			var form = document.createElement('form');
 			var container = document.createElement('div');
 			container.className = 'cm-userinput-container';
 			var message = document.createElement('div');
 			message.id = 'cm-userinput-message';
-			message.innerHTML = '&nbsp;'
+			message.innerHTML = '&nbsp;';
+
+			if (msg) {
+					message.innerHTML = msg;
+			}
 			form.className = 'cm-userinput ' + type + ' ' + style;
 
 			elements.push({id:'cm-userinput-type', type:'hidden', value:type});
@@ -492,12 +496,19 @@
 					'currency' :false,
 					'name'     :false,
 					'email'    :false,
+					'recurring':false,
 					'origin'   :window.location.href
 				};
 				// detect SSL for stripe
 				if (location.protocol !== 'https:' && options.testing !== true) {
 					options.stripe = false;
 				}
+
+				// recurring payments
+				if (options.recurring) {
+					cm.storage['checkoutdata'].recurring = true;
+				}
+
 				// choose defaults by currency
 				if (options.shipping) {
 					// this push business feels really dumb but we need a proper length count
