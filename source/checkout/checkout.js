@@ -164,7 +164,20 @@
 				if (element.required) {
 					input.setAttribute('data-required','1');
 				}
+
+				if (element.id == "stripe-submit" && cm.storage.checkoutdata.total) {
+					// show the final amount to be charged
+
+					var total = document.createElement('div');
+					total.id = 'cm-amount-message';
+
+					total.innerHTML = '<p class="cm-pricing">Transaction amount: '+ cm.storage['checkoutdata'].total + '</p><!--cm-pricing-->';
+
+					form.appendChild(total);
+				}
+
 				form.appendChild(input);
+
 			}
 
 			container.appendChild(message);
@@ -497,7 +510,8 @@
 					'name'     :false,
 					'email'    :false,
 					'recurring':false,
-					'origin'   :window.location.href
+					'origin'   :window.location.href,
+					'total'	   :false
 				};
 				// detect SSL for stripe
 				if (location.protocol !== 'https:' && options.testing !== true) {
@@ -507,6 +521,10 @@
 				// recurring payments
 				if (options.recurring) {
 					cm.storage['checkoutdata'].recurring = true;
+				}
+
+				if (options.total) {
+					cm.storage['checkoutdata'].total = options.total;
 				}
 
 				// choose defaults by currency
@@ -555,13 +573,16 @@
 						// add in the country selector
 						shippingElements.push({id: "country", type: "select", options: cm.checkout.countries, value: selectedCountry});
 						// and if needed, the shipping region selector
-						if (typeof options.shipping === 'object') {
-							shippingElements.push({id: "shipping-region", type: "select", options: {
-								"":"Select shipping region",
-								"r1":options.shipping.r1,
-								"r2":options.shipping.r2
-							}, required: true});
+						if (!options.recurring) {
+							if (typeof options.shipping === 'object') {
+								shippingElements.push({id: "shipping-region", type: "select", options: {
+									"":"Select shipping region",
+									"r1":options.shipping.r1,
+									"r2":options.shipping.r2
+								}, required: true});
+							}
 						}
+
 						// hey look a button!
 						shippingElements.push({id: "shipping-submit", type: "submit", text: "Set shipping info"});
 						// get the answers
@@ -589,7 +610,6 @@
 		initiatepayment: function (options,source) {
 			// just starts the payment flow and does the steps needed based on
 			// the options passed in...
-
 			// Stripe only
 			if (options.stripe && !options.paypal) {
 				cm.stripe.generateToken(options.stripe,source);
