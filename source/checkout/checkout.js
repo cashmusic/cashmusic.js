@@ -177,7 +177,6 @@
 				}
 
 				form.appendChild(input);
-
 			}
 
 			container.appendChild(message);
