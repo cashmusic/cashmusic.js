@@ -171,7 +171,7 @@
 					var total = document.createElement('div');
 					total.id = 'cm-amount-message';
 
-					total.innerHTML = '<p class="cm-pricing">Transaction amount: '+ cm.storage['checkoutdata'].total + '</p><!--cm-pricing-->';
+					total.innerHTML = '<h2 class="cm-pricing">Transaction amount: <span>'+b.storage.checkoutdata.total+"</span></h2><!--cm-pricing-->";
 
 					form.appendChild(total);
 				}
